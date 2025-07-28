@@ -1,0 +1,230 @@
+<!--pages/common/order-detail/order-detail.wxml-->
+<view class="order-detail-page">
+  <!-- 加载状态 -->
+  <view class="loading" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+
+  <!-- 订单详情内容 -->
+  <view class="order-content" wx:else>
+    <view wx:if="{{orderDetail}}">
+      <!-- 订单状态 -->
+      <view class="order-status-card">
+        <view class="status-icon {{getStatusClass(orderDetail.status)}}">
+          <text class="status-text">{{getStatusText(orderDetail.status)}}</text>
+        </view>
+        <view class="status-desc">
+          <text wx:if="{{orderDetail.status === 1}}">请在24小时内完成支付</text>
+          <text wx:if="{{orderDetail.status === 2}}">商家正在准备发货</text>
+          <text wx:if="{{orderDetail.status === 3}}">商品正在配送中，请耐心等待</text>
+          <text wx:if="{{orderDetail.status === 4}}">感谢您的购买，欢迎再次光临</text>
+          <text wx:if="{{orderDetail.status === 5}}">订单已取消</text>
+        </view>
+      </view>
+
+      <!-- 物流信息 -->
+      <view class="logistics-card" wx:if="{{orderDetail.shipping_company && orderDetail.shipping_no}}">
+        <view class="logistics-header" bindtap="viewLogistics">
+          <view class="logistics-info">
+            <text class="logistics-company">{{orderDetail.shipping_company}}</text>
+            <text class="logistics-no">运单号：{{orderDetail.shipping_no}}</text>
+          </view>
+          <text class="logistics-arrow">></text>
+        </view>
+        <view class="logistics-time" wx:if="{{orderDetail.shipping_time}}">
+          <text>发货时间：{{formatTime(orderDetail.shipping_time)}}</text>
+        </view>
+      </view>
+
+      <!-- 收货信息 -->
+      <view class="address-card">
+        <view class="address-header">
+          <text class="address-title">收货信息</text>
+        </view>
+        <view class="address-info">
+          <view class="address-line1">
+            <text class="receiver-name">{{orderDetail.receiver_name}}</text>
+            <text class="receiver-phone">{{orderDetail.receiver_phone}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 店铺信息 -->
+      <view class="shop-card" wx:if="{{orderDetail.shop}}">
+        <view class="shop-info">
+          <text class="shop-name">{{orderDetail.shop.name}}</text>
+          <text class="shop-arrow">></text>
+        </view>
+      </view>
+
+      <!-- 商品列表 -->
+      <view class="product-card">
+        <view class="product-header">
+          <text class="product-title">商品信息</text>
+        </view>
+        <view class="product-list">
+          <view class="product-item" wx:for="{{orderDetail.items}}" wx:key="id">
+            <image class="product-image" src="{{item.product.images[0] || '/assets/images/default-product.png'}}" />
+            <view class="product-info">
+              <text class="product-name">{{item.product.name}}</text>
+              <view class="product-meta">
+                <text class="product-price">¥{{formatPrice(item.price)}}</text>
+                <text class="product-quantity">x{{item.quantity}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 订单信息 -->
+      <view class="order-info-card">
+        <view class="order-info-header">
+          <text class="order-info-title">订单信息</text>
+        </view>
+        <view class="order-info-list">
+          <view class="order-info-item">
+            <text class="info-label">订单编号</text>
+            <view class="info-value-wrapper">
+              <text class="info-value">{{orderDetail.order_no}}</text>
+              <text class="copy-btn" bindtap="copyOrderNo">复制</text>
+            </view>
+          </view>
+          <view class="order-info-item">
+            <text class="info-label">下单时间</text>
+            <text class="info-value">{{formatTime(orderDetail.created_at)}}</text>
+          </view>
+          <view class="order-info-item" wx:if="{{orderDetail.paid_at}}">
+            <text class="info-label">付款时间</text>
+            <text class="info-value">{{formatTime(orderDetail.paid_at)}}</text>
+          </view>
+          <view class="order-info-item" wx:if="{{orderDetail.remark}}">
+            <text class="info-label">订单备注</text>
+            <text class="info-value">{{orderDetail.remark}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 金额明细 -->
+      <view class="amount-card">
+        <view class="amount-header">
+          <text class="amount-title">金额明细</text>
+        </view>
+        <view class="amount-list">
+          <view class="amount-item">
+            <text class="amount-label">商品金额</text>
+            <text class="amount-value">¥{{formatPrice(orderDetail.product_amount)}}</text>
+          </view>
+          <view class="amount-item" wx:if="{{orderDetail.shipping_amount > 0}}">
+            <text class="amount-label">运费</text>
+            <text class="amount-value">¥{{formatPrice(orderDetail.shipping_amount)}}</text>
+          </view>
+          <view class="amount-item" wx:if="{{orderDetail.coupon_amount > 0}}">
+            <text class="amount-label">优惠券</text>
+            <text class="amount-value discount">-¥{{formatPrice(orderDetail.coupon_amount)}}</text>
+          </view>
+          <view class="amount-item total">
+            <text class="amount-label">实付款</text>
+            <text class="amount-value">¥{{formatPrice(orderDetail.payment_amount)}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 订单不存在 -->
+    <view class="order-not-found" wx:else>
+      <text>订单不存在或已被删除</text>
+    </view>
+  </view>
+
+  <!-- 底部操作栏 -->
+  <view class="bottom-actions" wx:if="{{orderDetail && !loading}}">
+    <view class="action-buttons">
+      <!-- 用户操作按钮 -->
+      <block wx:if="{{orderType === 'user'}}">
+        <!-- 待付款状态 -->
+        <block wx:if="{{orderDetail.status === 1}}">
+          <button class="action-btn cancel-btn" bindtap="cancelOrder">取消订单</button>
+          <button class="action-btn pay-btn" bindtap="showPaymentMethods">立即支付</button>
+        </block>
+
+        <!-- 待发货状态 -->
+        <block wx:if="{{orderDetail.status === 2}}">
+          <button class="action-btn service-btn" bindtap="contactService">联系客服</button>
+        </block>
+
+        <!-- 待收货状态 -->
+        <block wx:if="{{orderDetail.status === 3}}">
+          <button class="action-btn service-btn" bindtap="contactService">联系客服</button>
+          <button class="action-btn confirm-btn" bindtap="confirmReceipt">确认收货</button>
+        </block>
+
+        <!-- 已完成状态 -->
+        <block wx:if="{{orderDetail.status === 4}}">
+          <button class="action-btn service-btn" bindtap="contactService">联系客服</button>
+        </block>
+      </block>
+
+      <!-- 商家操作按钮 -->
+      <block wx:if="{{orderType === 'merchant'}}">
+        <!-- 待发货状态 -->
+        <block wx:if="{{orderDetail.status === 2}}">
+          <button class="action-btn ship-btn" bindtap="merchantShipOrder">立即发货</button>
+        </block>
+
+        <!-- 待收货状态 -->
+        <block wx:if="{{orderDetail.status === 3}}">
+          <button class="action-btn logistics-btn" bindtap="viewLogistics">查看物流</button>
+        </block>
+      </block>
+    </view>
+  </view>
+
+  <!-- 支付方式选择弹窗 -->
+  <view class="payment-modal" wx:if="{{showPayment}}">
+    <view class="payment-overlay" bindtap="hidePaymentMethods"></view>
+    <view class="payment-content">
+      <view class="payment-header">
+        <text class="payment-title">选择支付方式</text>
+        <text class="payment-close" bindtap="hidePaymentMethods">×</text>
+      </view>
+      <view class="payment-amount">
+        <text class="payment-amount-label">需支付</text>
+        <text class="payment-amount-value">¥{{formatPrice(orderDetail.payment_amount)}}</text>
+      </view>
+      <view class="payment-methods">
+        <view 
+          class="payment-method {{selectedPayment === item.key ? 'selected' : ''}}"
+          wx:for="{{paymentMethods}}"
+          wx:key="key"
+          data-method="{{item.key}}"
+          bindtap="selectPayment"
+        >
+          <image class="payment-icon" src="{{item.icon}}" />
+          <text class="payment-name">{{item.name}}</text>
+          <text class="payment-radio {{selectedPayment === item.key ? 'checked' : ''}}">○</text>
+        </view>
+      </view>
+      <button class="payment-confirm-btn" bindtap="confirmPayment">确认支付</button>
+    </view>
+  </view>
+
+  <!-- 物流信息弹窗 -->
+  <view class="logistics-modal" wx:if="{{showLogistics}}">
+    <view class="logistics-overlay" bindtap="closeLogistics"></view>
+    <view class="logistics-content">
+      <view class="logistics-header">
+        <text class="logistics-title">物流信息</text>
+        <text class="logistics-close" bindtap="closeLogistics">×</text>
+      </view>
+      <view class="logistics-detail">
+        <view class="logistics-info">
+          <text class="logistics-company">{{orderDetail.shipping_company}}</text>
+          <text class="logistics-no">{{orderDetail.shipping_no}}</text>
+        </view>
+        <view class="logistics-status">
+          <text>TODO: 接入物流查询API显示详细物流信息</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view> 

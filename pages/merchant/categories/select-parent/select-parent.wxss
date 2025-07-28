@@ -1,0 +1,370 @@
+/* pages/merchant/categories/select-parent/select-parent.wxss */
+.select-parent-page {
+  min-height: 100vh;
+  background-color: #f7f8fa;
+}
+
+/* 调试信息样式（生产环境可移除） */
+.debug-info {
+  background: #fff3cd;
+  padding: 20rpx;
+  margin-bottom: 20rpx;
+  border-radius: 8rpx;
+  font-size: 24rpx;
+  color: #856404;
+  border-left: 4rpx solid #ffc107;
+}
+
+/* 加载状态 */
+.van-loading {
+  padding: 100rpx;
+  text-align: center;
+}
+
+/* 主容器 */
+.category-container {
+  padding: 20rpx;
+}
+
+/* 无父分类选项 */
+.no-parent-item {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  margin-bottom: 30rpx;
+  border-radius: 16rpx;
+  box-shadow: 0 8rpx 24rpx rgba(102, 126, 234, 0.3);
+}
+
+.no-parent-item .category-content {
+  padding: 30rpx;
+  display: flex;
+  align-items: center;
+}
+
+.no-parent-item .category-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  margin-left: 15rpx;
+  flex: 1;
+}
+
+.no-parent-item .category-desc {
+  font-size: 24rpx;
+  opacity: 0.8;
+  margin-left: 15rpx;
+}
+
+/* 分类列表 */
+.category-list {
+  background: white;
+  border-radius: 16rpx;
+  overflow: hidden;
+  box-shadow: 0 2rpx 12rpx rgba(50, 50, 51, 0.06);
+}
+
+/* 树节点 */
+.tree-node {
+  border-bottom: 1rpx solid #f7f8fa;
+}
+
+.tree-node:last-child {
+  border-bottom: none;
+}
+
+/* 分类项 */
+.category-item {
+  background: white;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.category-item:not(.disabled):active {
+  background-color: #f7f8fa;
+}
+
+.category-item.disabled {
+  opacity: 0.5;
+}
+
+/* 分类内容 */
+.category-content {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 30rpx;
+  min-height: 80rpx;
+}
+
+/* 层级缩进 */
+.level-indent {
+  flex-shrink: 0;
+}
+
+/* 展开按钮 */
+.expand-btn {
+  width: 40rpx;
+  height: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: #f7f8fa;
+  margin-right: 15rpx;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.expand-btn:active {
+  background-color: #e8f5e8;
+  transform: scale(0.95);
+}
+
+.expand-placeholder {
+  width: 40rpx;
+  height: 40rpx;
+  margin-right: 15rpx;
+  flex-shrink: 0;
+}
+
+/* 分类信息 */
+.category-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.category-name {
+  font-size: 30rpx;
+  color: #323233;
+  font-weight: 500;
+  line-height: 1.4;
+  word-break: break-all;
+}
+
+.category-meta {
+  display: flex;
+  align-items: center;
+  margin-top: 8rpx;
+  gap: 8rpx;
+}
+
+/* 层级样式 */
+.level-1 .category-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1989fa;
+}
+
+.level-2 .category-name {
+  font-size: 30rpx;
+  color: #323233;
+}
+
+.level-3 .category-name {
+  font-size: 28rpx;
+  color: #646566;
+}
+
+/* 禁用状态提示 */
+.disabled-hint {
+  margin-left: 15rpx;
+  flex-shrink: 0;
+}
+
+.hint-text {
+  font-size: 24rpx;
+  color: #ee0a24;
+  background: #ffeaea;
+  padding: 6rpx 12rpx;
+  border-radius: 12rpx;
+  border: 1rpx solid #ffd6d6;
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: 100rpx 40rpx;
+  background: white;
+  border-radius: 16rpx;
+  margin-top: 40rpx;
+}
+
+.empty-hint {
+  display: block;
+  margin-top: 20rpx;
+  color: #969799;
+  font-size: 26rpx;
+}
+
+/* 层级指示线 */
+.category-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4rpx;
+  background-color: transparent;
+  border-radius: 0 4rpx 4rpx 0;
+}
+
+.level-1::before {
+  background-color: #1989fa;
+}
+
+.level-2::before {
+  background-color: #07c160;
+}
+
+.level-3::before {
+  background-color: #ff976a;
+}
+
+/* 选中状态动画 */
+.category-item {
+  animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 展开动画 */
+.tree-node[data-expanded="true"] {
+  animation: expandNode 0.3s ease-out;
+}
+
+@keyframes expandNode {
+  from {
+    max-height: 80rpx;
+  }
+  to {
+    max-height: 1000rpx;
+  }
+}
+
+/* 响应式适配 */
+@media screen and (max-width: 375px) {
+  .category-content {
+    padding: 20rpx 25rpx;
+    min-height: 70rpx;
+  }
+  
+  .category-name {
+    font-size: 28rpx;
+  }
+  
+  .level-1 .category-name {
+    font-size: 30rpx;
+  }
+  
+  .expand-btn {
+    width: 36rpx;
+    height: 36rpx;
+  }
+  
+  .expand-placeholder {
+    width: 36rpx;
+    height: 36rpx;
+  }
+}
+
+/* 悬停效果（支持的设备） */
+@media (hover: hover) {
+  .category-item:not(.disabled):hover {
+    background-color: #f0f9ff;
+  }
+  
+  .expand-btn:hover {
+    background-color: #e8f5e8;
+    transform: scale(1.05);
+  }
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .select-parent-page {
+    background-color: #1a1a1a;
+  }
+  
+  .category-list,
+  .category-item,
+  .empty-state {
+    background-color: #2d2d2d;
+  }
+  
+  .category-name {
+    color: #ffffff;
+  }
+  
+  .level-2 .category-name {
+    color: #cccccc;
+  }
+  
+  .level-3 .category-name {
+    color: #999999;
+  }
+  
+  .expand-btn {
+    background-color: #404040;
+  }
+  
+  .expand-btn:active,
+  .expand-btn:hover {
+    background-color: #4a4a4a;
+  }
+  
+  .category-item:not(.disabled):active,
+  .category-item:not(.disabled):hover {
+    background-color: #3a3a3a;
+  }
+  
+  .hint-text {
+    background-color: #4a2626;
+    color: #ff9999;
+    border-color: #662626;
+  }
+  
+  .debug-info {
+    background-color: #4a4020;
+    color: #ffcc66;
+    border-color: #ffc107;
+  }
+}
+
+/* 过渡动画优化 */
+.select-parent-page,
+.category-item,
+.expand-btn,
+.category-content,
+.category-info {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.category-item,
+.expand-btn {
+  will-change: transform, background-color;
+}
+
+/* 搜索栏样式（如果需要） */
+.search-section {
+  margin-bottom: 20rpx;
+  background: white;
+  border-radius: 16rpx;
+  padding: 20rpx;
+  box-shadow: 0 2rpx 12rpx rgba(50, 50, 51, 0.06);
+}
+
+/* 可滚动区域优化 */
+.category-list {
+  max-height: calc(100vh - 200rpx);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+} 

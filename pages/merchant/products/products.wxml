@@ -1,0 +1,157 @@
+<!--pages/merchant/products/products.wxml-->
+<wxs module="utils" src="./utils.wxs"></wxs>
+<view class="container">
+  <!-- 搜索栏 -->
+  <view class="search-section">
+    <van-search 
+      value="{{searchKeyword}}" 
+      placeholder="搜索商品名称或关键词"
+      bind:search="onSearch"
+      bind:change="onSearchChange"
+      bind:clear="onSearchClear"
+    />
+  </view>
+
+  <!-- 筛选和排序 -->
+  <view class="filter-section">
+    <van-dropdown-menu active-color="#ee0a24">
+      <van-dropdown-item 
+        value="{{statusFilter}}" 
+        options="{{statusOptions}}"
+        bind:change="onStatusChange"
+      />
+      <van-dropdown-item 
+        value="{{categoryFilter}}" 
+        options="{{categoryOptions}}"
+        bind:change="onCategoryChange"
+      />
+      <van-dropdown-item 
+        value="{{sortType}}" 
+        options="{{sortOptions}}"
+        bind:change="onSortChange"
+      />
+    </van-dropdown-menu>
+  </view>
+
+  <!-- 商品统计 -->
+  <view class="stats-section">
+    <view class="stats-item">
+      <text class="stats-number">{{totalCount}}</text>
+      <text class="stats-label">全部商品</text>
+    </view>
+    <view class="stats-item">
+      <text class="stats-number">{{onSaleCount}}</text>
+      <text class="stats-label">在售</text>
+    </view>
+    <view class="stats-item">
+      <text class="stats-number">{{offSaleCount}}</text>
+      <text class="stats-label">下架</text>
+    </view>
+    <view class="stats-item">
+      <text class="stats-number">{{stockWarningCount}}</text>
+      <text class="stats-label">库存预警</text>
+    </view>
+  </view>
+
+  <!-- 商品列表 -->
+  <view class="product-list">
+    <view 
+      wx:for="{{productList}}" 
+      wx:key="id"
+      class="product-item"
+      bindtap="onProductTap"
+      data-item="{{item}}"
+    >
+      <!-- 商品图片 -->
+      <view class="product-image">
+        <image 
+          src="{{item.images && item.images.length > 0 ? item.images[0].url : '/assets/images/default-product.png'}}" 
+          mode="aspectFill"
+        />
+        <view wx:if="{{item.status === 2}}" class="status-tag off-sale">已下架</view>
+        <view wx:elif="{{item.stock <= 0}}" class="status-tag out-stock">缺货</view>
+        <view wx:elif="{{item.stock <= item.stock_warning}}" class="status-tag warning">库存不足</view>
+      </view>
+
+      <!-- 商品信息 -->
+      <view class="product-info">
+        <view class="product-name">{{item.name}}</view>
+        <view wx:if="{{item.sub_title}}" class="product-subtitle">{{item.sub_title}}</view>
+        
+        <view class="product-category">
+          <van-tag size="mini" type="primary">{{item.category ? item.category.name : '未分类'}}</van-tag>
+          <van-tag wx:if="{{item.is_hot}}" size="mini" color="#ff6d00">热门</van-tag>
+          <van-tag wx:if="{{item.is_new}}" size="mini" color="#4caf50">新品</van-tag>
+          <van-tag wx:if="{{item.is_recommend}}" size="mini" color="#9c27b0">推荐</van-tag>
+        </view>
+
+        <view class="product-price-stock">
+          <text class="price">¥{{utils.formatPrice(item.price)}}</text>
+          <text class="stock">库存: {{item.stock}}</text>
+        </view>
+
+        <view class="product-stats">
+          <text class="sales">销量: {{item.sales_count}}</text>
+          <text class="views">浏览: {{item.view_count}}</text>
+          <text class="time">{{utils.formatTime(item.created_at)}}</text>
+        </view>
+      </view>
+
+      <!-- 操作按钮 -->
+      <view class="product-actions" catchtap="onActionTap">
+        <van-button 
+          size="mini" 
+          type="{{item.status === 1 ? 'warning' : 'primary'}}"
+          data-item="{{item}}"
+          data-action="{{item.status === 1 ? 'unpublish' : 'publish'}}"
+          catchtap="onActionTap"
+        >
+          {{item.status === 1 ? '下架' : '上架'}}
+        </van-button>
+        <van-button 
+          size="mini" 
+          type="danger"
+          data-item="{{item}}"
+          data-action="delete"
+          catchtap="onActionTap"
+        >
+          删除
+        </van-button>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view wx:if="{{productList.length === 0 && !loading}}" class="empty-state">
+      <van-empty description="暂无商品" />
+      <van-button 
+        type="primary" 
+        size="small"
+        bindtap="onAddProduct"
+        style="margin-top: 20rpx;"
+      >
+        添加商品
+      </van-button>
+    </view>
+
+    <!-- 加载更多 -->
+    <view wx:if="{{hasMore && productList.length > 0}}" class="load-more">
+      <van-loading wx:if="{{loadingMore}}" size="16px">加载中...</van-loading>
+      <view wx:else class="load-more-text" bindtap="loadMore">点击加载更多</view>
+    </view>
+
+    <view wx:if="{{!hasMore && productList.length > 0}}" class="no-more">
+      <text>— 已显示全部商品 —</text>
+    </view>
+  </view>
+
+  <!-- 悬浮添加按钮 -->
+  <view class="floating-add-btn" bindtap="onAddProduct">
+    <van-icon name="plus" size="20px" color="white" />
+  </view>
+
+  <!-- 加载状态 -->
+  <van-loading wx:if="{{loading}}" size="20px" class="loading-center">加载中...</van-loading>
+</view>
+
+<!-- 商家底部导航栏 -->
+<merchant-tabbar current="{{tabbarCurrent}}" />

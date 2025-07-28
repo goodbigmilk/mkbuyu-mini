@@ -1,0 +1,106 @@
+<view class="container">
+  <!-- 用户信息卡片 -->
+  <view class="user-card">
+    <view class="user-header">
+      <image class="user-avatar" src="{{userInfo.avatar || '/images/default-avatar.png'}}" />
+      <view class="user-info">
+        <view class="user-name">{{userInfo.nickname || '微信用户'}}</view>
+        <view class="user-level">{{userInfo.level_name || '普通会员'}}</view>
+      </view>
+      <view class="user-actions">
+        <van-icon name="arrow" size="16" />
+      </view>
+    </view>
+    
+    <view class="user-stats">
+      <view class="stat-item" bindtap="onStatTap" data-type="points">
+        <text class="stat-value">{{userInfo.points || 0}}</text>
+        <text class="stat-label">积分</text>
+      </view>
+      <view class="stat-item" bindtap="onStatTap" data-type="coupons">
+        <text class="stat-value">{{userInfo.coupon_count || 0}}</text>
+        <text class="stat-label">优惠券</text>
+      </view>
+      <view class="stat-item" bindtap="onStatTap" data-type="favorites">
+        <text class="stat-value">{{userInfo.favorite_count || 0}}</text>
+        <text class="stat-label">收藏</text>
+      </view>
+      <view class="stat-item" bindtap="onStatTap" data-type="history">
+        <text class="stat-value">{{userInfo.view_count || 0}}</text>
+        <text class="stat-label">足迹</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 订单快捷入口 -->
+  <view class="order-shortcuts">
+    <view class="section-header">
+      <text class="section-title">我的订单</text>
+      <view class="section-more" bindtap="onOrderMore">
+        <text>查看全部</text>
+        <van-icon name="arrow" size="12" />
+      </view>
+    </view>
+    
+    <view class="shortcuts-grid">
+      <view 
+        wx:for="{{orderShortcuts}}" 
+        wx:key="type"
+        class="shortcut-item"
+        data-type="{{item.type}}"
+        bindtap="onOrderShortcut"
+      >
+        <view class="shortcut-icon">
+          <van-icon name="{{item.icon}}" size="24" />
+          <view wx:if="{{item.count > 0}}" class="shortcut-badge">{{item.count}}</view>
+        </view>
+        <text class="shortcut-label">{{item.label}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 功能菜单 -->
+  <view class="menu-section">
+    <view wx:for="{{menuGroups}}" wx:key="title" class="menu-group">
+      <view wx:if="{{item.title}}" class="menu-title">{{item.title}}</view>
+      <view class="menu-list">
+        <view 
+          wx:for="{{item.items}}" 
+          wx:for-item="menuItem"
+          wx:key="key"
+          class="menu-item"
+          data-key="{{menuItem.key}}"
+          bindtap="onMenuTap"
+        >
+          <view class="menu-icon">
+            <van-icon name="{{menuItem.icon}}" size="20" />
+          </view>
+          <text class="menu-label">{{menuItem.label}}</text>
+          <view class="menu-extra">
+            <text wx:if="{{menuItem.extra}}" class="extra-text">{{menuItem.extra}}</text>
+            <van-icon name="arrow" size="12" />
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 设置入口 -->
+  <view class="settings-section">
+    <view class="menu-item" bindtap="onSettings">
+      <view class="menu-icon">
+        <van-icon name="setting-o" size="20" />
+      </view>
+      <text class="menu-label">设置</text>
+      <view class="menu-extra">
+        <van-icon name="arrow" size="12" />
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部间距 -->
+  <view class="bottom-space"></view>
+</view>
+
+<!-- 自定义 TabBar -->
+<custom-tabbar /> 

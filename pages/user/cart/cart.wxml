@@ -1,0 +1,220 @@
+<!--pages/user/cart/cart.wxml-->
+<view class="container">
+  <!-- 页面加载状态 -->
+  <van-loading wx:if="{{loading}}" type="spinner" class="loading">加载中...</van-loading>
+  
+  <block wx:else>
+    <!-- 顶部工具栏 -->
+    <view class="header-toolbar" wx:if="{{cartItems.length > 0}}">
+      <view class="toolbar-left">
+        <text class="cart-count">购物车({{cartCount}})</text>
+      </view>
+      <view class="toolbar-right">
+        <van-button 
+          size="small" 
+          type="{{editMode ? 'primary' : 'default'}}"
+          bind:click="onToggleEdit"
+        >
+          {{editMode ? '完成' : '编辑'}}
+        </van-button>
+      </view>
+    </view>
+
+    <!-- 失效商品提示 -->
+    <view wx:if="{{showInvalid}}" class="invalid-section">
+      <view class="invalid-header">
+        <van-icon name="warning-o" color="#ff6d00" />
+        <text class="invalid-text">失效商品({{invalidItems.length}})</text>
+        <van-button 
+          size="mini" 
+          type="danger" 
+          plain
+          bind:click="onClearInvalid"
+        >
+          清理
+        </van-button>
+      </view>
+      <view class="invalid-list">
+        <view 
+          wx:for="{{invalidItems}}" 
+          wx:key="id"
+          class="cart-item invalid-item"
+        >
+          <view class="item-image">
+            <image 
+              src="{{item.product.images && item.product.images.length > 0 ? item.product.images[0].url : '/assets/images/default-product.png'}}" 
+              mode="aspectFill"
+            />
+            <view class="invalid-mask">失效</view>
+          </view>
+          <view class="item-info">
+            <view class="product-name">{{item.product.name}}</view>
+            <view class="product-spec" wx:if="{{item.product.specification}}">
+              {{item.product.specification}}
+            </view>
+            <view class="product-price">¥{{item.formattedPrice}}</view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 购物车商品列表 -->
+    <view wx:if="{{cartItems.length > 0}}" class="cart-section">
+      <view class="cart-list">
+        <view 
+          wx:for="{{cartItems}}" 
+          wx:key="id"
+          class="cart-item"
+        >
+          <!-- 选择框 -->
+          <view class="item-select">
+            <van-checkbox 
+              value="{{item.selected}}"
+              bind:change="onSelectItem"
+              data-cart-id="{{item.id}}"
+              checked-color="#ff6d00"
+            />
+          </view>
+
+          <!-- 商品信息 -->
+          <view 
+            class="item-content"
+            bindtap="onProductTap"
+            data-product-id="{{item.product.id}}"
+          >
+            <!-- 商品图片 -->
+            <view class="item-image">
+              <image 
+                src="{{item.product.images && item.product.images.length > 0 ? item.product.images[0].url : '/assets/images/default-product.png'}}" 
+                mode="aspectFill"
+              />
+              <!-- 商品标签 -->
+              <view wx:if="{{item.product.is_hot}}" class="product-tag hot-tag">热</view>
+              <view wx:if="{{item.product.is_new}}" class="product-tag new-tag">新</view>
+            </view>
+
+            <!-- 商品详情 -->
+            <view class="item-info">
+              <view class="product-name">{{item.product.name}}</view>
+              <view class="product-spec" wx:if="{{item.product.specification}}">
+                {{item.product.specification}}
+              </view>
+              <view class="product-category" wx:if="{{item.product.category}}">
+                <van-tag size="mini" type="primary">{{item.product.category.name}}</van-tag>
+              </view>
+              
+              <!-- 价格和数量 -->
+              <view class="price-quantity">
+                <view class="price-section">
+                  <text class="current-price">¥{{item.formattedPrice}}</text>
+                  <text 
+                    wx:if="{{item.product.origin_price && item.product.origin_price > item.product.price}}" 
+                    class="origin-price"
+                  >
+                    ¥{{item.formattedOriginPrice}}
+                  </text>
+                </view>
+                
+                <!-- 数量控制 -->
+                <view class="quantity-section" catchtap="onStopPropagation">
+                  <van-stepper 
+                    value="{{item.quantity}}"
+                    min="1"
+                    max="999"
+                    bind:change="onQuantityChangeStepper"
+                    data-cart-id="{{item.id}}"
+                    button-size="24"
+                    input-width="40"
+                  />
+                </view>
+              </view>
+            </view>
+          </view>
+
+          <!-- 删除按钮 -->
+          <view wx:if="{{editMode}}" class="item-delete">
+            <van-button 
+              size="small" 
+              type="danger" 
+              icon="delete-o"
+              bind:click="onDeleteItem"
+              data-cart-id="{{item.id}}"
+            >
+              删除
+            </van-button>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view wx:if="{{cartItems.length === 0 && !loading}}" class="empty-cart">
+      <van-empty 
+        image="https://img.yzcdn.cn/vant/empty-image-default.png"
+        description="购物车空空如也"
+      >
+        <van-button 
+          type="primary" 
+          size="small" 
+          bind:click="onGoShopping"
+        >
+          去逛逛
+        </van-button>
+      </van-empty>
+    </view>
+
+    <!-- 底部操作栏 -->
+    <view wx:if="{{cartItems.length > 0}}" class="bottom-bar">
+      <view class="bar-content">
+        <!-- 全选 -->
+        <view class="select-all">
+          <van-checkbox 
+            value="{{isAllSelected}}"
+            bind:change="onSelectAll"
+            checked-color="#ff6d00"
+          >
+            全选
+          </van-checkbox>
+        </view>
+
+        <!-- 编辑模式下的操作 -->
+        <view wx:if="{{editMode}}" class="edit-actions">
+          <van-button 
+            size="small" 
+            type="danger"
+            bind:click="onBatchDelete"
+            disabled="{{selectedItemsCount === 0}}"
+          >
+            删除选中({{selectedItemsCount}})
+          </van-button>
+        </view>
+
+        <!-- 正常模式下的价格和购买 -->
+        <view wx:else class="normal-actions">
+          <view class="price-info">
+            <view class="total-info">
+              <text class="total-label">合计：</text>
+              <text class="total-price">¥{{formattedTotalPrice}}</text>
+            </view>
+            <view wx:if="{{discountAmount > 0}}" class="discount-info">
+              <text class="discount-text">已优惠 ¥{{formattedDiscountAmount}}</text>
+            </view>
+          </view>
+          
+          <van-button 
+            class="buy-button"
+            type="primary" 
+            size="large"
+            bind:click="onBuyNow"
+            disabled="{{selectedItemsCount === 0}}"
+          >
+            立即购买({{selectedCount}})
+          </van-button>
+        </view>
+      </view>
+    </view>
+  </block>
+</view>
+
+<!-- 用户底部导航栏 -->
+<custom-tabbar />

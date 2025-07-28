@@ -1,0 +1,12 @@
+{
+  "navigationBarTitleText": "店铺设置",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "van-icon": "@vant/weapp/icon/index",
+    "van-switch": "@vant/weapp/switch/index",
+    "van-popup": "@vant/weapp/popup/index",
+    "van-field": "@vant/weapp/field/index",
+    "van-button": "@vant/weapp/button/index",
+    "merchant-tabbar": "../../../components/merchant-tabbar/merchant-tabbar"
+  }
+} 

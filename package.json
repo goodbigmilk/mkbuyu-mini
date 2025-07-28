@@ -1,0 +1,23 @@
+{
+  "name": "mkbuyu-miniprogram",
+  "version": "1.0.0",
+  "description": "名酷布语商城小程序",
+  "main": "app.js",
+  "scripts": {
+    "dev": "npm run build:npm",
+    "build:npm": "echo 'Please use WeChat DevTools to build npm packages'"
+  },
+  "dependencies": {
+    "@vant/weapp": "^1.11.7",
+    "mobx-miniprogram": "^4.13.2",
+    "mobx-miniprogram-bindings": "^1.2.1",
+    "vant": "^4.9.21"
+  },
+  "keywords": [
+    "miniprogram",
+    "wechat",
+    "ecommerce"
+  ],
+  "author": "",
+  "license": "ISC"
+}

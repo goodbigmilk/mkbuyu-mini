@@ -1,0 +1,199 @@
+<view class="container">
+  <!-- 商品图片上传 -->
+  <view class="section-card">
+    <view class="section-title">商品图片</view>
+    <view class="upload-section">
+      <van-uploader
+        file-list="{{fileList}}"
+        bind:after-read="afterRead"
+        bind:delete="deleteImage"
+        max-count="9"
+        multiple
+        upload-text="添加图片"
+        preview-size="160rpx"
+      />
+      <view class="upload-tip">最多上传9张图片，第一张为主图</view>
+    </view>
+  </view>
+
+  <!-- 基本信息 -->
+  <view class="section-card">
+    <view class="section-title">基本信息</view>
+    <van-cell-group>
+      <van-field
+        value="{{formData.name}}"
+        label="商品名称"
+        placeholder="请输入商品名称"
+        bind:change="onFieldChange"
+        data-field="name"
+        required
+        clearable
+      />
+      <van-field
+        value="{{formData.sub_title}}"
+        label="商品副标题"
+        placeholder="简短描述商品特色"
+        bind:change="onFieldChange"
+        data-field="sub_title"
+        clearable
+      />
+      <van-cell 
+        label="商品分类"
+        value="{{selectedCategory ? selectedCategory.name : '请选择分类'}}"
+        is-link
+        readonly
+        bind:click="selectParentCategory"
+        required
+      />
+      <van-field
+        value="{{formData.keywords}}"
+        label="关键词"
+        placeholder="多个关键词用逗号分隔"
+        bind:change="onFieldChange"
+        data-field="keywords"
+        clearable
+      />
+    </van-cell-group>
+  </view>
+
+  <!-- 价格与库存 -->
+  <view class="section-card">
+    <view class="section-title">价格与库存</view>
+    <van-cell-group>
+      <van-field
+        value="{{formData.price}}"
+        label="销售价格"
+        placeholder="0.00"
+        type="digit"
+        bind:change="onFieldChange"
+        data-field="price"
+        required
+      >
+        <text slot="button" class="price-unit">元</text>
+      </van-field>
+      <van-cell title="库存数量">
+        <van-stepper 
+          value="{{formData.stock}}" 
+          min="0"
+          bind:change="onStockChange"
+        />
+      </van-cell>
+      <van-field
+        value="{{formData.weight}}"
+        label="商品重量"
+        placeholder="0.00"
+        type="digit"
+        bind:change="onFieldChange"
+        data-field="weight"
+      >
+        <text slot="button" class="weight-unit">kg</text>
+      </van-field>
+    </van-cell-group>
+  </view>
+
+  <!-- 商品描述 -->
+  <view class="section-card">
+    <view class="section-title">商品描述</view>
+    <van-cell-group>
+      <van-field
+        value="{{formData.description}}"
+        type="textarea"
+        placeholder="详细描述商品信息、特色、使用方法等"
+        autosize
+        bind:change="onFieldChange"
+        data-field="description"
+        maxlength="1000"
+        show-word-limit
+      />
+    </van-cell-group>
+  </view>
+
+  <!-- 商品属性 -->
+  <view class="section-card">
+    <view class="section-title">商品属性</view>
+    <van-cell-group>
+      <van-cell title="热门商品">
+        <van-switch 
+          checked="{{formData.is_hot}}" 
+          bind:change="onSwitchChange"
+          data-field="is_hot"
+        />
+      </van-cell>
+      <van-cell title="新品推荐">
+        <van-switch 
+          checked="{{formData.is_new}}" 
+          bind:change="onSwitchChange"
+          data-field="is_new"
+        />
+      </van-cell>
+      <van-cell title="推荐商品">
+        <van-switch 
+          checked="{{formData.is_recommend}}" 
+          bind:change="onSwitchChange"
+          data-field="is_recommend"
+        />
+      </van-cell>
+      <van-field
+        value="{{formData.sort}}"
+        label="排序权重"
+        placeholder="数值越大越靠前"
+        type="number"
+        bind:change="onFieldChange"
+        data-field="sort"
+      />
+    </van-cell-group>
+  </view>
+
+  <!-- 底部操作栏 -->
+  <view class="footer-actions">
+    <van-button 
+      type="default" 
+      size="large"
+      bindtap="onPreview"
+      disabled="{{!formData.name}}"
+    >
+      预览
+    </van-button>
+    <van-button 
+      type="primary" 
+      size="large"
+      bindtap="onSave"
+      loading="{{saving}}"
+      disabled="{{!canSave}}"
+    >
+      {{isEdit ? '更新商品' : '创建商品'}}
+    </van-button>
+  </view>
+
+  <!-- 分类选择弹窗（备用，暂时保留） -->
+  <van-popup 
+    show="{{showCategoryPicker}}" 
+    position="bottom"
+    bind:close="closeCategoryPicker"
+  >
+    <view class="category-picker">
+      <view class="picker-header">
+        <text class="picker-cancel" bindtap="closeCategoryPicker">取消</text>
+        <text class="picker-title">选择分类</text>
+        <text class="picker-confirm" bindtap="confirmCategory">确定</text>
+      </view>
+      <scroll-view class="category-list" scroll-y>
+        <view 
+          wx:for="{{categories}}" 
+          wx:key="id"
+          class="category-item {{selectedCategoryId === item.id ? 'selected' : ''}}"
+          bindtap="onCategorySelect"
+          data-category="{{item}}"
+        >
+          <text class="category-name">{{item.displayName || item.name}}</text>
+          <van-icon wx:if="{{selectedCategoryId === item.id}}" name="checked" color="#1989fa" />
+        </view>
+      </scroll-view>
+    </view>
+  </van-popup>
+
+  <!-- 加载遮罩 -->
+  <van-loading wx:if="{{loading}}" class="loading-overlay" size="24px">
+    加载中...
+  </van-loading>
+</view> 

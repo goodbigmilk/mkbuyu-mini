@@ -1,0 +1,10 @@
+{
+  "navigationBarTitleText": "注册",
+  "enablePullDownRefresh": false,
+  "usingComponents": {
+    "van-field": "@vant/weapp/field/index",
+    "van-button": "@vant/weapp/button/index",
+    "van-icon": "@vant/weapp/icon/index",
+    "van-checkbox": "@vant/weapp/checkbox/index"
+  }
+} 

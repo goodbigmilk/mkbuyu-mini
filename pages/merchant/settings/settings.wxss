@@ -1,0 +1,255 @@
+page {
+  background-color: #f8f9fa;
+  padding-bottom: 120rpx;
+}
+
+.container {
+  min-height: 100vh;
+}
+
+/* 个人资料区域 */
+.profile-section {
+  margin-bottom: 20rpx;
+}
+
+.shop-card {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  background: #fff;
+  padding: 32rpx;
+  margin: 20rpx;
+  border-radius: 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+}
+
+.shop-avatar {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 12rpx;
+  background: #f5f5f5;
+}
+
+.shop-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.shop-name {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #323233;
+  margin-bottom: 8rpx;
+}
+
+.shop-desc {
+  font-size: 26rpx;
+  color: #646566;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+/* 数据概览 */
+.stats-overview {
+  display: flex;
+  align-items: center;
+  gap: 40rpx;
+  background: #fff;
+  padding: 32rpx;
+  margin: 0 20rpx 20rpx;
+  border-radius: 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+}
+
+.stats-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.stats-value {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #1989fa;
+}
+
+.stats-label {
+  font-size: 24rpx;
+  color: #646566;
+}
+
+.view-more-btn {
+  margin-left: auto;
+}
+
+/* 菜单组 */
+.menu-group {
+  margin-bottom: 20rpx;
+}
+
+.group-title {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #646566;
+  padding: 24rpx 32rpx 16rpx;
+}
+
+.menu-list {
+  background: #fff;
+  margin: 0 20rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  padding: 32rpx;
+  border-bottom: 1rpx solid #f0f1f2;
+  transition: background-color 0.3s;
+}
+
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.menu-item:active {
+  background-color: #f8f9fa;
+}
+
+.item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72rpx;
+  height: 72rpx;
+  background: #f0f1f2;
+  border-radius: 12rpx;
+  color: #1989fa;
+}
+
+.item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.item-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 500;
+  color: #323233;
+  margin-bottom: 4rpx;
+}
+
+.item-desc {
+  font-size: 24rpx;
+  color: #969799;
+}
+
+/* 操作按钮区域 */
+.action-section {
+  margin: 40rpx 20rpx 20rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.action-btn {
+  width: 100% !important;
+  border-radius: 16rpx !important;
+  height: 88rpx !important;
+  font-size: 30rpx !important;
+}
+
+/* 版本信息 */
+.version-section {
+  text-align: center;
+  padding: 40rpx 32rpx;
+  color: #969799;
+}
+
+.version-text {
+  font-size: 24rpx;
+  margin-bottom: 20rpx;
+  display: block;
+}
+
+.footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 40rpx;
+  flex-wrap: wrap;
+}
+
+.footer-link {
+  font-size: 24rpx;
+  color: #1989fa;
+  text-decoration: underline;
+}
+
+/* 底部间距 */
+.bottom-space {
+  height: calc(100rpx + env(safe-area-inset-bottom));
+}
+
+/* 响应式设计 */
+@media (max-width: 375px) {
+  .shop-card {
+    padding: 24rpx;
+    margin: 16rpx;
+  }
+  
+  .shop-avatar {
+    width: 80rpx;
+    height: 80rpx;
+  }
+  
+  .shop-name {
+    font-size: 28rpx;
+  }
+  
+  .stats-overview {
+    padding: 24rpx;
+    margin: 0 16rpx 16rpx;
+    gap: 24rpx;
+  }
+  
+  .stats-value {
+    font-size: 30rpx;
+  }
+  
+  .menu-item {
+    padding: 24rpx;
+  }
+  
+  .item-icon {
+    width: 60rpx;
+    height: 60rpx;
+  }
+  
+  .item-title {
+    font-size: 28rpx;
+  }
+}
+
+/* 动画效果 */
+.menu-group {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+} 

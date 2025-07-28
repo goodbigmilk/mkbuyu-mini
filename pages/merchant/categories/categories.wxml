@@ -1,0 +1,596 @@
+<view class="categories-page">
+  <!-- 顶部搜索和筛选 -->
+  <view class="header">
+    <view class="search-section">
+      <van-search
+        model:value="{{keyword}}"
+        placeholder="搜索分类名称"
+        bind:search="onSearch"
+        bind:clear="onSearch"
+        use-action-slot
+      >
+        <view slot="action" bindtap="onSearch">搜索</view>
+      </van-search>
+    </view>
+
+    <!-- 筛选和视图控制 -->
+    <view class="filter-section">
+      <van-dropdown-menu>
+        <van-dropdown-item
+          value="{{status}}"
+          options="{{[{text: '全部状态', value: 0}, {text: '显示', value: 1}, {text: '隐藏', value: 2}]}}"
+          bind:change="onStatusChange"
+        />
+      </van-dropdown-menu>
+      
+      <!-- 视图控制按钮 -->
+      <view class="view-controls">
+        <van-button 
+          size="mini" 
+          type="{{viewMode === 'tree' ? 'primary' : 'default'}}" 
+          plain
+          bindtap="switchViewMode"
+        >
+          {{viewMode === 'tree' ? '树形' : '列表'}}
+        </van-button>
+        <van-button 
+          wx:if="{{viewMode === 'tree'}}"
+          size="mini" 
+          type="info" 
+          plain
+          bindtap="expandAll"
+        >
+          展开
+        </van-button>
+        <van-button 
+          wx:if="{{viewMode === 'tree'}}"
+          size="mini" 
+          type="warning" 
+          plain
+          bindtap="collapseAll"
+        >
+          收起
+        </van-button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 分类列表 - 树形展示 -->
+  <view wx:if="{{viewMode === 'tree'}}" class="category-tree">
+    <view wx:if="{{categoryTree.length === 0 && !loading}}" class="empty-state">
+      <van-empty description="暂无分类" />
+      <van-button 
+        type="primary" 
+        size="small" 
+        bindtap="showAddForm"
+        custom-class="empty-add-btn"
+      >
+        添加分类
+      </van-button>
+    </view>
+
+    <view wx:else class="category-container">
+      <view wx:for="{{categoryTree}}" wx:key="id" class="tree-node">
+        <!-- 一级分类 -->
+        <view class="category-item level-{{item.level || 1}}">
+          <view class="category-content">
+            <!-- 展开/收起按钮 -->
+            <view 
+              wx:if="{{item.children && item.children.length > 0}}"
+              class="expand-btn"
+              catchtap="toggleCategory" 
+              data-category-id="{{item.id}}"
+            >
+              <van-icon 
+                name="{{expandedMap[item.id] ? 'arrow-down' : 'arrow'}}" 
+                size="14" 
+                color="#969799" 
+              />
+            </view>
+            <view wx:else class="expand-placeholder"></view>
+
+            <!-- 分类信息 -->
+            <view class="category-info">
+              <view class="category-header">
+                <!-- 可编辑的分类名称 -->
+                <view wx:if="{{editingCategoryId === item.id}}" class="editing-name">
+                  <input
+                    value="{{editingName}}"
+                    placeholder="请输入分类名称"
+                    bindinput="onEditingNameInput"
+                    bindconfirm="saveEditingName"
+                    bindblur="saveEditingName"
+                    focus="{{true}}"
+                    maxlength="50"
+                    class="edit-input"
+                  />
+                  <view class="edit-actions">
+                    <van-icon name="success" size="20" color="#1989fa" bindtap="saveEditingName" />
+                    <van-icon name="cross" size="20" color="#ee0a24" bindtap="cancelEditing" />
+                  </view>
+                </view>
+                <view wx:else class="category-name-wrapper">
+                  <text 
+                    class="category-name editable-name" 
+                    data-category="{{item}}"
+                    bindtap="startEditing"
+                  >
+                    {{item.name}}
+                  </text>
+                  <van-icon name="edit" size="16" color="#999" class="edit-icon" />
+                </view>
+                
+                <view class="category-badges">
+                  <van-tag 
+                    size="mini" 
+                    type="{{item.status === 1 ? 'primary' : 'default'}}"
+                  >
+                    {{item.status === 1 ? '显示' : '隐藏'}}
+                  </van-tag>
+                  <van-tag size="mini" type="default">{{item.level || 1}}级</van-tag>
+                  <van-tag 
+                    wx:if="{{item.children && item.children.length > 0}}"
+                    size="mini" 
+                    type="info"
+                  >
+                    {{item.children.length}}个子类
+                  </van-tag>
+                </view>
+              </view>
+              
+              <view wx:if="{{item.description}}" class="category-desc">
+                {{item.description}}
+              </view>
+              
+              <view class="category-meta">
+                <text class="meta-item">排序: {{item.sort}}</text>
+                <text wx:if="{{item.created_at}}" class="meta-item">创建: {{item.created_at}}</text>
+              </view>
+            </view>
+
+            <!-- 只保留删除按钮 -->
+            <view class="category-actions">
+              <van-button 
+                size="mini" 
+                type="danger"
+                plain
+                data-category="{{item}}"
+                catchtap="deleteCategory"
+              >
+                删除
+              </van-button>
+            </view>
+          </view>
+        </view>
+
+        <!-- 子分类 -->
+        <view wx:if="{{expandedMap[item.id] && item.children && item.children.length > 0}}">
+          <view wx:for="{{item.children}}" wx:for-item="child" wx:key="id">
+            <view class="category-item level-2">
+              <view class="category-content">
+                <!-- 层级缩进 -->
+                <view class="level-indent" style="width: 40rpx;"></view>
+                
+                <!-- 展开/收起按钮 -->
+                <view 
+                  wx:if="{{child.children && child.children.length > 0}}"
+                  class="expand-btn"
+                  catchtap="toggleCategory" 
+                  data-category-id="{{child.id}}"
+                >
+                  <van-icon 
+                    name="{{expandedMap[child.id] ? 'arrow-down' : 'arrow'}}" 
+                    size="14" 
+                    color="#969799" 
+                  />
+                </view>
+                <view wx:else class="expand-placeholder"></view>
+
+                <!-- 分类信息 -->
+                <view class="category-info">
+                  <view class="category-header">
+                    <!-- 可编辑的分类名称 -->
+                    <view wx:if="{{editingCategoryId === child.id}}" class="editing-name">
+                      <input
+                        value="{{editingName}}"
+                        placeholder="请输入分类名称"
+                        bindinput="onEditingNameInput"
+                        bindconfirm="saveEditingName"
+                        bindblur="saveEditingName"
+                        focus="{{true}}"
+                        maxlength="50"
+                        class="edit-input"
+                      />
+                      <view class="edit-actions">
+                        <van-icon name="success" size="20" color="#1989fa" bindtap="saveEditingName" />
+                        <van-icon name="cross" size="20" color="#ee0a24" bindtap="cancelEditing" />
+                      </view>
+                    </view>
+                    <view wx:else class="category-name-wrapper">
+                      <text 
+                        class="category-name editable-name" 
+                        data-category="{{child}}"
+                        bindtap="startEditing"
+                      >
+                        {{child.name}}
+                      </text>
+                      <van-icon name="edit" size="16" color="#999" class="edit-icon" />
+                    </view>
+                    
+                    <view class="category-badges">
+                      <van-tag 
+                        size="mini" 
+                        type="{{child.status === 1 ? 'primary' : 'default'}}"
+                      >
+                        {{child.status === 1 ? '显示' : '隐藏'}}
+                      </van-tag>
+                      <van-tag size="mini" type="default">{{child.level || 2}}级</van-tag>
+                      <van-tag 
+                        wx:if="{{child.children && child.children.length > 0}}"
+                        size="mini" 
+                        type="info"
+                      >
+                        {{child.children.length}}个子类
+                      </van-tag>
+                    </view>
+                  </view>
+                  
+                  <view wx:if="{{child.description}}" class="category-desc">
+                    {{child.description}}
+                  </view>
+                  
+                  <view class="category-meta">
+                    <text class="meta-item">排序: {{child.sort}}</text>
+                    <text wx:if="{{child.created_at}}" class="meta-item">创建: {{child.created_at}}</text>
+                  </view>
+                </view>
+
+                <!-- 只保留删除按钮 -->
+                <view class="category-actions">
+                  <van-button 
+                    size="mini" 
+                    type="danger"
+                    plain
+                    data-category="{{child}}"
+                    catchtap="deleteCategory"
+                  >
+                    删除
+                  </van-button>
+                </view>
+              </view>
+            </view>
+
+            <!-- 三级分类 -->
+            <view wx:if="{{expandedMap[child.id] && child.children && child.children.length > 0}}">
+              <view wx:for="{{child.children}}" wx:for-item="grandchild" wx:key="id">
+                <view class="category-item level-3">
+                  <view class="category-content">
+                    <!-- 层级缩进 -->
+                    <view class="level-indent" style="width: 80rpx;"></view>
+                    
+                    <view class="expand-placeholder"></view>
+
+                    <!-- 分类信息 -->
+                    <view class="category-info">
+                      <view class="category-header">
+                        <!-- 可编辑的分类名称 -->
+                        <view wx:if="{{editingCategoryId === grandchild.id}}" class="editing-name">
+                          <input
+                            value="{{editingName}}"
+                            placeholder="请输入分类名称"
+                            bindinput="onEditingNameInput"
+                            bindconfirm="saveEditingName"
+                            bindblur="saveEditingName"
+                            focus="{{true}}"
+                            maxlength="50"
+                            class="edit-input"
+                          />
+                          <view class="edit-actions">
+                            <van-icon name="success" size="20" color="#1989fa" bindtap="saveEditingName" />
+                            <van-icon name="cross" size="20" color="#ee0a24" bindtap="cancelEditing" />
+                          </view>
+                        </view>
+                        <view wx:else class="category-name-wrapper">
+                          <text 
+                            class="category-name editable-name" 
+                            data-category="{{grandchild}}"
+                            bindtap="startEditing"
+                          >
+                            {{grandchild.name}}
+                          </text>
+                          <van-icon name="edit" size="16" color="#999" class="edit-icon" />
+                        </view>
+                        
+                        <view class="category-badges">
+                          <van-tag 
+                            size="mini" 
+                            type="{{grandchild.status === 1 ? 'primary' : 'default'}}"
+                          >
+                            {{grandchild.status === 1 ? '显示' : '隐藏'}}
+                          </van-tag>
+                          <van-tag size="mini" type="default">{{grandchild.level || 3}}级</van-tag>
+                        </view>
+                      </view>
+                      
+                      <view wx:if="{{grandchild.description}}" class="category-desc">
+                        {{grandchild.description}}
+                      </view>
+                      
+                      <view class="category-meta">
+                        <text class="meta-item">排序: {{grandchild.sort}}</text>
+                        <text wx:if="{{grandchild.created_at}}" class="meta-item">创建: {{grandchild.created_at}}</text>
+                      </view>
+                    </view>
+
+                    <!-- 只保留删除按钮 -->
+                    <view class="category-actions">
+                      <van-button 
+                        size="mini" 
+                        type="danger"
+                        plain
+                        data-category="{{grandchild}}"
+                        catchtap="deleteCategory"
+                      >
+                        删除
+                      </van-button>
+                    </view>
+                  </view>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 分类列表 - 传统列表展示（保留原有功能） -->
+  <view wx:else class="category-list">
+    <view wx:if="{{categories.length === 0 && !loading}}" class="empty-state">
+      <van-empty description="暂无分类" />
+      <van-button 
+        type="primary" 
+        size="small" 
+        bindtap="showAddForm"
+        custom-class="empty-add-btn"
+      >
+        添加分类
+      </van-button>
+    </view>
+
+    <view wx:else>
+      <view 
+        wx:for="{{categories}}" 
+        wx:key="id"
+        class="category-item"
+        data-category="{{item}}"
+        bindtap="viewDetail"
+      >
+        <view class="item-content">
+          <!-- 分类信息 -->
+          <view class="category-info">
+            <view class="category-header">
+              <!-- 可编辑的分类名称 -->
+              <view wx:if="{{editingCategoryId === item.id}}" class="editing-name">
+                <input
+                  value="{{editingName}}"
+                  placeholder="请输入分类名称"
+                  bindinput="onEditingNameInput"
+                  bindconfirm="saveEditingName"
+                  bindblur="saveEditingName"
+                  focus="{{true}}"
+                  maxlength="50"
+                  class="edit-input"
+                />
+                <view class="edit-actions">
+                  <van-icon name="success" size="20" color="#1989fa" bindtap="saveEditingName" />
+                  <van-icon name="cross" size="20" color="#ee0a24" bindtap="cancelEditing" />
+                </view>
+              </view>
+              <view wx:else class="category-name-wrapper">
+                <text 
+                  class="category-name editable-name" 
+                  data-category="{{item}}"
+                  bindtap="startEditing"
+                  catchtap="true"
+                >
+                  {{item.name}}
+                </text>
+                <van-icon name="edit" size="16" color="#999" class="edit-icon" />
+              </view>
+              
+              <view class="category-badges">
+                <van-tag 
+                  wx:if="{{item.level > 1}}"
+                  size="mini" 
+                  type="default"
+                >
+                  {{item.level}}级
+                </van-tag>
+                <van-tag 
+                  size="mini" 
+                  type="{{item.status === 1 ? 'primary' : 'default'}}"
+                >
+                  {{item.status === 1 ? '显示' : '隐藏'}}
+                </van-tag>
+              </view>
+            </view>
+            
+            <view wx:if="{{item.description}}" class="category-desc">
+              {{item.description}}
+            </view>
+            
+            <view class="category-meta">
+              <text class="meta-item">排序: {{item.sort}}</text>
+              <text class="meta-item">创建时间: {{item.created_at}}</text>
+            </view>
+          </view>
+
+          <!-- 只保留删除按钮 -->
+          <view class="category-actions">
+            <van-button 
+              size="mini" 
+              type="danger"
+              plain
+              data-category="{{item}}"
+              catchtap="deleteCategory"
+            >
+              删除
+            </van-button>
+          </view>
+        </view>
+      </view>
+
+      <!-- 加载更多 -->
+      <view wx:if="{{hasMore && categories.length > 0}}" class="load-more">
+        <van-loading wx:if="{{loading}}" size="24px">加载中...</van-loading>
+        <text wx:else class="load-more-text">上拉加载更多</text>
+      </view>
+
+      <view wx:if="{{!hasMore && categories.length > 0}}" class="no-more">
+        <text class="no-more-text">没有更多数据了</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 悬浮添加按钮 -->
+  <view class="fab-button" bindtap="showAddForm">
+    <van-icon name="plus" size="24" color="#fff" />
+  </view>
+
+  <!-- 新增/编辑分类表单弹窗 -->
+  <van-popup
+    show="{{showForm}}"
+    position="bottom"
+    custom-style="height: 70%"
+    bind:close="cancelForm"
+  >
+    <view class="form-popup">
+      <view class="form-header">
+        <text class="form-title">{{isEdit ? '编辑分类' : '新增分类'}}</text>
+        <van-icon 
+          name="cross" 
+          size="18" 
+          bindtap="cancelForm"
+          custom-class="close-btn"
+        />
+      </view>
+
+      <scroll-view scroll-y class="form-content">
+        <van-cell-group>
+          <!-- 父分类选择 - 新版本 -->
+          <van-field
+            label="父分类"
+            value="{{selectedParentCategory ? selectedParentCategory.name : '无父分类'}}"
+            placeholder="点击选择父分类"
+            readonly
+            is-link
+            bind:click-input="selectParentCategory"
+          >
+            <view slot="right-icon" class="parent-category-info">
+              <van-tag 
+                wx:if="{{selectedParentCategory}}"
+                size="mini" 
+                type="primary"
+              >
+                {{selectedParentCategory.level}}级
+              </van-tag>
+            </view>
+          </van-field>
+
+          <!-- 分类名称 -->
+          <van-field
+            label="分类名称"
+            value="{{formData.name}}"
+            placeholder="请输入分类名称"
+            required
+            data-field="name"
+            bind:input="onFormInput"
+            bind:change="onFormInput"
+            maxlength="50"
+            show-word-limit
+          />
+
+          <!-- 排序 -->
+          <van-field
+            label="排序"
+            value="{{formData.sort}}"
+            placeholder="请输入排序值"
+            type="number"
+            data-field="sort"
+            bind:input="onNumberInput"
+          />
+
+          <!-- 状态 -->
+          <van-field
+            label="状态"
+            value="{{formData.status === 1 ? '显示' : '隐藏'}}"
+            placeholder="选择状态"
+            readonly
+            is-link
+          >
+            <picker
+              slot="input"
+              range="{{['显示', '隐藏']}}"
+              value="{{formData.status - 1}}"
+              bind:change="onStatusPickerChange"
+            >
+              <view class="picker-input">{{formData.status === 1 ? '显示' : '隐藏'}}</view>
+            </picker>
+          </van-field>
+
+          <!-- 描述 -->
+          <van-field
+            label="描述"
+            value="{{formData.description}}"
+            placeholder="请输入分类描述（可选）"
+            type="textarea"
+            autosize
+            maxlength="255"
+            show-word-limit
+            data-field="description"
+            bind:input="onFormInput"
+          />
+        </van-cell-group>
+      </scroll-view>
+
+      <!-- 表单按钮 -->
+      <view class="form-actions">
+        <van-button 
+          block 
+          type="primary" 
+          bindtap="submitForm"
+        >
+          {{isEdit ? '更新分类' : '创建分类'}}
+        </van-button>
+      </view>
+    </view>
+  </van-popup>
+
+  <!-- 父分类选择器（旧版本兼容，已隐藏） -->
+  <van-action-sheet
+    show="{{showParentPicker}}"
+    title="选择父分类"
+    bind:close="onParentPickerClose"
+    wx:if="{{false}}"
+  >
+    <view class="parent-picker">
+      <view 
+        class="picker-item {{parentIndex === 0 ? 'selected' : ''}}"
+        data-index="0"
+        bindtap="onParentPickerChange"
+      >
+        无父分类
+      </view>
+      <view 
+        wx:for="{{parentCategories}}" 
+        wx:key="id"
+        class="picker-item {{parentIndex === index + 1 ? 'selected' : ''}}"
+        data-index="{{index + 1}}"
+        bindtap="onParentPickerChange"
+      >
+        {{item.name}}
+      </view>
+    </view>
+  </van-action-sheet>
+</view> 

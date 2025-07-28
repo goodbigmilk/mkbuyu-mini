@@ -1,0 +1,62 @@
+// 格式化价格（分转元，保留两位小数）
+function formatPrice(price) {
+  if (price === null || price === undefined) {
+    return '0.00';
+  }
+  var yuan = price / 100;
+  return yuan.toFixed(2);
+}
+
+// 格式化时间
+function formatTime(timestamp) {
+  if (!timestamp) {
+    return '';
+  }
+  
+  var date = getDate(timestamp);
+  var now = getDate();
+  var diff = now.getTime() - date.getTime();
+  
+  // 一分钟内
+  if (diff < 60000) {
+    return '刚刚';
+  }
+  
+  // 一小时内
+  if (diff < 3600000) {
+    var minutes = Math.floor(diff / 60000);
+    return minutes + '分钟前';
+  }
+  
+  // 一天内
+  if (diff < 86400000) {
+    var hours = Math.floor(diff / 3600000);
+    return hours + '小时前';
+  }
+  
+  // 一周内
+  if (diff < 604800000) {
+    var days = Math.floor(diff / 86400000);
+    return days + '天前';
+  }
+  
+  // 超过一周，显示具体日期
+  var year = date.getFullYear();
+  var month = date.getMonth() + 1;
+  var day = date.getDate();
+  
+  month = month < 10 ? '0' + month : month;
+  day = day < 10 ? '0' + day : day;
+  
+  var currentYear = now.getFullYear();
+  if (year === currentYear) {
+    return month + '-' + day;
+  } else {
+    return year + '-' + month + '-' + day;
+  }
+}
+
+module.exports = {
+  formatPrice: formatPrice,
+  formatTime: formatTime
+}; 

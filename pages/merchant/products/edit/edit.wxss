@@ -1,0 +1,283 @@
+/* pages/merchant/products/edit/edit.wxss */
+.container {
+  min-height: 100vh;
+  background-color: #f7f8fa;
+  padding-bottom: 200rpx;
+}
+
+/* 卡片区域 */
+.section-card {
+  background: white;
+  margin-bottom: 20rpx;
+  border-radius: 12rpx;
+  overflow: hidden;
+}
+
+.section-title {
+  padding: 30rpx 30rpx 20rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #323233;
+  border-bottom: 1rpx solid #ebedf0;
+}
+
+/* 图片上传区域 */
+.upload-section {
+  padding: 20rpx 30rpx 30rpx;
+}
+
+.upload-tip {
+  margin-top: 20rpx;
+  font-size: 26rpx;
+  color: #969799;
+  line-height: 1.4;
+}
+
+/* 表单样式优化 */
+.van-cell-group {
+  border-radius: 0 !important;
+}
+
+.van-field__label {
+  font-weight: 500 !important;
+}
+
+/* 价格和重量单位 */
+.price-unit,
+.weight-unit {
+  color: #646566;
+  font-size: 28rpx;
+  margin-left: 10rpx;
+}
+
+/* 底部操作栏 */
+.footer-actions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  padding: 20rpx 30rpx;
+  display: flex;
+  gap: 20rpx;
+  box-shadow: 0 -2rpx 12rpx rgba(50, 50, 51, 0.06);
+  z-index: 100;
+}
+
+.footer-actions .van-button {
+  flex: 1;
+  height: 88rpx !important;
+  border-radius: 44rpx !important;
+  font-size: 32rpx !important;
+  font-weight: 500 !important;
+}
+
+/* 分类选择弹窗 */
+.category-picker {
+  background: white;
+  border-radius: 20rpx 20rpx 0 0;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 30rpx;
+  border-bottom: 1rpx solid #ebedf0;
+  flex-shrink: 0;
+}
+
+.picker-cancel,
+.picker-confirm {
+  font-size: 32rpx;
+  color: #1989fa;
+  padding: 10rpx;
+}
+
+.picker-cancel {
+  color: #646566;
+}
+
+.picker-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #323233;
+}
+
+.category-list {
+  flex: 1;
+  padding: 20rpx 0;
+}
+
+.category-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 25rpx 30rpx;
+  border-bottom: 1rpx solid #f7f8fa;
+}
+
+.category-item:last-child {
+  border-bottom: none;
+}
+
+.category-item.selected {
+  background-color: #f0f9ff;
+}
+
+.category-name {
+  font-size: 30rpx;
+  color: #323233;
+}
+
+.category-item.selected .category-name {
+  color: #1989fa;
+  font-weight: 500;
+}
+
+/* 加载遮罩 */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  color: white;
+  font-size: 28rpx;
+}
+
+/* 优化van-uploader样式 */
+.van-uploader__upload {
+  border: 2rpx dashed #dcdee0 !important;
+  border-radius: 12rpx !important;
+  background-color: #fafafa !important;
+}
+
+.van-uploader__upload:active {
+  border-color: #1989fa !important;
+  background-color: #f0f9ff !important;
+}
+
+.van-uploader__upload-text {
+  color: #646566 !important;
+  font-size: 26rpx !important;
+}
+
+.van-uploader__preview-image {
+  border-radius: 12rpx !important;
+}
+
+/* 表单项间距优化 */
+.van-cell {
+  padding: 24rpx 30rpx !important;
+}
+
+.van-field__control {
+  font-size: 30rpx !important;
+}
+
+.van-field__label {
+  font-size: 30rpx !important;
+  min-width: 140rpx !important;
+}
+
+/* 开关样式优化 */
+.van-switch {
+  transform: scale(0.9);
+}
+
+/* 步进器样式优化 */
+.van-stepper {
+  font-size: 30rpx !important;
+}
+
+/* 响应式适配 */
+@media screen and (max-width: 375px) {
+  .section-title {
+    font-size: 30rpx;
+    padding: 25rpx 25rpx 15rpx;
+  }
+  
+  .upload-section {
+    padding: 15rpx 25rpx 25rpx;
+  }
+  
+  .footer-actions {
+    padding: 15rpx 25rpx;
+    gap: 15rpx;
+  }
+  
+  .footer-actions .van-button {
+    height: 80rpx !important;
+    font-size: 30rpx !important;
+  }
+}
+
+/* 动画效果 */
+.section-card {
+  animation: slideInUp 0.3s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 聚焦状态优化 */
+.van-field--focused .van-field__control {
+  color: #323233 !important;
+}
+
+/* 必填字段标识 */
+.van-cell--required .van-field__label::before {
+  content: '*';
+  color: #ee0a24;
+  margin-right: 8rpx;
+  font-weight: bold;
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .container {
+    background-color: #1a1a1a;
+  }
+  
+  .section-card,
+  .footer-actions,
+  .category-picker {
+    background-color: #2d2d2d;
+  }
+  
+  .section-title,
+  .picker-title,
+  .category-name {
+    color: #ffffff;
+  }
+  
+  .upload-tip {
+    color: #999999;
+  }
+  
+  .van-uploader__upload {
+    background-color: #404040 !important;
+    border-color: #555555 !important;
+  }
+  
+  .van-uploader__upload-text {
+    color: #cccccc !important;
+  }
+} 

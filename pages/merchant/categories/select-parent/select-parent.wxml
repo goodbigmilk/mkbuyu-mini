@@ -1,0 +1,152 @@
+<view class="select-parent-page">
+  <!-- 加载状态 -->
+  <van-loading wx:if="{{loading}}" vertical>
+    正在加载分类...
+  </van-loading>
+
+  <view wx:else class="category-container">
+    <!-- 无父分类选项 -->
+    <view class="category-item no-parent-item" bindtap="selectNoParent">
+      <view class="category-content">
+        <van-icon name="home-o" size="20" color="white" />
+        <view class="category-info">
+          <text class="category-name">无父分类</text>
+          <text class="category-desc">设置为顶级分类</text>
+        </view>
+        <van-icon name="arrow" size="16" color="white" />
+      </view>
+    </view>
+
+    <!-- 分类列表 -->
+    <view wx:if="{{categoryTree.length > 0}}" class="category-list">
+      <view wx:for="{{categoryTree}}" wx:key="id" class="tree-node">
+        <!-- 一级分类 -->
+        <view 
+          class="category-item level-1 {{item.id === currentCategoryId ? 'disabled' : ''}}"
+          data-category="{{item}}"
+        >
+          <view class="category-content">
+            <!-- 展开/收起按钮 -->
+            <view 
+              wx:if="{{item.children && item.children.length > 0}}"
+              class="expand-btn"
+              catchtap="toggleCategory" 
+              data-category-id="{{item.id}}"
+            >
+              <van-icon 
+                name="{{expandedMap[item.id] ? 'arrow-down' : 'arrow'}}" 
+                size="14" 
+                color="#969799" 
+              />
+            </view>
+            <view wx:else class="expand-placeholder"></view>
+
+            <!-- 分类信息 -->
+            <view class="category-info" bindtap="selectCategory" data-category="{{item}}">
+              <text class="category-name">{{item.name}}</text>
+              <view wx:if="{{item.children && item.children.length > 0}}" class="category-meta">
+                <van-tag size="mini" type="default">
+                  {{item.children.length}}个子分类
+                </van-tag>
+              </view>
+            </view>
+
+            <!-- 不可选择提示 -->
+            <view wx:if="{{item.id === currentCategoryId}}" class="disabled-hint">
+              <text class="hint-text">当前分类</text>
+            </view>
+            <van-icon wx:elif="{{item.id !== currentCategoryId}}" name="arrow" size="16" color="#c8c9cc" />
+          </view>
+        </view>
+
+        <!-- 子分类 -->
+        <view wx:if="{{expandedMap[item.id] && item.children && item.children.length > 0}}">
+          <view wx:for="{{item.children}}" wx:for-item="child" wx:key="id">
+            <view 
+              class="category-item level-2 {{child.id === currentCategoryId ? 'disabled' : ''}}"
+              data-category="{{child}}"
+            >
+              <view class="category-content">
+                <!-- 层级缩进 -->
+                <view class="level-indent" style="width: 40rpx;"></view>
+                
+                <!-- 展开/收起按钮 -->
+                <view 
+                  wx:if="{{child.children && child.children.length > 0}}"
+                  class="expand-btn"
+                  catchtap="toggleCategory" 
+                  data-category-id="{{child.id}}"
+                >
+                  <van-icon 
+                    name="{{expandedMap[child.id] ? 'arrow-down' : 'arrow'}}" 
+                    size="14" 
+                    color="#969799" 
+                  />
+                </view>
+                <view wx:else class="expand-placeholder"></view>
+
+                <!-- 分类信息 -->
+                <view class="category-info" bindtap="selectCategory" data-category="{{child}}">
+                  <text class="category-name">{{child.name}}</text>
+                  <view wx:if="{{child.children && child.children.length > 0}}" class="category-meta">
+                    <van-tag size="mini" type="default">
+                      {{child.children.length}}个子分类
+                    </van-tag>
+                  </view>
+                </view>
+
+                <!-- 不可选择提示 -->
+                <view wx:if="{{child.id === currentCategoryId}}" class="disabled-hint">
+                  <text class="hint-text">当前分类</text>
+                </view>
+                <van-icon wx:elif="{{child.id !== currentCategoryId}}" name="arrow" size="16" color="#c8c9cc" />
+              </view>
+            </view>
+
+            <!-- 三级分类 -->
+            <view wx:if="{{expandedMap[child.id] && child.children && child.children.length > 0}}">
+              <view wx:for="{{child.children}}" wx:for-item="grandchild" wx:key="id">
+                <view 
+                  class="category-item level-3 {{grandchild.id === currentCategoryId ? 'disabled' : ''}}"
+                  data-category="{{grandchild}}"
+                >
+                  <view class="category-content">
+                    <!-- 层级缩进 -->
+                    <view class="level-indent" style="width: 80rpx;"></view>
+                    
+                    <view class="expand-placeholder"></view>
+
+                    <!-- 分类信息 -->
+                    <view class="category-info" bindtap="selectCategory" data-category="{{grandchild}}">
+                      <text class="category-name">{{grandchild.name}}</text>
+                    </view>
+
+                    <!-- 不可选择提示 -->
+                    <view wx:if="{{grandchild.id === currentCategoryId}}" class="disabled-hint">
+                      <text class="hint-text">当前分类</text>
+                    </view>
+                    <van-icon wx:elif="{{grandchild.id !== currentCategoryId}}" name="arrow" size="16" color="#c8c9cc" />
+                  </view>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view wx:if="{{categoryTree.length === 0}}" class="empty-state">
+      <van-empty description="暂无分类数据" image="search" />
+      <text class="empty-hint">请先在分类管理中创建一些分类</text>
+      <van-button 
+        type="primary" 
+        size="small" 
+        style="margin-top: 30rpx;"
+        bindtap="goToCategoryManage"
+      >
+        去管理分类
+      </van-button>
+    </view>
+  </view>
+</view> 

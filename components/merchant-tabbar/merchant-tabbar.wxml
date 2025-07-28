@@ -1,0 +1,16 @@
+<van-tabbar 
+  active="{{ current }}" 
+  bind:change="onChange"
+  active-color="#1989fa"
+  inactive-color="#7A7E83"
+  class="merchant-tabbar"
+>
+  <van-tabbar-item 
+    wx:for="{{ list }}" 
+    wx:key="index"
+    icon="{{ current === index ? item.activeIcon : item.icon }}"
+    icon-prefix="van-icon"
+  >
+    {{ item.text }}
+  </van-tabbar-item>
+</van-tabbar> 

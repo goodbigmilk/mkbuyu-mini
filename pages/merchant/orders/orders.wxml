@@ -1,0 +1,181 @@
+<view class="container">
+  <!-- 搜索栏 -->
+  <view class="search-section">
+    <van-search 
+      value="{{searchKeyword}}" 
+      placeholder="搜索订单号/商品名称"
+      bind:search="onSearch"
+      bind:change="onSearchChange"
+    />
+  </view>
+
+  <!-- 状态标签页 -->
+  <view class="tab-section">
+    <scroll-view class="tab-scroll" scroll-x>
+      <view 
+        wx:for="{{tabs}}" 
+        wx:key="key"
+        class="tab-item {{activeTab === item.key ? 'active' : ''}}"
+        data-key="{{item.key}}"
+        bindtap="onTabChange"
+      >
+        <text class="tab-text">{{item.title}}</text>
+        <view wx:if="{{item.count > 0}}" class="tab-badge">{{item.count}}</view>
+      </view>
+    </scroll-view>
+    <view class="tab-actions">
+      <van-icon 
+        name="{{isEditing ? 'checked' : 'edit'}}" 
+        size="18" 
+        color="{{isEditing ? '#1989fa' : '#969799'}}"
+        bindtap="onToggleEdit"
+      />
+    </view>
+  </view>
+
+  <!-- 批量操作栏 -->
+  <view wx:if="{{isEditing}}" class="batch-section">
+    <view class="batch-left">
+      <text class="selected-count">已选择 {{selectedOrders.length}} 个订单</text>
+    </view>
+    <view class="batch-actions">
+      <van-button 
+        size="small" 
+        type="primary"
+        bindtap="onBatchAction"
+        data-action="ship"
+        disabled="{{selectedOrders.length === 0}}"
+      >
+        批量发货
+      </van-button>
+      <van-button 
+        size="small" 
+        type="default"
+        bindtap="onBatchAction"
+        data-action="complete"
+        disabled="{{selectedOrders.length === 0}}"
+      >
+        批量完成
+      </van-button>
+    </view>
+  </view>
+
+  <!-- 订单列表 -->
+  <view wx:if="{{orderList.length}}" class="order-list">
+    <view wx:for="{{orderList}}" wx:key="id" class="order-item">
+      <!-- 选择框 -->
+      <view wx:if="{{isEditing}}" class="item-checkbox">
+        <van-checkbox 
+          value="{{selectedOrders.indexOf(item.id) !== -1}}" 
+          data-order-id="{{item.id}}"
+          bind:change="onOrderSelect"
+        />
+      </view>
+
+      <!-- 订单卡片 -->
+      <view class="order-card" bindtap="onOrderTap" data-order="{{item}}">
+        <!-- 订单头部 -->
+        <view class="order-header">
+          <view class="order-info">
+            <text class="order-number">{{item.order_no}}</text>
+            <text class="order-time">{{formatTime(item.created_at)}}</text>
+          </view>
+          <view class="order-status" style="color: {{getStatusColor(item.status)}}">
+            {{getStatusText(item.status)}}
+          </view>
+        </view>
+
+        <!-- 买家信息 -->
+        <view class="buyer-info">
+          <image class="buyer-avatar" src="{{item.user_avatar || '/assets/images/default-avatar.png'}}" />
+          <view class="buyer-details">
+            <text class="buyer-name">{{item.user_name}}</text>
+            <text class="buyer-phone">{{item.phone}}</text>
+          </view>
+        </view>
+
+        <!-- 商品信息 -->
+        <view class="product-section">
+          <view wx:for="{{item.products}}" wx:for-item="product" wx:key="id" class="product-item">
+            <image class="product-image" src="{{product.image}}" />
+            <view class="product-info">
+              <text class="product-name">{{product.name}}</text>
+              <view class="product-details">
+                <text class="product-price">¥{{formatPrice(product.price)}}</text>
+                <text class="product-qty">x{{product.quantity}}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <!-- 订单金额 -->
+        <view class="order-total">
+          <text class="total-label">订单金额：</text>
+          <text class="total-amount">¥{{formatPrice(item.total_amount)}}</text>
+        </view>
+
+        <!-- 收货信息 -->
+        <view wx:if="{{item.receiver_name}}" class="order-address">
+          <van-icon name="contact" size="14" />
+          <text class="address-text">
+            {{item.receiver_name}} {{item.receiver_phone}}
+          </text>
+        </view>
+      </view>
+
+      <!-- 订单操作 -->
+      <view class="order-actions">
+        <van-button 
+          wx:if="{{item.status === 'paid'}}"
+          size="small" 
+          type="primary"
+          bindtap="onUpdateOrderStatus" 
+          data-order="{{item}}"
+          data-status="shipped"
+        >
+          发货
+        </van-button>
+        
+        <van-button 
+          wx:if="{{item.status === 'shipped'}}"
+          size="small" 
+          type="info"
+          bindtap="onViewExpress" 
+          data-order="{{item}}"
+        >
+          查看物流
+        </van-button>
+
+        <van-button 
+          size="small" 
+          type="default"
+          bindtap="onContactBuyer" 
+          data-order="{{item}}"
+        >
+          联系买家
+        </van-button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view wx:elif="{{!loading}}" class="empty-section">
+    <van-empty description="暂无订单数据" />
+  </view>
+
+  <!-- 加载状态 -->
+  <view wx:if="{{loading}}" class="loading-section">
+    <van-loading type="spinner" size="24">加载中...</van-loading>
+  </view>
+
+  <!-- 到底提示 -->
+  <view wx:if="{{!hasMore && orderList.length > 0}}" class="no-more">
+    <text>已经到底了~</text>
+  </view>
+
+  <!-- 底部间距 -->
+  <view class="bottom-space"></view>
+
+  <!-- 商家端TabBar -->
+  <merchant-tabbar current="{{tabbarCurrent}}" />
+</view> 

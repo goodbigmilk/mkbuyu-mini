@@ -1,0 +1,411 @@
+/* pages/user/cart/cart.wxss */
+
+/* 页面容器 */
+.container {
+  background-color: #f8f8f8;
+  min-height: 100vh;
+  padding-bottom: 200rpx;
+}
+
+/* 加载状态 */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 400rpx;
+}
+
+/* 顶部工具栏 */
+.header-toolbar {
+  background: #fff;
+  padding: 20rpx 30rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #ebedf0;
+  margin-bottom: 20rpx;
+}
+
+.toolbar-left .cart-count {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #323233;
+}
+
+/* 失效商品区域 */
+.invalid-section {
+  background: #fff;
+  margin-bottom: 20rpx;
+}
+
+.invalid-header {
+  padding: 24rpx 30rpx;
+  display: flex;
+  align-items: center;
+  background: #fff2e8;
+  border-left: 6rpx solid #ff6d00;
+}
+
+.invalid-text {
+  flex: 1;
+  margin-left: 12rpx;
+  font-size: 28rpx;
+  color: #ff6d00;
+  font-weight: 500;
+}
+
+.invalid-list {
+  padding: 0 30rpx 24rpx;
+}
+
+.invalid-item {
+  opacity: 0.6;
+  position: relative;
+}
+
+.invalid-mask {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  padding: 8rpx 16rpx;
+  border-radius: 8rpx;
+  font-size: 24rpx;
+}
+
+/* 购物车区域 */
+.cart-section {
+  background: #fff;
+  margin-bottom: 20rpx;
+}
+
+.cart-list {
+  padding: 0;
+}
+
+/* 购物车商品项 */
+.cart-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 30rpx;
+  border-bottom: 1px solid #ebedf0;
+  background: #fff;
+  position: relative;
+}
+
+.cart-item:last-child {
+  border-bottom: none;
+}
+
+/* 选择框 */
+.item-select {
+  margin-right: 20rpx;
+  padding-top: 10rpx;
+}
+
+/* 商品内容区域 */
+.item-content {
+  flex: 1;
+  display: flex;
+  min-width: 0;
+}
+
+/* 商品图片 */
+.item-image {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 12rpx;
+  overflow: hidden;
+  margin-right: 20rpx;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.item-image image {
+  width: 100%;
+  height: 100%;
+  border-radius: 12rpx;
+}
+
+/* 商品标签 */
+.product-tag {
+  position: absolute;
+  top: 8rpx;
+  right: 8rpx;
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20rpx;
+  color: #fff;
+  font-weight: bold;
+}
+
+.hot-tag {
+  background: #ff6d00;
+}
+
+.new-tag {
+  background: #4caf50;
+}
+
+/* 商品信息 */
+.item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.product-name {
+  font-size: 30rpx;
+  color: #323233;
+  line-height: 1.4;
+  margin-bottom: 12rpx;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  word-break: break-all;
+}
+
+.product-spec {
+  font-size: 24rpx;
+  color: #969799;
+  margin-bottom: 16rpx;
+  background: #f5f5f5;
+  padding: 8rpx 12rpx;
+  border-radius: 6rpx;
+  display: inline-block;
+}
+
+.product-category {
+  margin-bottom: 16rpx;
+}
+
+/* 价格和数量区域 */
+.price-quantity {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-top: auto;
+}
+
+.price-section {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.current-price {
+  font-size: 32rpx;
+  color: #ff6d00;
+  font-weight: 600;
+  margin-right: 12rpx;
+}
+
+.origin-price {
+  font-size: 24rpx;
+  color: #969799;
+  text-decoration: line-through;
+}
+
+.quantity-section {
+  flex-shrink: 0;
+}
+
+/* 删除按钮 */
+.item-delete {
+  margin-left: 20rpx;
+  display: flex;
+  align-items: center;
+}
+
+/* 空状态 */
+.empty-cart {
+  background: #fff;
+  padding: 100rpx 60rpx;
+  text-align: center;
+  margin-top: 100rpx;
+  border-radius: 20rpx;
+  margin: 100rpx 30rpx 0;
+}
+
+/* 底部操作栏 */
+.bottom-bar {
+  position: fixed;
+  bottom: 150rpx;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-top: 1px solid #ebedf0;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+.bar-content {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 30rpx;
+  min-height: 80rpx;
+}
+
+/* 全选区域 */
+.select-all {
+  margin-right: auto;
+}
+
+/* 编辑模式操作 */
+.edit-actions {
+  margin-left: auto;
+}
+
+/* 正常模式操作 */
+.normal-actions {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.price-info {
+  margin-right: 30rpx;
+  text-align: right;
+}
+
+.total-info {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  margin-bottom: 4rpx;
+}
+
+.total-label {
+  font-size: 28rpx;
+  color: #323233;
+}
+
+.total-price {
+  font-size: 36rpx;
+  color: #ff6d00;
+  font-weight: 600;
+  margin-left: 8rpx;
+}
+
+.discount-info {
+  font-size: 22rpx;
+  color: #969799;
+}
+
+.discount-text {
+  font-size: 22rpx;
+  color: #4caf50;
+}
+
+/* 购买按钮 */
+.buy-button {
+  min-width: 200rpx !important;
+  border-radius: 50rpx !important;
+  font-weight: 500 !important;
+}
+
+/* 响应式设计 */
+@media (max-width: 375px) {
+  .item-image {
+    width: 140rpx;
+    height: 140rpx;
+  }
+  
+  .product-name {
+    font-size: 28rpx;
+  }
+  
+  .current-price {
+    font-size: 30rpx;
+  }
+}
+
+/* 自定义stepper样式 */
+.quantity-section .van-stepper {
+  border-radius: 8rpx;
+}
+
+.quantity-section .van-stepper__input {
+  background-color: #f8f8f8;
+  border: 1px solid #ebedf0;
+  color: #323233;
+  font-size: 26rpx;
+}
+
+.quantity-section .van-stepper__button {
+  background-color: #f8f8f8;
+  border: 1px solid #ebedf0;
+  color: #969799;
+}
+
+.quantity-section .van-stepper__button:active {
+  background-color: #ebedf0;
+}
+
+.quantity-section .van-stepper__button--minus {
+  border-top-left-radius: 8rpx;
+  border-bottom-left-radius: 8rpx;
+}
+
+.quantity-section .van-stepper__button--plus {
+  border-top-right-radius: 8rpx;
+  border-bottom-right-radius: 8rpx;
+}
+
+/* 自定义checkbox样式 */
+.van-checkbox__icon--checked {
+  background-color: #ff6d00 !important;
+  border-color: #ff6d00 !important;
+}
+
+.van-checkbox__icon--checked .van-icon {
+  color: #fff !important;
+}
+
+/* 动画效果 */
+.cart-item {
+  transition: all 0.3s ease;
+}
+
+.cart-item:hover {
+  transform: translateX(8rpx);
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.1);
+}
+
+/* 加载动画 */
+.loading {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 列表项进入动画 */
+.cart-item {
+  animation: slideInUp 0.3s ease forwards;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+} 

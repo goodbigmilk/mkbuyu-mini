@@ -1,0 +1,591 @@
+/* pages/common/order-detail/order-detail.wxss */
+.order-detail-page {
+  background-color: #f5f5f5;
+  min-height: 100vh;
+  padding-bottom: 120rpx;
+}
+
+/* 加载状态 */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 60vh;
+  color: #999;
+  font-size: 28rpx;
+}
+
+/* 卡片通用样式 */
+.order-status-card,
+.logistics-card,
+.address-card,
+.shop-card,
+.product-card,
+.order-info-card,
+.amount-card {
+  background-color: #fff;
+  margin: 20rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+/* 订单状态卡片 */
+.order-status-card {
+  padding: 40rpx;
+  text-align: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+}
+
+.status-icon {
+  margin-bottom: 20rpx;
+}
+
+.status-text {
+  font-size: 36rpx;
+  font-weight: bold;
+}
+
+.status-desc {
+  font-size: 26rpx;
+  opacity: 0.9;
+}
+
+/* 物流信息卡片 */
+.logistics-card {
+  padding: 32rpx;
+}
+
+.logistics-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logistics-info .logistics-company {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.logistics-info .logistics-no {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.logistics-arrow {
+  font-size: 24rpx;
+  color: #ccc;
+}
+
+.logistics-time {
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  color: #999;
+}
+
+/* 收货地址卡片 */
+.address-card {
+  padding: 32rpx;
+}
+
+.address-header .address-title {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+  margin-bottom: 20rpx;
+  display: block;
+}
+
+.address-line1 {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+
+.receiver-name {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.receiver-phone {
+  font-size: 28rpx;
+  color: #666;
+}
+
+.receiver-address {
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.4;
+}
+
+/* 店铺信息卡片 */
+.shop-card {
+  padding: 24rpx 32rpx;
+}
+
+.shop-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.shop-name {
+  font-size: 28rpx;
+  color: #333;
+}
+
+.shop-arrow {
+  font-size: 24rpx;
+  color: #ccc;
+}
+
+/* 商品信息卡片 */
+.product-card .product-header {
+  padding: 24rpx 32rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.product-title {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.product-list {
+  padding: 0 32rpx;
+}
+
+.product-item {
+  display: flex;
+  padding: 32rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.product-item:last-child {
+  border-bottom: none;
+}
+
+.product-image {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 12rpx;
+  margin-right: 24rpx;
+  background-color: #f0f0f0;
+}
+
+.product-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.product-name {
+  font-size: 28rpx;
+  color: #333;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.product-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16rpx;
+}
+
+.product-price {
+  font-size: 28rpx;
+  color: #ff4444;
+  font-weight: 500;
+}
+
+.product-quantity {
+  font-size: 24rpx;
+  color: #999;
+}
+
+/* 订单信息卡片 */
+.order-info-card .order-info-header {
+  padding: 24rpx 32rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.order-info-title {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.order-info-list {
+  padding: 0 32rpx;
+}
+
+.order-info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid #f9f9f9;
+}
+
+.order-info-item:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  font-size: 26rpx;
+  color: #666;
+  flex-shrink: 0;
+  width: 160rpx;
+}
+
+.info-value-wrapper {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.info-value {
+  font-size: 26rpx;
+  color: #333;
+  text-align: right;
+}
+
+.copy-btn {
+  font-size: 24rpx;
+  color: #007aff;
+  margin-left: 16rpx;
+  padding: 4rpx 12rpx;
+  border: 1rpx solid #007aff;
+  border-radius: 12rpx;
+}
+
+/* 金额明细卡片 */
+.amount-card .amount-header {
+  padding: 24rpx 32rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.amount-title {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.amount-list {
+  padding: 0 32rpx;
+}
+
+.amount-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #f9f9f9;
+}
+
+.amount-item:last-child {
+  border-bottom: none;
+}
+
+.amount-item.total {
+  padding-top: 24rpx;
+  margin-top: 12rpx;
+  border-top: 1rpx solid #e5e5e5;
+}
+
+.amount-label {
+  font-size: 26rpx;
+  color: #666;
+}
+
+.amount-item.total .amount-label {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.amount-value {
+  font-size: 26rpx;
+  color: #333;
+}
+
+.amount-value.discount {
+  color: #ff4444;
+}
+
+.amount-item.total .amount-value {
+  font-size: 32rpx;
+  color: #ff4444;
+  font-weight: bold;
+}
+
+/* 订单不存在 */
+.order-not-found {
+  text-align: center;
+  padding: 120rpx 40rpx;
+  color: #999;
+  font-size: 28rpx;
+}
+
+/* 底部操作栏 */
+.bottom-actions {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: #fff;
+  border-top: 1rpx solid #e5e5e5;
+  padding: 20rpx;
+  box-shadow: 0 -2rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 20rpx;
+}
+
+.action-btn {
+  border-radius: 40rpx;
+  font-size: 26rpx !important;
+  padding: 0 40rpx !important;
+  height: 72rpx !important;
+  line-height: 72rpx !important;
+  border: 1rpx solid #ddd !important;
+  background-color: #fff !important;
+  color: #666 !important;
+}
+
+.action-btn.cancel-btn {
+  border-color: #ddd !important;
+  color: #666 !important;
+}
+
+.action-btn.pay-btn {
+  border-color: #ff4444 !important;
+  background-color: #ff4444 !important;
+  color: #fff !important;
+}
+
+.action-btn.confirm-btn {
+  border-color: #007aff !important;
+  background-color: #007aff !important;
+  color: #fff !important;
+}
+
+.action-btn.service-btn {
+  border-color: #4caf50 !important;
+  color: #4caf50 !important;
+}
+
+.action-btn.ship-btn {
+  border-color: #ff9800 !important;
+  background-color: #ff9800 !important;
+  color: #fff !important;
+}
+
+.action-btn.logistics-btn {
+  border-color: #607d8b !important;
+  color: #607d8b !important;
+}
+
+/* 支付方式弹窗 */
+.payment-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+}
+
+.payment-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.payment-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: #fff;
+  border-radius: 24rpx 24rpx 0 0;
+  padding: 40rpx;
+}
+
+.payment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40rpx;
+}
+
+.payment-title {
+  font-size: 32rpx;
+  color: #333;
+  font-weight: bold;
+}
+
+.payment-close {
+  font-size: 48rpx;
+  color: #999;
+  line-height: 1;
+}
+
+.payment-amount {
+  text-align: center;
+  margin-bottom: 40rpx;
+}
+
+.payment-amount-label {
+  font-size: 28rpx;
+  color: #666;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.payment-amount-value {
+  font-size: 48rpx;
+  color: #ff4444;
+  font-weight: bold;
+}
+
+.payment-methods {
+  margin-bottom: 40rpx;
+}
+
+.payment-method {
+  display: flex;
+  align-items: center;
+  padding: 32rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.payment-method:last-child {
+  border-bottom: none;
+}
+
+.payment-method.selected {
+  background-color: #f0f9ff;
+}
+
+.payment-icon {
+  width: 64rpx;
+  height: 64rpx;
+  margin-right: 24rpx;
+  border-radius: 8rpx;
+}
+
+.payment-name {
+  flex: 1;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.payment-radio {
+  font-size: 32rpx;
+  color: #ddd;
+}
+
+.payment-radio.checked {
+  color: #007aff;
+}
+
+.payment-confirm-btn {
+  background-color: #007aff;
+  color: #fff;
+  border-radius: 40rpx;
+  height: 88rpx;
+  line-height: 88rpx;
+  font-size: 32rpx;
+  font-weight: bold;
+}
+
+/* 物流信息弹窗 */
+.logistics-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+}
+
+.logistics-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.logistics-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  max-width: 600rpx;
+  background-color: #fff;
+  border-radius: 16rpx;
+  padding: 40rpx;
+}
+
+.logistics-content .logistics-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32rpx;
+}
+
+.logistics-title {
+  font-size: 32rpx;
+  color: #333;
+  font-weight: bold;
+}
+
+.logistics-close {
+  font-size: 48rpx;
+  color: #999;
+  line-height: 1;
+}
+
+.logistics-detail .logistics-info {
+  margin-bottom: 24rpx;
+}
+
+.logistics-detail .logistics-company {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.logistics-detail .logistics-no {
+  font-size: 26rpx;
+  color: #666;
+}
+
+.logistics-status {
+  font-size: 26rpx;
+  color: #999;
+  line-height: 1.6;
+} 

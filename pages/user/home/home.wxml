@@ -1,0 +1,165 @@
+<!--pages/user/home/home.wxml-->
+<view class="container">
+  <!-- 搜索栏 -->
+  <view class="search-section">
+    <van-search 
+      value="{{searchKeyword}}" 
+      placeholder="搜索商品名称或关键词"
+      bind:search="onSearch"
+      bind:change="onSearchChange"
+      bind:clear="onSearchClear"
+      show-action="{{searchKeyword}}"
+      action-text="搜索"
+      bind:action="onSearch"
+    />
+  </view>
+
+  <!-- 轮播图 -->
+  <view wx:if="{{banners.length > 0}}" class="banner-section">
+    <swiper 
+      indicator-dots="true" 
+      autoplay="true" 
+      interval="3000" 
+      duration="500"
+      indicator-color="rgba(255,255,255,0.5)"
+      indicator-active-color="#fff"
+      class="banner-swiper"
+    >
+      <swiper-item 
+        wx:for="{{banners}}" 
+        wx:key="id"
+        bindtap="onBannerTap"
+        data-banner="{{item}}"
+      >
+        <image src="{{item.image_url}}" mode="aspectFill" class="banner-image" />
+      </swiper-item>
+    </swiper>
+  </view>
+
+  <!-- 分类快捷入口 -->
+  <view wx:if="{{categories.length > 0}}" class="category-section">
+    <scroll-view scroll-x="true" class="category-scroll">
+      <view class="category-list">
+        <view 
+          wx:for="{{categories}}" 
+          wx:key="id"
+          class="category-item"
+          bindtap="onCategoryTap"
+          data-category="{{item}}"
+        >
+          <image wx:if="{{item.icon}}" src="{{item.icon}}" class="category-icon" />
+          <view wx:else class="category-icon-placeholder">
+            <van-icon name="bag" size="20px" />
+          </view>
+          <text class="category-name">{{item.name}}</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 筛选和排序 -->
+  <view class="filter-section">
+    <van-dropdown-menu active-color="#ee0a24">
+      <van-dropdown-item 
+        value="{{categoryFilter}}" 
+        options="{{categoryOptions}}"
+        bind:change="onCategoryFilterChange"
+      />      
+      <van-dropdown-item 
+        value="{{priceFilter}}" 
+        options="{{priceOptions}}"
+        bind:change="onPriceFilterChange"
+      />
+      <van-dropdown-item 
+        value="{{sortType}}" 
+        options="{{sortOptions}}"
+        bind:change="onSortChange"
+      />
+    </van-dropdown-menu>
+  </view>
+
+  <!-- 商品列表 -->
+  <view class="product-section">
+    <view wx:if="{{searchKeyword || categoryFilter > 0}}" class="section-title">
+      <text class="title-text">
+        {{searchKeyword ? '搜索结果' : '商品列表'}}
+        <text wx:if="{{total > 0}}" class="result-count">({{total}}件)</text>
+      </text>
+    </view>
+
+    <view class="product-list">
+      <view 
+        wx:for="{{productList}}" 
+        wx:key="id"
+        class="product-item"
+        bindtap="onProductTap"
+        data-product="{{item}}"
+      >
+        <!-- 商品图片 -->
+        <view class="product-image">
+          <image 
+            src="{{item.images && item.images.length > 0 ? item.images[0].url : '/assets/images/default-product.png'}}" 
+            mode="aspectFill"
+          />
+          <view wx:if="{{item.is_hot}}" class="product-tag hot-tag">热</view>
+          <view wx:if="{{item.is_new}}" class="product-tag new-tag">新</view>
+          <view wx:if="{{item.is_recommend}}" class="product-tag recommend-tag">荐</view>
+        </view>
+
+        <!-- 商品信息 -->
+        <view class="product-info">
+          <view class="product-name">{{item.name}}</view>
+          <view wx:if="{{item.sub_title}}" class="product-subtitle">{{item.sub_title}}</view>
+          
+          <view class="product-category">
+            <van-tag size="mini" type="primary">{{item.category ? item.category.name : '未分类'}}</van-tag>
+            <van-tag wx:if="{{item.is_hot}}" size="mini" color="#ff6d00">热门</van-tag>
+            <van-tag wx:if="{{item.is_new}}" size="mini" color="#4caf50">新品</van-tag>
+            <van-tag wx:if="{{item.is_recommend}}" size="mini" color="#9c27b0">推荐</van-tag>
+          </view>
+
+          <view class="product-price-sales">
+            <text class="product-price">¥{{item.price / 100}}</text>
+            <text class="product-sales">销量 {{item.sales_count || 0}}</text>
+          </view>
+
+          <view class="product-stats">
+            <text class="views">浏览 {{item.view_count || 0}}</text>
+            <text wx:if="{{item.shop}}" class="shop-name">{{item.shop.name}}</text>
+          </view>
+        </view>
+
+        <!-- 加入购物车按钮 -->
+        <view class="product-action" catchtap="onAddToCart" data-product="{{item}}">
+          <van-button size="small" type="primary" icon="shopping-cart-o">
+            加购物车
+          </van-button>
+        </view>
+      </view>
+
+      <!-- 空状态 -->
+      <view wx:if="{{productList.length === 0 && !loading}}" class="empty-state">
+        <van-empty 
+          description="{{searchKeyword ? '没有找到相关商品' : '暂无商品'}}"
+          image="search"
+        />
+      </view>
+
+      <!-- 加载更多 -->
+      <view wx:if="{{hasMore && productList.length > 0}}" class="load-more">
+        <van-loading wx:if="{{loadingMore}}" size="16px">加载中...</van-loading>
+        <view wx:else class="load-more-text" bindtap="loadMore">点击加载更多</view>
+      </view>
+
+      <view wx:if="{{!hasMore && productList.length > 0}}" class="no-more">
+        <text>— 已显示全部商品 —</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <van-loading wx:if="{{loading}}" size="20px" class="loading-center">加载中...</van-loading>
+</view>
+
+<!-- 用户底部导航栏 -->
+<custom-tabbar /> 

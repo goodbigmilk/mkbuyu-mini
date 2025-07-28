@@ -1,0 +1,227 @@
+.container {
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+/* 用户信息卡片 */
+.user-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 40rpx 30rpx;
+  color: white;
+}
+
+.user-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 40rpx;
+}
+
+.user-avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  margin-right: 30rpx;
+  border: 4rpx solid rgba(255, 255, 255, 0.3);
+}
+
+.user-info {
+  flex: 1;
+}
+
+.user-name {
+  font-size: 36rpx;
+  font-weight: bold;
+  margin-bottom: 8rpx;
+}
+
+.user-level {
+  font-size: 24rpx;
+  opacity: 0.8;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 6rpx 16rpx;
+  border-radius: 12rpx;
+  display: inline-block;
+}
+
+.user-actions {
+  opacity: 0.8;
+}
+
+.user-stats {
+  display: flex;
+  justify-content: space-around;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 16rpx;
+  padding: 30rpx 0;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10rpx;
+}
+
+.stat-value {
+  font-size: 32rpx;
+  font-weight: bold;
+  margin-bottom: 8rpx;
+}
+
+.stat-label {
+  font-size: 24rpx;
+  opacity: 0.8;
+}
+
+/* 订单快捷入口 */
+.order-shortcuts {
+  background: white;
+  margin: 20rpx;
+  border-radius: 16rpx;
+  padding: 30rpx;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 30rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.section-more {
+  display: flex;
+  align-items: center;
+  color: #999;
+  font-size: 24rpx;
+}
+
+.shortcuts-grid {
+  display: flex;
+  justify-content: space-around;
+}
+
+.shortcut-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20rpx;
+}
+
+.shortcut-icon {
+  position: relative;
+  width: 80rpx;
+  height: 80rpx;
+  background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16rpx;
+}
+
+.shortcut-badge {
+  position: absolute;
+  top: -8rpx;
+  right: -8rpx;
+  background: #ff4444;
+  color: white;
+  font-size: 20rpx;
+  padding: 4rpx 8rpx;
+  border-radius: 10rpx;
+  min-width: 20rpx;
+  text-align: center;
+  line-height: 1;
+}
+
+.shortcut-label {
+  font-size: 24rpx;
+  color: #333;
+  text-align: center;
+}
+
+/* 功能菜单 */
+.menu-section {
+  margin: 20rpx;
+}
+
+.menu-group {
+  background: white;
+  border-radius: 16rpx;
+  margin-bottom: 20rpx;
+  overflow: hidden;
+}
+
+.menu-title {
+  padding: 30rpx;
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.menu-list {
+  padding: 0 30rpx;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 30rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+  transition: background-color 0.3s ease;
+}
+
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.menu-item:active {
+  background-color: #f8f9fa;
+}
+
+.menu-icon {
+  width: 60rpx;
+  height: 60rpx;
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 24rpx;
+}
+
+.menu-label {
+  flex: 1;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.menu-extra {
+  display: flex;
+  align-items: center;
+  color: #999;
+}
+
+.extra-text {
+  font-size: 24rpx;
+  margin-right: 8rpx;
+}
+
+/* 设置入口 */
+.settings-section {
+  background: white;
+  margin: 20rpx;
+  border-radius: 16rpx;
+  padding: 0 30rpx;
+}
+
+/* 底部间距 */
+.bottom-space {
+  height: calc(100rpx + env(safe-area-inset-bottom));
+} 
