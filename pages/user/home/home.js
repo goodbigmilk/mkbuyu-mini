@@ -6,16 +6,12 @@ Page({
   data: {
     // 搜索相关
     searchKeyword: '',
-    
-    // 轮播图
-    banners: [],
-    
-    // 分类
-    categories: [],
+    searchTimer: null,
     
     // 商品列表
     productList: [],
     total: 0,
+    noShopMessage: '', // 用户未绑定商家时的提示信息
     
     // 分页
     page: 1,
@@ -56,7 +52,7 @@ Page({
     if (options.categoryId) {
       this.setData({ categoryFilter: options.categoryId })
     }
-    
+    console.log("页面初始化，页面初始化，页面初始化，页面初始化，页面初始化，页面初始化，页面初始化")
     this.initPage()
   },
 
@@ -81,13 +77,10 @@ Page({
 
   // 初始化页面
   async initPage() {
-    this.setData({ loading: true })
-    
     try {
       await Promise.all([
-        this.loadBanners(),
         this.loadCategories(),
-        this.loadProductList(true)
+        this.loadProductList()
       ])
     } catch (error) {
       console.error('初始化页面失败:', error)
@@ -111,27 +104,13 @@ Page({
     await this.initPage()
   },
 
-  // 加载轮播图
-  async loadBanners() {
-    try {
-      const res = await productApi.getBanners({ position: 'home' })
-      if (res.code === 200) {
-        // 处理轮播图数据结构
-        const banners = res.data?.items || res.data || []
-        this.setData({ banners: Array.isArray(banners) ? banners : [] })
-      }
-    } catch (error) {
-      console.error('加载轮播图失败:', error)
-    }
-  },
-
   // 加载分类
   async loadCategories() {
     try {
       const res = await productApi.getCategories()
       if (res.code === 200) {
         // 处理分类数据结构 - 兼容不同的返回格式
-        const categoriesData = res.data?.items || res.data || []
+        const categoriesData = (res.data && res.data.items) || res.data || []
         const categories = Array.isArray(categoriesData) ? categoriesData : []
         
         // 构建分类树结构
@@ -161,7 +140,6 @@ Page({
         addCategoryOptions(categoryTree)
         
         this.setData({ 
-          categories: categoryTree.slice(0, 8), // 首页只显示前8个根分类
           categoryOptions,
           rawCategories: categories // 保存原始分类数据
         })
@@ -178,7 +156,7 @@ Page({
     
     // 创建分类映射
     categories.forEach(category => {
-      categoryMap[category.id] = { ...category, children: [] }
+      categoryMap[category.id] = Object.assign({}, category, { children: [] })
     })
     
     // 构建树结构
@@ -202,7 +180,9 @@ Page({
     const currentPage = reset ? 1 : this.data.page
     const setLoadingKey = reset ? 'loading' : 'loadingMore'
     
-    this.setData({ [setLoadingKey]: true })
+    const loadingState = {}
+    loadingState[setLoadingKey] = true
+    this.setData(loadingState)
     
     try {
       // 构建查询参数
@@ -225,7 +205,9 @@ Page({
       
       // 添加价格筛选
       if (this.data.priceFilter) {
-        const [minPrice, maxPrice] = this.data.priceFilter.split('-').map(Number)
+        const priceParts = this.data.priceFilter.split('-').map(Number)
+        const minPrice = priceParts[0]
+        const maxPrice = priceParts[1]
         if (minPrice > 0) params.min_price = minPrice
         if (maxPrice > 0) params.max_price = maxPrice
       }
@@ -245,8 +227,8 @@ Page({
         responseType: typeof res,
         hasData: !!res.data,
         dataType: typeof res.data,
-        itemsType: typeof res.data?.items,
-        isItemsArray: Array.isArray(res.data?.items)
+        itemsType: typeof (res.data && res.data.items),
+        isItemsArray: Array.isArray(res.data && res.data.items)
       })
       
       if (res.code === 200) {
@@ -254,18 +236,20 @@ Page({
         const responseData = res.data || {}
         const newProducts = responseData.items || responseData.list || responseData || []
         const total = responseData.total || 0
+        const message = responseData.message || '' // 获取后端返回的消息（如未绑定商家提示）
         
         // 确保newProducts始终为数组
         const safeNewProducts = Array.isArray(newProducts) ? newProducts : []
         // 确保现有productList也是数组
         const currentProductList = Array.isArray(this.data.productList) ? this.data.productList : []
-        const productList = reset ? safeNewProducts : [...currentProductList, ...safeNewProducts]
+        const productList = reset ? safeNewProducts : currentProductList.concat(safeNewProducts)
         
         this.setData({
           productList,
           total: total,
           page: currentPage + 1,
-          hasMore: safeNewProducts.length >= this.data.pageSize
+          hasMore: safeNewProducts.length >= this.data.pageSize,
+          noShopMessage: message // 设置提示信息
         })
       } else {
         throw new Error(res.message || '加载商品失败')
@@ -277,7 +261,9 @@ Page({
         icon: 'none'
       })
     } finally {
-      this.setData({ [setLoadingKey]: false })
+      const loadingState = {}
+      loadingState[setLoadingKey] = false
+      this.setData(loadingState)
     }
   },
 
@@ -296,18 +282,31 @@ Page({
     this.loadProductList(true)
   },
 
-  onSearchChange(e) {
-    this.setData({ searchKeyword: e.detail })
+  // 搜索输入
+  onSearchInput(e) {
+    this.setData({
+      searchKeyword: e.detail.value
+    })
+    this.performSearch() // 实时搜索
   },
 
-  onSearchClear() {
-    this.setData({ 
-      searchKeyword: '',
-      page: 1,
-      productList: [],
-      hasMore: true
+  // 实时搜索（防抖）
+  performSearch() {
+    if (this.data.searchTimer) {
+      clearTimeout(this.data.searchTimer)
+    }
+
+    this.data.searchTimer = setTimeout(() => {
+      this.onSearch()
+    }, 500) // 500ms 延迟
+  },
+
+  // 清空搜索
+  clearSearch() {
+    this.setData({
+      searchKeyword: ''
     })
-    this.loadProductList(true)
+    this.performSearch() // 清空后重新加载列表
   },
 
   // 筛选功能
@@ -334,43 +333,6 @@ Page({
   onSortChange(e) {
     this.setData({ 
       sortType: e.detail,
-      page: 1,
-      productList: [],
-      hasMore: true
-    })
-    this.loadProductList(true)
-  },
-
-  // 轮播图点击
-  onBannerTap(e) {
-    const banner = e.currentTarget.dataset.banner
-    if (banner.link_type === 'product' && banner.link_value) {
-      // 跳转到商品详情
-      wx.navigateTo({
-        url: `/pages/user/product/detail/detail?id=${banner.link_value}`
-      })
-    } else if (banner.link_type === 'category' && banner.link_value) {
-      // 筛选该分类商品
-      this.setData({ 
-        categoryFilter: banner.link_value,
-        page: 1,
-        productList: [],
-        hasMore: true
-      })
-      this.loadProductList(true)
-    } else if (banner.link_type === 'url' && banner.link_value) {
-      // 跳转到网页
-      wx.navigateTo({
-        url: `/pages/webview/webview?url=${encodeURIComponent(banner.link_value)}`
-      })
-    }
-  },
-
-  // 分类点击
-  onCategoryTap(e) {
-    const category = e.currentTarget.dataset.category
-    this.setData({ 
-      categoryFilter: category.id,
       page: 1,
       productList: [],
       hasMore: true
@@ -442,7 +404,8 @@ Page({
 
   // 分享
   onShareAppMessage() {
-    const { searchKeyword, categoryFilter } = this.data
+    const searchKeyword = this.data.searchKeyword
+    const categoryFilter = this.data.categoryFilter
     let path = '/pages/user/home/home'
     const params = []
     
@@ -455,15 +418,13 @@ Page({
     
     return {
       title: searchKeyword ? `搜索"${searchKeyword}"的商品` : '名酷布语商城',
-      path: path,
-      imageUrl: this.data.banners.length > 0 ? this.data.banners[0].image_url : ''
+      path: path
     }
   },
 
   onShareTimeline() {
     return {
-      title: '名酷布语商城 - 优质商品等你来',
-      imageUrl: this.data.banners.length > 0 ? this.data.banners[0].image_url : ''
+      title: '名酷布语商城 - 优质商品等你来'
     }
-  }
+  },
 }) 

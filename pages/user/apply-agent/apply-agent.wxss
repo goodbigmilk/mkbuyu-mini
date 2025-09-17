@@ -1,0 +1,175 @@
+/* pages/user/apply-agent/apply-agent.wxss */
+.container {
+  min-height: 100vh;
+  background-color: #f8f8f8;
+  padding-bottom: 120rpx;
+}
+
+.section {
+  margin: 20rpx 20rpx 30rpx;
+  background: white;
+  border-radius: 16rpx;
+  overflow: hidden;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #333;
+  padding: 30rpx 30rpx 10rpx;
+}
+
+.section-subtitle {
+  font-size: 24rpx;
+  color: #999;
+  padding: 0 30rpx 20rpx;
+}
+
+/* 申请条件样式 */
+.conditions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+  padding: 0 30rpx 30rpx;
+}
+
+.condition-item {
+  padding: 24rpx;
+  background-color: #f8f9fa;
+  border-radius: 12rpx;
+  border-left: 4rpx solid #4CAF50;
+}
+
+.condition-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.condition-type {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #333;
+}
+
+.condition-desc {
+  font-size: 26rpx;
+  color: #666;
+  margin-bottom: 12rpx;
+}
+
+.condition-progress {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+}
+
+.progress-label {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.progress-value {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: #4CAF50;
+}
+
+/* 申请按钮区域 */
+.action-section {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20rpx 20rpx 40rpx;
+  background: white;
+  box-shadow: 0 -2rpx 8rpx rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+.action-button {
+  width: 100%;
+  border-radius: 50rpx;
+}
+
+.pending-section {
+  text-align: center;
+}
+
+.pending-tip {
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 16rpx;
+  line-height: 1.4;
+}
+
+/* 说明信息 */
+.info-section {
+  margin: 20rpx 20rpx 0;
+  background: white;
+  border-radius: 16rpx;
+  padding: 30rpx;
+}
+
+.info-title {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+
+.info-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.info-item {
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.5;
+  position: relative;
+  padding-left: 16rpx;
+}
+
+.info-item::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: #4CAF50;
+}
+
+/* 加载状态 */
+.loading-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+}
+
+/* 空状态调整 */
+.van-empty {
+  padding: 60rpx 0;
+}
+
+/* 条件满足状态的视觉强化 */
+.condition-item:has(.van-tag--success) {
+  background-color: #f0f9ff;
+  border-left-color: #4CAF50;
+}
+
+/* 响应式调整 */
+@media (max-width: 500px) {
+  .condition-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12rpx;
+  }
+  
+  .condition-progress {
+    justify-content: space-between;
+    width: 100%;
+  }
+}

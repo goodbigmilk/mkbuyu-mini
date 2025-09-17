@@ -1,0 +1,17 @@
+{
+  "usingComponents": {
+    "van-nav-bar": "@vant/weapp/nav-bar/index",
+    "van-button": "@vant/weapp/button/index",
+    "van-tag": "@vant/weapp/tag/index",
+    "van-empty": "@vant/weapp/empty/index",
+    "van-loading": "@vant/weapp/loading/index",
+    "van-dialog": "@vant/weapp/dialog/index",
+    "van-field": "@vant/weapp/field/index",
+    "van-search": "@vant/weapp/search/index",
+    "van-icon": "@vant/weapp/icon/index",
+    "merchant-tabbar": "/components/merchant-tabbar/merchant-tabbar"
+  },
+  "navigationBarTitleText": "分组定价管理",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark"
+}

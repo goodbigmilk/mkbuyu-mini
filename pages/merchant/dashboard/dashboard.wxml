@@ -1,21 +1,22 @@
+<wxs module="utils">
+  // 格式化价格（分转元）
+  function formatPrice(price) {
+    if (!price) return '0.00';
+    return (price / 100).toFixed(2);
+  }
+</wxs>
+
 <view class="container">
   <!-- 顶部欢迎区域 -->
   <view class="welcome-section">
     <view class="welcome-content">
       <view class="shop-info">
-        <image class="shop-avatar" src="{{shopInfo.avatar || '/images/default-shop.png'}}" />
+        <image class="shop-avatar" src="{{shopInfo.logo}}" />
         <view class="shop-details">
           <view class="shop-name">{{shopInfo.name || '我的店铺'}}</view>
-          <view class="shop-status">
-            <text class="status-dot {{shopInfo.status === 'open' ? 'open' : 'closed'}}"></text>
-            <text class="status-text">{{shopInfo.status === 'open' ? '营业中' : '已打烊'}}</text>
-          </view>
         </view>
       </view>
       <view class="quick-actions">
-        <view class="action-btn" bindtap="onToggleShopStatus">
-          <van-icon name="{{shopInfo.status === 'open' ? 'pause-circle-o' : 'play-circle-o'}}" size="20" />
-        </view>
         <view class="action-btn" bindtap="onSettings">
           <van-icon name="setting-o" size="20" />
         </view>
@@ -23,77 +24,7 @@
     </view>
   </view>
 
-  <!-- 今日数据概览 -->
-  <view class="stats-section">
-    <view class="section-title">今日数据</view>
-    <view class="stats-grid">
-      <view class="stat-item" bindtap="onStatTap" data-type="orders">
-        <view class="stat-value">{{todayStats.orderCount || 0}}</view>
-        <view class="stat-label">订单数</view>
-        <view class="stat-change {{todayStats.orderChange >= 0 ? 'positive' : 'negative'}}">
-          <van-icon name="{{todayStats.orderChange >= 0 ? 'arrow-up' : 'arrow-down'}}" size="12" />
-          <text>{{Math.abs(todayStats.orderChange || 0)}}%</text>
-        </view>
-      </view>
-      
-      <view class="stat-item" bindtap="onStatTap" data-type="sales">
-        <view class="stat-value">¥{{formatPrice(todayStats.sales || 0)}}</view>
-        <view class="stat-label">销售额</view>
-        <view class="stat-change {{todayStats.salesChange >= 0 ? 'positive' : 'negative'}}">
-          <van-icon name="{{todayStats.salesChange >= 0 ? 'arrow-up' : 'arrow-down'}}" size="12" />
-          <text>{{Math.abs(todayStats.salesChange || 0)}}%</text>
-        </view>
-      </view>
-      
-      <view class="stat-item" bindtap="onStatTap" data-type="visitors">
-        <view class="stat-value">{{todayStats.visitorCount || 0}}</view>
-        <view class="stat-label">访客数</view>
-        <view class="stat-change {{todayStats.visitorChange >= 0 ? 'positive' : 'negative'}}">
-          <van-icon name="{{todayStats.visitorChange >= 0 ? 'arrow-up' : 'arrow-down'}}" size="12" />
-          <text>{{Math.abs(todayStats.visitorChange || 0)}}%</text>
-        </view>
-      </view>
-      
-      <view class="stat-item" bindtap="onStatTap" data-type="conversion">
-        <view class="stat-value">{{todayStats.conversionRate || 0}}%</view>
-        <view class="stat-label">转化率</view>
-        <view class="stat-change {{todayStats.conversionChange >= 0 ? 'positive' : 'negative'}}">
-          <van-icon name="{{todayStats.conversionChange >= 0 ? 'arrow-up' : 'arrow-down'}}" size="12" />
-          <text>{{Math.abs(todayStats.conversionChange || 0)}}%</text>
-        </view>
-      </view>
-    </view>
-  </view>
 
-  <!-- 销售趋势图 -->
-  <view class="chart-section">
-    <view class="section-header">
-      <view class="section-title">销售趋势</view>
-      <view class="chart-tabs">
-        <text 
-          class="chart-tab {{chartPeriod === 'week' ? 'active' : ''}}" 
-          data-period="week" 
-          bindtap="onChartPeriodChange"
-        >
-          7天
-        </text>
-        <text 
-          class="chart-tab {{chartPeriod === 'month' ? 'active' : ''}}" 
-          data-period="month" 
-          bindtap="onChartPeriodChange"
-        >
-          30天
-        </text>
-      </view>
-    </view>
-    <view class="chart-container">
-      <!-- 这里可以集成图表组件，暂时用简单的展示 -->
-      <view class="chart-placeholder">
-        <text>销售趋势图表</text>
-        <text class="chart-summary">近{{chartPeriod === 'week' ? '7' : '30'}}天销售总额：¥{{formatPrice(chartData.totalSales || 0)}}</text>
-      </view>
-    </view>
-  </view>
 
   <!-- 待处理事务 -->
   <view class="pending-section">
@@ -215,13 +146,14 @@
   <view class="activity-section">
     <view class="section-title">最新动态</view>
     <view wx:if="{{activities.length}}" class="activity-list">
-      <view wx:for="{{activities}}" wx:key="id" class="activity-item">
+      <view wx:for="{{activities}}" wx:key="id" class="activity-item" bindtap="onActivityTap" data-activity="{{item}}">
         <view class="activity-time">{{formatTime(item.created_at)}}</view>
         <view class="activity-content">
           <view class="activity-title">{{item.title}}</view>
           <view class="activity-desc">{{item.description}}</view>
         </view>
         <view class="activity-type {{item.type}}">{{item.type_name}}</view>
+        <van-icon name="arrow" size="16" />
       </view>
     </view>
     <view wx:else class="empty-activity">

@@ -1,0 +1,196 @@
+/* pages/user/customers/customers.wxss */
+.customers-page {
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+/* 顶部统计 */
+.stats-section {
+  padding: 20rpx;
+  background-color: #fff;
+  margin-bottom: 20rpx;
+}
+
+.stats-card {
+  display: flex;
+  justify-content: space-around;
+  padding: 30rpx 20rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20rpx;
+}
+
+.stats-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #fff;
+}
+
+.stats-value {
+  font-size: 48rpx;
+  font-weight: bold;
+  margin-bottom: 10rpx;
+}
+
+.stats-label {
+  font-size: 26rpx;
+  opacity: 0.9;
+}
+
+/* 客户列表 */
+.customer-list {
+  padding: 0 20rpx;
+}
+
+.list-header {
+  padding: 30rpx 0 20rpx 0;
+}
+
+.list-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 100rpx 0;
+}
+
+.loading-text {
+  margin-top: 20rpx;
+  font-size: 28rpx;
+  color: #999;
+}
+
+/* 客户项 */
+.customer-items {
+  margin-bottom: 30rpx;
+}
+
+.customer-item {
+  background-color: #fff;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.customer-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 25rpx;
+}
+
+.customer-avatar {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 50%;
+  margin-right: 25rpx;
+  border: 4rpx solid #f0f0f0;
+}
+
+.customer-details {
+  flex: 1;
+}
+
+.customer-name {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10rpx;
+}
+
+.customer-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.register-time,
+.customer-phone {
+  font-size: 26rpx;
+  color: #666;
+}
+
+/* 客户统计 */
+.customer-stats {
+  display: flex;
+  justify-content: space-around;
+  padding: 20rpx 0;
+  margin-bottom: 25rpx;
+  background-color: #f8f9fa;
+  border-radius: 15rpx;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-value {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 5rpx;
+}
+
+.stat-label {
+  font-size: 24rpx;
+  color: #666;
+}
+
+/* 操作按钮 */
+.customer-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.customer-actions .van-button {
+  border-radius: 25rpx !important;
+}
+
+/* 加载更多和空状态 */
+.loading-more,
+.no-more {
+  text-align: center;
+  padding: 30rpx 0;
+  color: #999;
+  font-size: 26rpx;
+}
+
+.no-more {
+  color: #ccc;
+}
+
+/* 底部间距 */
+.bottom-space {
+  height: 100rpx;
+}
+
+/* 响应式设计 */
+@media screen and (max-width: 750rpx) {
+  .stats-card {
+    padding: 20rpx 10rpx;
+  }
+  
+  .stats-value {
+    font-size: 40rpx;
+  }
+  
+  .stats-label {
+    font-size: 24rpx;
+  }
+  
+  .customer-item {
+    padding: 25rpx;
+  }
+  
+  .customer-avatar {
+    width: 80rpx;
+    height: 80rpx;
+  }
+}

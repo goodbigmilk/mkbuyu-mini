@@ -1,0 +1,11 @@
+{
+  "navigationBarTitleText": "退款详情",
+  "usingComponents": {
+    "van-empty": "@vant/weapp/empty/index",
+    "van-icon": "@vant/weapp/icon/index",
+    "van-loading": "@vant/weapp/loading/index",
+    "van-button": "@vant/weapp/button/index",
+    "van-image": "@vant/weapp/image/index",
+    "van-dialog": "@vant/weapp/dialog/index"
+  }
+}

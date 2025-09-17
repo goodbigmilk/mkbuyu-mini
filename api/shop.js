@@ -15,7 +15,7 @@ const getShopInfo = (shopId) => {
  * @returns {Promise} 我的店铺信息
  */
 const getMyShopInfo = () => {
-  return get('/shop/my')
+  return get('/shop/info')
 }
 
 /**
@@ -39,7 +39,7 @@ const createShop = (data) => {
  * @returns {Promise} 更新结果
  */
 const updateShopInfo = (data) => {
-  return put('/shop/update', data)
+  return put('/shop/info', data)
 }
 
 /**
@@ -108,7 +108,7 @@ const getShopCategories = (shopId) => {
  * @returns {Promise} 统计数据
  */
 const getShopStatistics = (params = {}) => {
-  return get('/shop/statistics', params)
+  return get('/shop/stats', params)
 }
 
 /**

@@ -9,7 +9,6 @@
   <view class="register-container">
     <!-- Logo和标题 -->
     <view class="header">
-      <image class="logo" src="/assets/images/logo.jpg" mode="aspectFit" />
       <text class="title">注册买不语</text>
       <text class="subtitle">开启您的购物之旅</text>
     </view>
@@ -39,13 +38,14 @@
       <!-- 手机号 -->
       <view class="input-group">
         <van-field
-          model:value="{{phone}}"
+          value="{{phone}}"
           type="number"
           placeholder="请输入手机号"
           border="{{false}}"
           maxlength="11"
           custom-class="register-input"
-          bind:input="onPhoneInput"
+          bind:change="onFieldChange"
+          data-field="phone"
         >
           <van-icon slot="left-icon" name="phone-o" />
         </van-field>
@@ -54,14 +54,15 @@
       <!-- 验证码 -->
       <view class="input-group">
         <van-field
-          model:value="{{smsCode}}"
+          value="{{smsCode}}"
           type="number"
           placeholder="请输入验证码"
           border="{{false}}"
           maxlength="6"
           custom-class="register-input"
           use-button-slot
-          bind:input="onSmsCodeInput"
+          bind:change="onFieldChange"
+          data-field="smsCode"
         >
           <van-icon slot="left-icon" name="shield-o" />
           <van-button 
@@ -81,13 +82,14 @@
       <!-- 密码 -->
       <view class="input-group">
         <van-field
-          model:value="{{password}}"
+          value="{{password}}"
           type="password"
           placeholder="请设置登录密码(6-20位)"
           border="{{false}}"
           maxlength="20"
           custom-class="register-input"
-          bind:input="onPasswordInput"
+          bind:change="onFieldChange"
+          data-field="password"
         >
           <van-icon slot="left-icon" name="lock" />
         </van-field>
@@ -96,13 +98,14 @@
       <!-- 确认密码 -->
       <view class="input-group">
         <van-field
-          model:value="{{confirmPassword}}"
+          value="{{confirmPassword}}"
           type="password"
           placeholder="请再次输入密码"
           border="{{false}}"
           maxlength="20"
           custom-class="register-input"
-          bind:input="onConfirmPasswordInput"
+          bind:change="onFieldChange"
+          data-field="confirmPassword"
         >
           <van-icon slot="left-icon" name="lock" />
         </van-field>
@@ -113,11 +116,12 @@
         <!-- 店铺名称 -->
         <view class="input-group">
           <van-field
-            model:value="{{shopName}}"
+            value="{{shopName}}"
             placeholder="请输入店铺名称"
             border="{{false}}"
             custom-class="register-input"
-            bind:input="onShopNameInput"
+            bind:change="onFieldChange"
+            data-field="shopName"
           >
             <van-icon slot="left-icon" name="shop-o" />
           </van-field>
@@ -126,25 +130,27 @@
         <!-- 店主姓名 -->
         <view class="input-group">
           <van-field
-            model:value="{{ownerName}}"
+            value="{{ownerName}}"
             placeholder="请输入店主姓名"
             border="{{false}}"
             custom-class="register-input"
-            bind:input="onOwnerNameInput"
+            bind:change="onFieldChange"
+            data-field="ownerName"
           >
             <van-icon slot="left-icon" name="contact" />
           </van-field>
         </view>
       </block>
 
-      <!-- 邀请码（可选）- 仅买家显示 -->
+      <!-- 推荐码（可选）- 仅买家显示 -->
       <view class="input-group" wx:if="{{role === 'user'}}">
         <van-field
-          model:value="{{inviteCode}}"
-          placeholder="邀请码（可选）"
+          value="{{referralCode}}"
+          placeholder="推荐码（可选）"
           border="{{false}}"
           custom-class="register-input"
-          bind:input="onInviteCodeInput"
+          bind:change="onFieldChange"
+          data-field="referralCode"
         >
           <van-icon slot="left-icon" name="gift-o" />
         </van-field>
@@ -155,7 +161,6 @@
         type="primary" 
         size="large"
         loading="{{registering}}"
-        disabled="{{!canRegister}}"
         bindtap="onRegister"
         custom-class="register-btn"
       >

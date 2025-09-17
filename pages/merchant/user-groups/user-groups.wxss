@@ -1,0 +1,156 @@
+/* pages/merchant/user-groups/user-groups.wxss */
+.container {
+  background-color: #f5f5f5;
+  min-height: 100vh;
+  padding-bottom: 120rpx;
+}
+
+/* 操作栏 */
+.action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx 32rpx;
+  background-color: #fff;
+  margin-bottom: 16rpx;
+}
+
+.stats-info {
+  display: flex;
+  align-items: center;
+}
+
+.stats-text {
+  font-size: 28rpx;
+  color: #666;
+}
+
+/* 分组列表 */
+.group-list {
+  background-color: #fff;
+  margin: 0 16rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
+}
+
+.list-header {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 32rpx;
+  background-color: #f8f9fa;
+  border-bottom: 1rpx solid #eee;
+}
+
+.header-item {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 600;
+}
+
+.header-item.name {
+  flex: 2;
+}
+
+.header-item.members {
+  flex: 1;
+  text-align: center;
+}
+
+.header-item.status {
+  flex: 1;
+  text-align: center;
+}
+
+.header-item.actions {
+  flex: 3;
+  text-align: right;
+}
+
+/* 分组项 */
+.group-item {
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.group-item:last-child {
+  border-bottom: none;
+}
+
+.group-item.disabled {
+  opacity: 0.6;
+}
+
+.item-content {
+  display: flex;
+  align-items: center;
+  padding: 32rpx;
+}
+
+.group-info {
+  flex: 2;
+}
+
+.group-name {
+  display: block;
+  font-size: 32rpx;
+  color: #333;
+  font-weight: 500;
+  margin-bottom: 8rpx;
+}
+
+.group-desc {
+  display: block;
+  font-size: 24rpx;
+  color: #999;
+  line-height: 1.4;
+}
+
+.group-members {
+  flex: 1;
+  text-align: center;
+}
+
+.member-count {
+  font-size: 32rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.group-status {
+  flex: 1;
+  text-align: center;
+}
+
+.group-actions {
+  flex: 3;
+  display: flex;
+  gap: 12rpx;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+/* 加载更多 */
+.loading-more {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40rpx;
+  color: #999;
+}
+
+/* 对话框内容 */
+.dialog-content {
+  padding: 32rpx 0;
+}
+
+/* 响应式设计 */
+@media (max-width: 750rpx) {
+  .group-actions {
+    flex-direction: column;
+    gap: 8rpx;
+  }
+  
+  .header-item.actions,
+  .group-actions {
+    flex: 2;
+  }
+}

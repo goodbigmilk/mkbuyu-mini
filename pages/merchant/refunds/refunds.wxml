@@ -1,0 +1,158 @@
+<!--pages/merchant/refunds/refunds.wxml-->
+<wxs module="utils">
+  // 格式化时间
+  function formatTime(timestamp) {
+    if (!timestamp) return '';
+    var date = getDate(timestamp);
+    var year = date.getFullYear();
+    var month = date.getMonth() + 1;
+    var day = date.getDate();
+    var hour = date.getHours();
+    var minute = date.getMinutes();
+    
+    month = month < 10 ? '0' + month : month;
+    day = day < 10 ? '0' + day : day;
+    hour = hour < 10 ? '0' + hour : hour;
+    minute = minute < 10 ? '0' + minute : minute;
+    
+    return year + '-' + month + '-' + day + ' ' + hour + ':' + minute;
+  }
+  
+  module.exports = {
+    formatTime: formatTime
+  };
+</wxs>
+
+<view class="refund-page">
+  <!-- 搜索栏 -->
+  <view class="search-bar">
+    <view class="search-input-wrapper">
+      <input 
+        class="search-input" 
+        placeholder="搜索退款申请号、订单号" 
+        value="{{searchKeyword}}"
+        bindinput="onSearchInput"
+        confirm-type="search"
+        bindconfirm="onSearch"
+      />
+      <text class="clear-btn" wx:if="{{searchKeyword}}" bindtap="clearSearch">✕</text>
+      <text class="search-btn" bindtap="onSearch">搜索</text>
+    </view>
+  </view>
+
+  <!-- Tab切换 -->
+  <view class="tabs">
+    <scroll-view class="tabs-scroll" scroll-x="true">
+      <view class="tab-list">
+        <view 
+          class="tab-item {{activeTab === item.key ? 'active' : ''}}" 
+          wx:for="{{tabs}}" 
+          wx:key="key"
+          data-key="{{item.key}}"
+          bindtap="onTabChange"
+        >
+          <text class="tab-title">{{item.title}}</text>
+          <view wx:if="{{item.count > 0}}" class="tab-count">{{item.count}}</view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 退款申请列表 -->
+  <scroll-view class="refund-list-container" scroll-y="true" enable-back-to-top="true">
+    <view class="refund-list">
+      <view class="refund-item" wx:for="{{refundList}}" wx:key="id">
+        <!-- 退款申请头部信息 -->
+        <view class="refund-header" bindtap="viewRefundDetail" data-refund-id="{{item.id}}">
+          <view class="refund-main-info">
+            <view class="refund-no-row">
+              <text class="refund-no">退款号：{{item.refund_no}}</text>
+              <!-- 退款状态显示 -->
+              <view class="refund-status status-pending" wx:if="{{item.status === 1}}">待处理</view>
+              <view class="refund-status status-approved" wx:elif="{{item.status === 2}}">已同意</view>
+              <view class="refund-status status-rejected" wx:elif="{{item.status === 3}}">已拒绝</view>
+              <view class="refund-status" wx:else>未知状态</view>
+            </view>
+            
+            <!-- 关联订单信息 -->
+            <view class="order-info-row" wx:if="{{item.order}}">
+              <text class="order-label">关联订单：</text>
+              <text class="order-no">{{item.order.order_no}}</text>
+              <text class="refund-time">{{utils.formatTime(item.created_at)}}</text>
+            </view>
+
+            <!-- 用户信息行 -->
+            <view class="user-info-row" wx:if="{{item.user}}">
+              <text class="user-label">申请用户：</text>
+              <text class="user-name">{{item.user.nickname}}</text>
+              <text class="user-phone">{{item.user.phone}}</text>
+            </view>
+
+            <!-- 退款金额信息 -->
+            <view class="amount-section">
+              <text class="amount-label">退款金额：</text>
+              <text class="amount-value">¥{{item.refund_amount/100}}</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- 退款原因 -->
+        <view class="refund-summary" bindtap="viewRefundDetail" data-refund-id="{{item.id}}">
+          <view class="reason-section">
+            <text class="reason-label">退款原因：</text>
+            <text class="reason-detail">{{item.reason}}</text>
+          </view>
+        </view>
+
+        <!-- 退款申请操作按钮 -->
+        <view class="refund-actions">
+          <!-- 待处理状态 - 显示同意/拒绝按钮 -->
+          <block wx:if="{{item.status === 1}}">
+            <button 
+              class="action-btn reject-btn" 
+              size="mini"
+              data-refund-id="{{item.id}}"
+              data-approved="{{false}}"
+              bindtap="processRefund"
+            >拒绝</button>
+            <button 
+              class="action-btn approve-btn" 
+              size="mini"
+              data-refund-id="{{item.id}}"
+              data-approved="{{true}}"
+              bindtap="processRefund"
+            >同意</button>
+          </block>
+
+          <!-- 已处理状态 - 显示查看详情按钮 -->
+          <block wx:if="{{item.status === 2 || item.status === 3}}">
+            <button 
+              class="action-btn detail-btn" 
+              size="mini"
+              data-refund-id="{{item.id}}"
+              bindtap="viewRefundDetail"
+            >查看详情</button>
+          </block>
+        </view>
+      </view>
+
+      <!-- 加载更多 -->
+      <view class="loading-more" wx:if="{{loading}}">
+        <text>加载中...</text>
+      </view>
+
+      <!-- 没有更多数据 -->
+      <view class="no-more" wx:if="{{!hasMore && refundList.length > 0}}">
+        <text>没有更多退款申请了</text>
+      </view>
+
+      <!-- 空状态 -->
+      <view class="empty-state" wx:if="{{!loading && refundList.length === 0}}">
+        <van-empty description="暂无退款申请" />
+      </view>
+    </view>
+  </scroll-view>
+</view>
+
+<!-- 商家底部导航栏 -->
+<merchant-tabbar current="{{tabbarCurrent}}" />

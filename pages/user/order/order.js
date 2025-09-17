@@ -12,7 +12,9 @@ Page({
       { key: 'paid', title: '待发货', status: 2 },
       { key: 'shipped', title: '待收货', status: 3 },
       { key: 'completed', title: '已完成', status: 4 },
-      { key: 'cancelled', title: '已取消', status: 5 }
+      { key: 'cancelled', title: '已取消', status: 5 },
+      { key: 'refunding', title: '退款中', status: 6 },
+      { key: 'refunded', title: '已退款', status: 7 }
     ],
     
     // 订单列表
@@ -24,10 +26,7 @@ Page({
     
     // 搜索
     searchKeyword: '',
-    showSearch: false,
-    
-    // 统计数据
-    statistics: {}
+    searchTimer: null
   },
 
   onLoad(options) {
@@ -37,7 +36,6 @@ Page({
     }
     
     this.loadOrderList()
-    this.loadStatistics()
   },
 
   onShow() {
@@ -72,8 +70,15 @@ Page({
       page: 1,
       orderList: [],
       hasMore: true
+      // 保持搜索关键词不变
     })
-    this.loadOrderList()
+    
+    // 如果有搜索关键词，在新的Tab状态下重新搜索；否则正常加载
+    if (this.data.searchKeyword.trim()) {
+      this.onSearch()
+    } else {
+      this.loadOrderList()
+    }
   },
 
   // 刷新数据
@@ -84,10 +89,12 @@ Page({
       hasMore: true
     })
     
-    await Promise.all([
-      this.loadOrderList(),
-      this.loadStatistics()
-    ])
+    // 如果有搜索关键词，执行搜索，否则加载正常列表
+    if (this.data.searchKeyword.trim()) {
+      await this.performSearch()
+    } else {
+      await this.loadOrderList()
+    }
   },
 
   // 加载订单列表
@@ -107,7 +114,13 @@ Page({
       const result = await orderApi.getUserOrderList(params)
       
       if (result.code === 200) {
-        const newOrderList = this.data.page === 1 ? result.data.list : [...this.data.orderList, ...result.data.list]
+        // 预处理订单数据，格式化时间
+        const processedList = result.data.list.map(order => ({
+          ...order,
+          formatted_time: formatTime(order.created_at)
+        }))
+        
+        const newOrderList = this.data.page === 1 ? processedList : [...this.data.orderList, ...processedList]
         
         this.setData({
           orderList: newOrderList,
@@ -127,37 +140,74 @@ Page({
 
   // 加载更多订单
   async loadMoreOrders() {
+    if (this.data.loading) return
+    
     this.setData({
-      page: this.data.page + 1
+      page: this.data.page + 1,
+      loading: true
     })
-    await this.loadOrderList()
-  },
-
-  // 加载统计数据
-  async loadStatistics() {
+    
     try {
-      const result = await orderApi.getUserOrderStatistics()
-      if (result.code === 200) {
-        this.setData({ statistics: result.data })
+      const keyword = this.data.searchKeyword.trim()
+      let result
+      
+      if (!keyword) {
+        // 正常列表的加载更多，按Tab状态筛选
+        const currentTab = this.data.tabs.find(tab => tab.key === this.data.activeTab)
+        const params = {
+          page: this.data.page,
+          page_size: this.data.pageSize
+        }
         
-        // 更新tab上的数量显示
-        const tabs = this.data.tabs.map(tab => {
-          const count = result.data[tab.key] || 0
-          return { ...tab, count }
+        if (currentTab && currentTab.status > 0) {
+          params.status = currentTab.status
+        }
+        
+        result = await orderApi.getUserOrderList(params)
+      } else {
+        // 搜索状态的加载更多，在当前Tab状态下搜索
+        const currentTab = this.data.tabs.find(tab => tab.key === this.data.activeTab)
+        const params = {
+          keyword: keyword,
+          page: this.data.page,
+          page_size: this.data.pageSize
+        }
+        
+        // 如果当前Tab有状态筛选，添加到搜索参数中
+        if (currentTab && currentTab.status > 0) {
+          params.status = currentTab.status
+        }
+        
+        result = await orderApi.searchUserOrders(params)
+      }
+      
+      if (result.code === 200) {
+        // 预处理新加载的订单数据，格式化时间
+        const processedList = result.data.list.map(order => ({
+          ...order,
+          formatted_time: formatTime(order.created_at)
+        }))
+        
+        const newList = this.data.orderList.concat(processedList)
+        this.setData({
+          orderList: newList,
+          hasMore: result.data.list.length >= this.data.pageSize,
+          loading: false
         })
-        this.setData({ tabs })
+      } else {
+        showToast(result.message || '加载失败')
+        this.setData({ loading: false })
       }
     } catch (error) {
-      console.error('加载统计数据失败:', error)
+      console.error('加载更多订单失败:', error)
+      showToast('加载失败，请重试')
+      this.setData({ loading: false })
     }
   },
 
   // 搜索订单
   async onSearch() {
-    if (!this.data.searchKeyword.trim()) {
-      showToast('请输入搜索关键词')
-      return
-    }
+    const keyword = this.data.searchKeyword.trim()
     
     this.setData({
       page: 1,
@@ -167,17 +217,47 @@ Page({
     })
     
     try {
-      const params = {
-        keyword: this.data.searchKeyword,
-        page: 1,
-        page_size: this.data.pageSize
+      let result
+      
+      if (!keyword) {
+        // 没有搜索关键词时，加载正常的订单列表，按Tab状态筛选
+        const currentTab = this.data.tabs.find(tab => tab.key === this.data.activeTab)
+        const params = {
+          page: 1,
+          page_size: this.data.pageSize
+        }
+        
+        if (currentTab && currentTab.status > 0) {
+          params.status = currentTab.status
+        }
+        
+        result = await orderApi.getUserOrderList(params)
+      } else {
+        // 有搜索关键词时，在当前Tab状态下搜索
+        const currentTab = this.data.tabs.find(tab => tab.key === this.data.activeTab)
+        const params = {
+          keyword: keyword,
+          page: 1,
+          page_size: this.data.pageSize
+        }
+        
+        // 如果当前Tab有状态筛选，添加到搜索参数中
+        if (currentTab && currentTab.status > 0) {
+          params.status = currentTab.status
+        }
+        
+        result = await orderApi.searchUserOrders(params)
       }
       
-      const result = await orderApi.searchUserOrders(params)
-      
       if (result.code === 200) {
+        // 预处理搜索结果数据，格式化时间
+        const processedList = result.data.list.map(order => ({
+          ...order,
+          formatted_time: formatTime(order.created_at)
+        }))
+        
         this.setData({
-          orderList: result.data.list,
+          orderList: processedList,
           hasMore: result.data.list.length < result.data.total,
           loading: false
         })
@@ -192,16 +272,15 @@ Page({
     }
   },
 
-  // 切换搜索显示
-  toggleSearch() {
-    this.setData({
-      showSearch: !this.data.showSearch,
-      searchKeyword: ''
-    })
-    
-    if (!this.data.showSearch) {
-      this.refreshData()
+  // 实时搜索
+  performSearch() {
+    if (this.data.searchTimer) {
+      clearTimeout(this.data.searchTimer)
     }
+
+    this.data.searchTimer = setTimeout(async () => {
+      await this.onSearch()
+    }, 500) // 500ms 延迟
   },
 
   // 搜索输入
@@ -209,6 +288,15 @@ Page({
     this.setData({
       searchKeyword: e.detail.value
     })
+    this.performSearch() // 实时搜索
+  },
+
+  // 清空搜索
+  clearSearch() {
+    this.setData({
+      searchKeyword: ''
+    })
+    this.performSearch() // 清空后重新加载列表
   },
 
   // 查看订单详情
@@ -263,12 +351,11 @@ Page({
     }
   },
 
-  // 去支付
-  async goPay(e) {
-    const { orderId, orderNo } = e.currentTarget.dataset
-    
+  // 去支付/立即付款
+  goPay(e) {
+    const { orderId } = e.currentTarget.dataset
     wx.navigateTo({
-      url: `/pages/common/payment/payment?orderNo=${orderNo}&orderId=${orderId}`
+      url: `/pages/common/order-detail/order-detail?id=${orderId}&showPayment=true`
     })
   },
 
@@ -276,7 +363,7 @@ Page({
   contactService(e) {
     const { orderId } = e.currentTarget.dataset
     // TODO: 实现联系客服功能
-    showToast('客服功能开发中')
+    showToast('功能开发中')
   },
 
   // 删除订单
@@ -290,34 +377,14 @@ Page({
     showToast('删除功能开发中')
   },
 
-  // 格式化价格
-  formatPrice,
-  
-  // 格式化时间
-  formatTime,
-  
-  // 获取订单状态文本
-  getStatusText(status) {
-    const statusMap = {
-      1: '待付款',
-      2: '待发货', 
-      3: '待收货',
-      4: '已完成',
-      5: '已取消'
-    }
-    return statusMap[status] || '未知状态'
-  },
-  
-  // 获取订单状态样式
-  getStatusClass(status) {
-    const classMap = {
-      1: 'status-pending',
-      2: 'status-paid',
-      3: 'status-shipped', 
-      4: 'status-completed',
-      5: 'status-cancelled'
-    }
-    return classMap[status] || ''
+  // 申请退款
+  applyRefund(e) {
+    const { orderId } = e.currentTarget.dataset
+    
+    // 跳转到退款信息填写页面
+    wx.navigateTo({
+      url: `/pages/user/refund/refund-apply?orderId=${orderId}`
+    })
   },
 
   // 去购物

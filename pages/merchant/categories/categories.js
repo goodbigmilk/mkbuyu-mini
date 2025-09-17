@@ -684,14 +684,9 @@ Page({
   // 表单输入处理
   onFormInput(e) {
     const { field } = e.currentTarget.dataset
-    
-    // 获取输入值 - 兼容不同的事件结构
+
     let value = ''
-    if (e.detail && typeof e.detail === 'object') {
-      value = e.detail.value !== undefined ? e.detail.value : e.detail
-    } else if (e.detail !== undefined) {
-      value = e.detail
-    }
+    value = e.detail
     
     // 确保值是字符串类型
     if (typeof value !== 'string') {

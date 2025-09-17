@@ -401,17 +401,34 @@ const hideLoading = () => {
 
 /**
  * 显示模态对话框
- * @param {Object} options 选项
+ * @param {Object|string} options 选项对象或标题字符串
+ * @param {string} content 内容（当第一个参数为字符串时使用）
  * @returns {Promise} 用户选择结果
  */
-const showModal = (options = {}) => {
+const showModal = (options = {}, content = '') => {
+  // 支持两种调用方式：
+  // 1. showModal({ title: '标题', content: '内容' })
+  // 2. showModal('标题', '内容')
+  let modalOptions = {}
+  
+  if (typeof options === 'string') {
+    // 第一种调用方式：showModal('标题', '内容')
+    modalOptions = {
+      title: options,
+      content: content
+    }
+  } else {
+    // 第二种调用方式：showModal({ title: '标题', content: '内容' })
+    modalOptions = options
+  }
+  
   return new Promise((resolve) => {
     wx.showModal({
-      title: options.title || '提示',
-      content: options.content || '',
-      showCancel: options.showCancel !== false,
-      cancelText: options.cancelText || '取消',
-      confirmText: options.confirmText || '确定',
+      title: modalOptions.title || '提示',
+      content: modalOptions.content || '',
+      showCancel: modalOptions.showCancel !== false,
+      cancelText: modalOptions.cancelText || '取消',
+      confirmText: modalOptions.confirmText || '确定',
       success: (res) => {
         resolve(res.confirm)
       },

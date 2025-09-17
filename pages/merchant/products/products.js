@@ -41,7 +41,9 @@ Page({
       { text: '价格从低到高', value: 'price_asc' },
       { text: '价格从高到低', value: 'price_desc' },
       { text: '销量从高到低', value: 'sales_desc' },
-      { text: '库存从高到低', value: 'stock_desc' }
+      { text: '销量从低到高', value: 'sales_asc' },
+      { text: '库存从高到低', value: 'stock_desc' },
+      { text: '库存从低到高', value: 'stock_asc' }
     ],
     
     // 统计数据
@@ -311,18 +313,16 @@ Page({
     this.loadProductList(true)
   },
 
-  // 搜索功能（防抖处理）
-  onSearch: throttle(function(e) {
-    this.setData({
-      searchKeyword: e.detail
-    })
+  // 搜索功能
+  onSearch(e) {
+    console.log('执行搜索:', this.data.searchKeyword)
     this.refreshList()
-  }, 500),
+  },
 
   // 搜索输入变化
   onSearchChange(e) {
     this.setData({
-      searchKeyword: e.detail
+      searchKeyword: e.detail.value
     })
   },
 
@@ -488,26 +488,27 @@ Page({
   },
 
   // 删除商品
-  onDeleteProduct(item) {
-    showModal('确认删除', `确定要删除商品"${item.name}"吗？删除后不可恢复。`, async () => {
-      try {
-        wx.showLoading({ title: '删除中...' })
-        
-        const response = await deleteProduct(item.id)
-        
-        if (response.code === 200) {
-          showToast('删除成功')
-          this.refreshList()
-        } else {
-          showToast(response.message || '删除失败')
-        }
-      } catch (error) {
-        console.error('删除商品失败:', error)
-        showToast('删除失败，请重试')
-      } finally {
-        wx.hideLoading()
+  async onDeleteProduct(item) {
+    const confirmed = await showModal('确认删除', `确定要删除商品"${item.name}"吗？删除后不可恢复。`)
+    if (!confirmed) return
+    
+    try {
+      wx.showLoading({ title: '删除中...' })
+      
+      const response = await deleteProduct(item.id)
+      
+      if (response.code === 200) {
+        showToast('删除成功')
+        this.refreshList()
+      } else {
+        showToast(response.message || '删除失败')
       }
-    })
+    } catch (error) {
+      console.error('删除商品失败:', error)
+      showToast('删除失败，请重试')
+    } finally {
+      wx.hideLoading()
+    }
   },
 
   // 格式化时间

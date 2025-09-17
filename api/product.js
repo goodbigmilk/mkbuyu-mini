@@ -1,5 +1,6 @@
 // 商品相关API
 const { request } = require('../utils/request')
+const { API_CONFIG } = require('../utils/constants')
 
 // 获取商品列表（店铺商品管理）
 function getProductList(params = {}) {
@@ -36,10 +37,18 @@ function deleteProduct(id) {
   })
 }
 
-// 获取商品详情
+// 获取用户可见商品详情
 function getProductDetail(id) {
   return request({
-    url: `/products/${id}`,
+    url: `/user/products/${id}`,
+    method: 'GET'
+  })
+}
+
+// 获取商家端商品详情（用于编辑）
+function getShopProductDetail(id) {
+  return request({
+    url: `/shop/products/${id}`,
     method: 'GET'
   })
 }
@@ -78,28 +87,28 @@ function updateStock(id, data) {
   })
 }
 
-// 获取公开商品列表（用户浏览）
+// 获取用户可见商品列表（基于用户绑定商家）
 function getPublicProductList(params = {}) {
   return request({
-    url: '/products/list',
+    url: '/user/products/list',
     method: 'GET',
     data: params
   })
 }
 
-// 获取热门商品
+// 获取用户可见热门商品
 function getHotProducts(params = {}) {
   return request({
-    url: '/products/hot',
+    url: '/user/products/hot',
     method: 'GET',
     data: params
   })
 }
 
-// 获取推荐商品
+// 获取用户可见推荐商品
 function getRecommendProducts(params = {}) {
   return request({
-    url: '/products/recommend',
+    url: '/user/products/recommend',
     method: 'GET',
     data: params
   })
@@ -114,10 +123,10 @@ function getBanners(params = {}) {
   })
 }
 
-// 获取商品分类
+// 获取用户可见商品分类
 function getCategories(params = {}) {
   return request({
-    url: '/products/categories',
+    url: '/user/products/categories',
     method: 'GET',
     data: params
   })
@@ -128,7 +137,7 @@ function uploadImage(filePath) {
   return new Promise((resolve, reject) => {
     const token = wx.getStorageSync('token')
     wx.uploadFile({
-      url: 'http://localhost:8080/api/upload/image',
+      url: API_CONFIG.BASE_URL + '/upload/image',
       filePath: filePath,
       name: 'file',
       header: {
@@ -162,6 +171,7 @@ module.exports = {
   updateProduct,
   deleteProduct,
   getProductDetail,
+  getShopProductDetail,
   publishProduct,
   unpublishProduct,
   batchProductOperation,

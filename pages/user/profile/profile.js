@@ -1,30 +1,36 @@
 const authAPI = require('../../../api/auth.js')
-const orderAPI = require('../../../api/order.js')
-const { getStore } = require('../../../store/index.js')
+const userAPI = require('../../../api/user.js')
+const groupPricingAPI = require('../../../api/group-pricing.js')
+const agentAPI = require('../../../api/agent.js')
 
 Page({
   data: {
     userInfo: {},
-    orderShortcuts: [
-      { type: 'pending', label: '待付款', icon: 'pending-payment', count: 0 },
-      { type: 'paid', label: '待发货', icon: 'tosend', count: 0 },
-      { type: 'shipped', label: '待收货', icon: 'send-gift-o', count: 0 },
-      { type: 'completed', label: '已完成', icon: 'checked', count: 0 }
-    ],
+    hasGroupPricing: false, // 用户是否有分组定价权限
+    isInUserGroup: false, // 用户是否在任何用户分组中
+    // 推荐码相关
+    showReferralModal: false, // 是否显示推荐码模态框
+    showInputDialog: false, // 是否显示输入推荐码对话框
+    inputDialogTitle: '', // 输入对话框标题
+    inputReferralCode: '', // 输入的推荐码
+    referralInfo: {}, // 推荐信息
+
     menuGroups: [
       {
         title: '我的服务',
         items: [
-          { key: 'coupon', label: '优惠券', icon: 'coupon-o', extra: '0张' },
-          { key: 'points', label: '积分商城', icon: 'gift-card-o' },
+          { key: 'referral', label: '推荐码', icon: 'share-o' },
+          { key: 'distribution', label: '分销管理', icon: 'friends-o', show: false },
+          { key: 'apply-agent', label: '申请成为推广员', icon: 'add-o', show: false },
+          { key: 'group-pricing', label: '用户特权', icon: 'vip-card-o', show: false },
+
           { key: 'wallet', label: '我的钱包', icon: 'balance-o' }
         ]
       },
       {
         title: '购物助手',
         items: [
-          { key: 'favorites', label: '我的收藏', icon: 'star-o' },
-          { key: 'history', label: '浏览历史', icon: 'clock-o' },
+
           { key: 'follow', label: '关注店铺', icon: 'shop-o' },
           { key: 'feedback', label: '意见反馈', icon: 'comment-o' }
         ]
@@ -45,14 +51,16 @@ Page({
   onLoad() {
     this.checkLoginStatus()
     this.loadUserInfo()
-    this.loadOrderCounts()
+    this.checkGroupPricingAccess()
+    this.checkUserGroupStatus()
   },
 
   onShow() {
     // 每次显示时刷新数据
     this.checkLoginStatus()
     this.loadUserInfo()
-    this.loadOrderCounts()
+    this.checkGroupPricingAccess()
+    this.checkUserGroupStatus()
     
     // 更新自定义 tabbar 状态
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
@@ -65,7 +73,8 @@ Page({
   onPullDownRefresh() {
     Promise.all([
       this.loadUserInfo(),
-      this.loadOrderCounts()
+      this.checkGroupPricingAccess(),
+      this.checkUserGroupStatus()
     ]).finally(() => {
       wx.stopPullDownRefresh()
     })
@@ -84,7 +93,7 @@ Page({
         this.setData({ 
           userInfo: {
             nickname: '未登录',
-            avatar: '/assets/images/default-avatar.png'
+            avatar: ''
           }
         })
         return
@@ -117,117 +126,226 @@ Page({
     }
   },
 
-  // 加载订单数量
-  async loadOrderCounts() {
+
+
+  // 检查用户是否有分组定价权限
+  async checkGroupPricingAccess() {
     try {
       if (!this.data.isLogin) {
+        this.setData({ hasGroupPricing: false })
+        this.updateMenuGroupVisibility()
         return
       }
 
-      const response = await orderAPI.getOrderStats()
+      const response = await groupPricingAPI.getUserGroupPricingSummary()
       
       if (response.code === 200) {
-        const stats = response.data || {}
-        const orderShortcuts = this.data.orderShortcuts.map(item => ({
-          ...item,
-          count: stats[item.type] || 0
-        }))
-        
-        this.setData({ orderShortcuts })
+        const hasAccess = response.data && response.data.group_count > 0
+        this.setData({ hasGroupPricing: hasAccess })
+        this.updateMenuGroupVisibility()
+      } else {
+        this.setData({ hasGroupPricing: false })
+        this.updateMenuGroupVisibility()
       }
     } catch (error) {
-      console.error('加载订单数量失败:', error)
+      console.error('检查分组定价权限失败:', error)
+      this.setData({ hasGroupPricing: false })
+      this.updateMenuGroupVisibility()
     }
   },
 
-  // 头像点击
+  // 检查用户是否在任何用户分组中
+  async checkUserGroupStatus() {
+    try {
+      if (!this.data.isLogin) {
+        this.setData({ isInUserGroup: false })
+        this.updateMenuGroupVisibility()
+        return
+      }
+
+      const response = await agentAPI.checkUserInGroup()
+      
+      if (response.code === 200) {
+        const isInGroup = response.data && response.data.is_in_group
+        this.setData({ isInUserGroup: isInGroup })
+        this.updateMenuGroupVisibility()
+      } else {
+        this.setData({ isInUserGroup: false })
+        this.updateMenuGroupVisibility()
+      }
+    } catch (error) {
+      console.error('检查用户分组状态失败:', error)
+      this.setData({ isInUserGroup: false })
+      this.updateMenuGroupVisibility()
+    }
+  },
+
+
+  // 更新菜单项显示状态
+  updateMenuGroupVisibility() {
+    const menuGroups = this.data.menuGroups.map(group => ({
+      ...group,
+      items: group.items.map(item => {
+        if (item.key === 'group-pricing') {
+          return { ...item, show: this.data.hasGroupPricing }
+        } else if (item.key === 'distribution') {
+          // 用户在分组中才显示分销管理
+          return { ...item, show: this.data.isInUserGroup }
+        } else if (item.key === 'apply-agent') {
+          // 用户不在分组中才显示申请成为推广员
+          return { ...item, show: !this.data.isInUserGroup }
+        }
+        return item
+      })
+    }))
+    
+    this.setData({ menuGroups })
+  },
+
+  // 头像点击 - 显示编辑选项
   onAvatarTap() {
     if (!this.data.isLogin) {
       wx.navigateTo({
         url: '/pages/auth/login/login'
       })
-    } else {
-      wx.navigateTo({
-        url: '/pages/user/edit-profile/edit-profile'
-      })
-    }
-  },
-
-  // 统计项点击
-  onStatTap(e) {
-    const { type } = e.currentTarget.dataset
-    
-    if (!this.data.isLogin) {
-      wx.navigateTo({
-        url: '/pages/auth/login/login'
-      })
       return
     }
-    
-    switch (type) {
-      case 'points':
-        wx.navigateTo({
-          url: '/pages/user/points/points'
-        })
-        break
-      case 'coupons':
-        wx.navigateTo({
-          url: '/pages/user/coupon/coupon'
-        })
-        break
-      case 'favorites':
-        wx.navigateTo({
-          url: '/pages/user/favorites/favorites'
-        })
-        break
-      case 'history':
-        wx.navigateTo({
-          url: '/pages/user/history/history'
-        })
-        break
-      default:
+
+    wx.showActionSheet({
+      itemList: ['更换头像', '修改昵称'],
+      success: (res) => {
+        switch (res.tapIndex) {
+          case 0:
+            this.chooseAvatar()
+            break
+          case 1:
+            this.editNickname()
+            break
+        }
+      }
+    })
+  },
+
+  // 选择头像
+  chooseAvatar() {
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['image'],
+      sourceType: ['album', 'camera'],
+      maxDuration: 30,
+      camera: 'back',
+      success: (res) => {
+        const tempFilePath = res.tempFiles[0].tempFilePath
+        this.uploadAvatar(tempFilePath)
+      },
+      fail: (error) => {
+        console.error('选择图片失败:', error)
         wx.showToast({
-          title: '功能开发中',
+          title: '选择图片失败',
           icon: 'none'
         })
-    }
-  },
-
-  // 订单快捷入口点击
-  onOrderShortcut(e) {
-    if (!this.data.isLogin) {
-      wx.navigateTo({
-        url: '/pages/auth/login/login'
-      })
-      return
-    }
-
-    const { type } = e.currentTarget.dataset
-    wx.navigateTo({
-      url: `/pages/user/order/order?status=${type}`
+      }
     })
   },
 
-  // 查看全部订单
-  onOrderMore() {
-    if (!this.data.isLogin) {
-      wx.navigateTo({
-        url: '/pages/auth/login/login'
+  // 上传头像
+  async uploadAvatar(filePath) {
+    try {
+      wx.showLoading({ title: '上传中...' })
+      
+      // 调用上传头像的API
+      const response = await userAPI.uploadAvatar(filePath)
+      
+      if (response.code === 200) {
+        // 更新用户信息
+        const userInfo = { ...this.data.userInfo, avatar: response.data.url || response.data.avatar }
+        this.setData({ userInfo })
+        
+        // 更新本地存储
+        wx.setStorageSync('userInfo', userInfo)
+        
+        wx.showToast({
+          title: '头像更新成功',
+          icon: 'success'
+        })
+      } else {
+        throw new Error(response.message || '上传失败')
+      }
+    } catch (error) {
+      console.error('上传头像失败:', error)
+      wx.showToast({
+        title: '上传失败',
+        icon: 'none'
       })
-      return
+    } finally {
+      wx.hideLoading()
     }
+  },
 
-    wx.navigateTo({
-      url: '/pages/user/order/order'
+  // 编辑昵称
+  editNickname() {
+    wx.showModal({
+      title: '修改昵称',
+      editable: true,
+      placeholderText: '请输入新昵称',
+      content: this.data.userInfo.nickname || '',
+      success: async (res) => {
+        if (res.confirm && res.content) {
+          const newNickname = res.content.trim()
+          if (newNickname) {
+            await this.updateNickname(newNickname)
+          }
+        }
+      }
     })
   },
+
+  // 更新昵称
+  async updateNickname(nickname) {
+    try {
+      wx.showLoading({ title: '更新中...' })
+      
+      // 调用更新用户资料的API
+      const response = await userAPI.updateUserProfile({ nickname })
+      
+      if (response.code === 200) {
+        // 更新用户信息
+        const userInfo = { ...this.data.userInfo, nickname }
+        this.setData({ userInfo })
+        
+        // 更新本地存储
+        wx.setStorageSync('userInfo', userInfo)
+        
+        wx.showToast({
+          title: '昵称更新成功',
+          icon: 'success'
+        })
+      } else {
+        throw new Error(response.message || '更新失败')
+      }
+    } catch (error) {
+      console.error('更新昵称失败:', error)
+      wx.showToast({
+        title: '更新失败',
+        icon: 'none'
+      })
+    } finally {
+      wx.hideLoading()
+    }
+  },
+
+
+
+
+
+
 
   // 菜单项点击
   onMenuTap(e) {
     const { key } = e.currentTarget.dataset
     
     // 部分功能需要登录
-    const needLogin = ['coupon', 'wallet', 'favorites', 'history', 'follow']
+    const needLogin = ['distribution', 'apply-agent', 'wallet', 'follow']
     if (needLogin.includes(key) && !this.data.isLogin) {
       wx.navigateTo({
         url: '/pages/auth/login/login'
@@ -236,31 +354,31 @@ Page({
     }
     
     switch (key) {
-      case 'coupon':
+      case 'referral':
+        this.showReferralModal()
+        break
+      case 'distribution':
         wx.navigateTo({
-          url: '/pages/user/coupon/coupon'
+          url: '/pages/user/distribution/distribution'
         })
         break
-      case 'points':
+      case 'apply-agent':
         wx.navigateTo({
-          url: '/pages/user/points/points'
+          url: '/pages/user/apply-agent/apply-agent'
         })
         break
+      case 'group-pricing':
+        wx.navigateTo({
+          url: '/pages/user/group-pricing/index'
+        })
+        break
+
       case 'wallet':
         wx.navigateTo({
           url: '/pages/user/wallet/wallet'
         })
         break
-      case 'favorites':
-        wx.navigateTo({
-          url: '/pages/user/favorites/favorites'
-        })
-        break
-      case 'history':
-        wx.navigateTo({
-          url: '/pages/user/history/history'
-        })
-        break
+
       case 'follow':
         wx.navigateTo({
           url: '/pages/user/follow/follow'
@@ -344,12 +462,8 @@ Page({
         isLogin: false,
         userInfo: {
           nickname: '未登录',
-          avatar: '/assets/images/default-avatar.png'
-        },
-        orderShortcuts: this.data.orderShortcuts.map(item => ({
-          ...item,
-          count: 0
-        }))
+          avatar: ''
+        }
       })
       
       wx.showToast({
@@ -372,5 +486,215 @@ Page({
     wx.navigateTo({
       url: '/pages/user/settings/settings'
     })
+  },
+
+  // ==================== 推荐码相关方法 ====================
+
+  // 显示推荐码模态框
+  async showReferralModal() {
+    try {
+      wx.showLoading({ title: '加载中...' })
+      
+      // 获取推荐信息
+      const response = await authAPI.getReferralInfo()
+      
+      if (response.code === 200) {
+        this.setData({
+          referralInfo: response.data || {},
+          showReferralModal: true
+        })
+      } else {
+        wx.showToast({
+          title: response.message || '获取推荐信息失败',
+          icon: 'none'
+        })
+      }
+    } catch (error) {
+      console.error('获取推荐信息失败:', error)
+      wx.showToast({
+        title: '获取推荐信息失败',
+        icon: 'none'
+      })
+    } finally {
+      wx.hideLoading()
+    }
+  },
+
+  // 关闭推荐码模态框
+  closeReferralModal() {
+    this.setData({
+      showReferralModal: false
+    })
+  },
+
+  // 复制我的推荐码
+  copyReferralCode() {
+    const referralCode = this.data.referralInfo.referral_code
+    if (!referralCode) {
+      wx.showToast({
+        title: '推荐码获取中，请稍候',
+        icon: 'none'
+      })
+      return
+    }
+
+    wx.setClipboardData({
+      data: referralCode,
+      success: () => {
+        wx.showToast({
+          title: '推荐码已复制',
+          icon: 'success'
+        })
+      },
+      fail: () => {
+        wx.showToast({
+          title: '复制失败',
+          icon: 'none'
+        })
+      }
+    })
+  },
+
+  // 复制推荐人的推荐码
+  copyReferrerCode() {
+    const referrerCode = this.data.referralInfo.referrer_info?.referral_code
+    if (!referrerCode) {
+      wx.showToast({
+        title: '推荐人推荐码不存在',
+        icon: 'none'
+      })
+      return
+    }
+
+    wx.setClipboardData({
+      data: referrerCode,
+      success: () => {
+        wx.showToast({
+          title: '推荐人推荐码已复制',
+          icon: 'none'
+        })
+      },
+      fail: () => {
+        wx.showToast({
+          title: '复制失败',
+          icon: 'none'
+        })
+      }
+    })
+  },
+
+  // 显示绑定推荐人模态框
+  showBindReferrerModal() {
+    console.log('显示绑定推荐人对话框')
+    this.setData({
+      showInputDialog: true,
+      inputDialogTitle: '绑定推荐人',
+      inputReferralCode: ''
+    })
+  },
+
+  // 显示修改推荐人模态框
+  showUpdateReferrerModal() {
+    console.log('显示修改推荐人对话框')
+    this.setData({
+      showInputDialog: true,
+      inputDialogTitle: '修改推荐人',
+      inputReferralCode: ''
+    })
+  },
+
+  // 推荐码输入变化
+  onReferralCodeInput(e) {
+    const value = e.detail.value || e.detail || ''
+    console.log('推荐码输入事件:', {
+      原始事件: e,
+      detail: e.detail,
+      值: value
+    })
+    
+    this.setData({
+      inputReferralCode: value
+    })
+  },
+
+  // 确认推荐码
+  async confirmReferralCode() {
+    // 安全地获取输入的推荐码
+    const inputCode = this.data.inputReferralCode || ''
+    const referralCode = inputCode.trim()
+    
+    console.log('确认推荐码 - 输入值检查:', {
+      原始输入: this.data.inputReferralCode,
+      处理后: referralCode
+    })
+    
+    if (!referralCode) {
+      wx.showToast({
+        title: '请输入推荐码',
+        icon: 'none'
+      })
+      return
+    }
+
+    const isUpdate = this.data.inputDialogTitle === '修改推荐人'
+
+    try {
+      wx.showLoading({ title: isUpdate ? '修改中...' : '绑定中...' })
+
+      const response = isUpdate 
+        ? await authAPI.updateReferrer(referralCode)
+        : await authAPI.bindReferrer(referralCode)
+
+      if (response.code === 200) {
+        wx.showToast({
+          title: isUpdate ? '推荐人修改成功' : '推荐人绑定成功',
+          icon: 'none'
+        })
+
+        // 关闭输入对话框
+        this.setData({
+          showInputDialog: false,
+          inputReferralCode: ''
+        })
+
+        // 重新获取推荐信息
+        await this.refreshReferralInfo()
+      } else {
+        wx.showToast({
+          title: response.message || (isUpdate ? '修改失败' : '绑定失败'),
+          icon: 'none'
+        })
+      }
+    } catch (error) {
+      console.error('推荐人操作失败:', error)
+      wx.showToast({
+        title: error.message || (isUpdate ? '修改失败' : '绑定失败'),
+        icon: 'none'
+      })
+    } finally {
+      wx.hideLoading()
+    }
+  },
+
+  // 取消推荐码输入
+  cancelReferralInput() {
+    this.setData({
+      showInputDialog: false,
+      inputReferralCode: ''
+    })
+  },
+
+  // 刷新推荐信息
+  async refreshReferralInfo() {
+    try {
+      const response = await authAPI.getReferralInfo()
+      if (response.code === 200) {
+        this.setData({
+          referralInfo: response.data || {}
+        })
+      }
+    } catch (error) {
+      console.error('刷新推荐信息失败:', error)
+    }
   }
 }) 

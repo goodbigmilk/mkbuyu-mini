@@ -1,0 +1,362 @@
+/* pages/user/refund/refund-apply.wxss */
+.refund-apply-page {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.12) 50%, rgba(25, 137, 250, 0.06) 100%);
+  min-height: 100vh;
+  padding: 20rpx 24rpx 120rpx;
+  position: relative;
+}
+
+.refund-apply-page::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(79, 195, 247, 0.03) 0%, rgba(129, 212, 250, 0.05) 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* 卡片样式 */
+.form-card, .order-card, .tips-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
+  border-radius: 20rpx;
+  margin-bottom: 24rpx;
+  overflow: hidden;
+  box-shadow: 0 8rpx 32rpx rgba(102, 126, 234, 0.12), 0 2rpx 16rpx rgba(118, 75, 162, 0.08);
+  border: 1rpx solid rgba(102, 126, 234, 0.1);
+  backdrop-filter: blur(10rpx);
+  position: relative;
+  z-index: 5;
+}
+
+.card-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #212529;
+  padding: 32rpx 32rpx 20rpx;
+  border-bottom: 1rpx solid rgba(102, 126, 234, 0.08);
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.02) 0%, rgba(255, 255, 255, 0.8) 50%, rgba(118, 75, 162, 0.02) 100%);
+}
+
+.card-subtitle {
+  font-size: 24rpx;
+  color: #6c757d;
+  font-weight: 400;
+  margin-left: 8rpx;
+}
+
+/* 订单信息卡片 */
+.order-content {
+  padding: 24rpx 32rpx;
+}
+
+.order-no, .order-amount {
+  font-size: 28rpx;
+  color: #495057;
+  margin-bottom: 8rpx;
+}
+
+.order-amount {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.product-list {
+  padding: 0 32rpx 24rpx;
+}
+
+.product-item {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid rgba(102, 126, 234, 0.05);
+}
+
+.product-item:last-child {
+  border-bottom: none;
+}
+
+.product-image {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 12rpx;
+  margin-right: 20rpx;
+  background-color: #f8f9fa;
+  flex-shrink: 0;
+}
+
+.product-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.product-name {
+  font-size: 28rpx;
+  color: #212529;
+  margin-bottom: 8rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-price {
+  font-size: 24rpx;
+  color: #6c757d;
+}
+
+/* 退款金额部分 */
+.amount-section {
+  padding: 24rpx 32rpx;
+}
+
+.amount-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.amount-input-wrapper {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.amount-label {
+  font-size: 28rpx;
+  color: #495057;
+  margin-right: 16rpx;
+}
+
+.amount-value {
+  font-size: 28rpx;
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.amount-input {
+  flex: 1;
+  height: 70rpx;
+  line-height: 70rpx;
+  padding: 0 20rpx;
+  border: 1rpx solid rgba(102, 126, 234, 0.2);
+  border-radius: 12rpx;
+  background: rgba(255, 255, 255, 0.8);
+  font-size: 28rpx;
+  margin: 0 16rpx;
+}
+
+.amount-unit {
+  font-size: 28rpx;
+  color: #495057;
+}
+
+.max-amount-btn {
+  background: linear-gradient(135deg, #007aff, #5ac8fa);
+  color: #fff;
+  border: none;
+  border-radius: 40rpx;
+  font-size: 26rpx;
+  padding: 0 32rpx;
+  height: 60rpx;
+  line-height: 60rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 122, 255, 0.3);
+}
+
+/* 退款原因部分 */
+.reason-section {
+  padding: 24rpx 32rpx;
+}
+
+.reason-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-bottom: 24rpx;
+}
+
+.reason-option {
+  padding: 16rpx 24rpx;
+  border: 1rpx solid rgba(102, 126, 234, 0.2);
+  border-radius: 40rpx;
+  font-size: 26rpx;
+  color: #495057;
+  background: rgba(255, 255, 255, 0.8);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.reason-option.active {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  border-color: #667eea;
+  box-shadow: 0 4rpx 12rpx rgba(102, 126, 234, 0.3);
+}
+
+.custom-reason {
+  position: relative;
+}
+
+.reason-textarea {
+  width: 100%;
+  min-height: 120rpx;
+  padding: 20rpx;
+  border: 1rpx solid rgba(102, 126, 234, 0.2);
+  border-radius: 12rpx;
+  background: rgba(255, 255, 255, 0.8);
+  font-size: 28rpx;
+  color: #495057;
+  resize: none;
+  box-sizing: border-box;
+}
+
+.char-count {
+  position: absolute;
+  bottom: 12rpx;
+  right: 16rpx;
+  font-size: 22rpx;
+  color: #adb5bd;
+}
+
+/* 上传凭证部分 */
+.upload-section {
+  padding: 24rpx 32rpx;
+}
+
+.image-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.image-item {
+  position: relative;
+  width: 160rpx;
+  height: 160rpx;
+}
+
+.upload-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 12rpx;
+  object-fit: cover;
+  background-color: #f8f9fa;
+}
+
+.delete-btn {
+  position: absolute;
+  top: -8rpx;
+  right: -8rpx;
+  width: 48rpx;
+  height: 48rpx;
+  background: #dc3545;
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  font-weight: bold;
+  box-shadow: 0 2rpx 8rpx rgba(220, 53, 69, 0.3);
+}
+
+.upload-btn {
+  width: 160rpx;
+  height: 160rpx;
+  border: 2rpx dashed rgba(102, 126, 234, 0.3);
+  border-radius: 12rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(102, 126, 234, 0.05);
+  transition: all 0.3s ease;
+}
+
+.upload-btn:active {
+  background: rgba(102, 126, 234, 0.1);
+  border-color: rgba(102, 126, 234, 0.5);
+}
+
+.upload-icon {
+  font-size: 48rpx;
+  color: #667eea;
+  margin-bottom: 8rpx;
+}
+
+.upload-text {
+  font-size: 22rpx;
+  color: #667eea;
+}
+
+/* 温馨提示 */
+.tips-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #495057;
+  padding: 24rpx 32rpx 16rpx;
+  border-bottom: 1rpx solid rgba(102, 126, 234, 0.08);
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.02) 0%, rgba(255, 255, 255, 0.8) 50%, rgba(118, 75, 162, 0.02) 100%);
+}
+
+.tips-content {
+  padding: 20rpx 32rpx 24rpx;
+}
+
+.tip-item {
+  display: block;
+  font-size: 26rpx;
+  color: #6c757d;
+  line-height: 1.6;
+  margin-bottom: 12rpx;
+}
+
+.tip-item:last-child {
+  margin-bottom: 0;
+}
+
+/* 提交按钮 */
+.submit-section {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
+  padding: 20rpx 24rpx 30rpx;
+  border-top: 1rpx solid rgba(102, 126, 234, 0.1);
+  backdrop-filter: blur(10rpx);
+  z-index: 999;
+}
+
+.submit-btn {
+  width: 100%;
+  height: 88rpx;
+  line-height: 88rpx;
+  border-radius: 44rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+  border: none;
+  text-align: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.1);
+}
+
+.submit-btn.active {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  box-shadow: 0 8rpx 24rpx rgba(102, 126, 234, 0.4);
+}
+
+.submit-btn.active:active {
+  transform: translateY(2rpx);
+  box-shadow: 0 4rpx 16rpx rgba(102, 126, 234, 0.3);
+}
+
+.submit-btn.disabled {
+  background: #e9ecef;
+  color: #adb5bd;
+  box-shadow: none;
+}

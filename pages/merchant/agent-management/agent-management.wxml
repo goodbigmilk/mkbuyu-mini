@@ -1,0 +1,252 @@
+<!--pages/merchant/agent-management/agent-management.wxml-->
+<view class="container">
+  <!-- 顶部Tab切换 -->
+  <van-sticky>
+    <van-tabs active="{{ activeTab }}" bind:change="onTabChange" color="#4CAF50">
+      <van-tab title="申请列表"></van-tab>
+      <van-tab title="条件设置"></van-tab>
+    </van-tabs>
+  </van-sticky>
+
+  <!-- 申请列表Tab -->
+  <view wx:if="{{ activeTab === 0 }}" class="tab-content">
+    <view wx:if="{{ applications.length > 0 }}" class="applications-list">
+      <view wx:for="{{ applications }}" wx:key="id" class="application-item">
+        <view class="application-header">
+          <view class="user-info">
+            <image class="avatar" src="{{ item.user.avatar || '/images/default-avatar.png' }}" mode="aspectFill"></image>
+            <view class="user-details">
+              <view class="nickname">{{ item.user.nickname || '未设置昵称' }}</view>
+              <view class="phone">{{ item.user.phone }}</view>
+            </view>
+          </view>
+          <view class="status-container">
+            <view type="{{ item.formattedStatus.color }}" size="large" plain="{{ false }}">
+              {{ item.formattedStatus.text }}
+            </view>
+          </view>
+        </view>
+
+        <view class="application-data">
+          <view class="data-item">
+            <view class="data-label">个人消费</view>
+            <view class="data-value">¥{{ item.formattedPersonalConsume }}</view>
+          </view>
+          <view class="data-item">
+            <view class="data-label">团队消费</view>
+            <view class="data-value">¥{{ item.formattedTeamConsume }}</view>
+          </view>
+          <view class="data-item">
+            <view class="data-label">客户数量</view>
+            <view class="data-value">{{ item.customer_count }}人</view>
+          </view>
+        </view>
+
+        <view class="application-time">
+          申请时间：{{ item.formattedTime }}
+        </view>
+
+        <view wx:if="{{ item.status === 1 }}" class="application-actions">
+          <van-button size="small" type="default" bind:click="onRejectApplication" data-application="{{ item }}">
+            拒绝
+          </van-button>
+          <van-button size="small" type="primary" bind:click="onApproveApplication" data-application="{{ item }}">
+            同意
+          </van-button>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <van-empty wx:else description="暂无申请记录" image="search" />
+
+    <!-- 加载状态 -->
+    <view wx:if="{{ loading }}" class="loading-container">
+      <van-loading size="24px">加载中...</van-loading>
+    </view>
+  </view>
+
+  <!-- 条件设置Tab -->
+  <view wx:if="{{ activeTab === 1 }}" class="tab-content">
+    <van-cell-group>
+      <van-cell title="添加条件" label="添加用户成为推广员的条件" is-link bind:click="onAddCondition" />
+    </van-cell-group>
+
+    <view class="condition-display">
+      <view class="condition-title">当前生效条件：</view>
+      <view wx:if="{{ conditions.length === 0 }}" class="no-conditions">
+        暂未设置任何条件
+      </view>
+      <view wx:else class="conditions-list">
+        <view wx:for="{{ conditions }}" wx:key="id" class="condition-item">
+          <view class="condition-content">
+            <van-icon name="success" color="#4CAF50" />
+            <text class="condition-text">
+              {{ item.type === 1 ? '个人消费' : '团队消费' }}达到 ¥{{ item.formattedAmount }}
+            </text>
+          </view>
+          <view class="condition-actions">
+            <van-button size="mini" type="primary" plain bind:click="onEditCondition" data-condition="{{ item }}">
+              编辑
+            </van-button>
+            <van-button size="mini" type="danger" plain bind:click="onDeleteCondition" data-condition="{{ item }}">
+              删除
+            </van-button>
+          </view>
+        </view>
+      </view>
+      <view class="condition-note">
+        用户只需满足其中任意一个条件即可申请成为推广员
+      </view>
+    </view>
+  </view>
+</view>
+
+<!-- 选择分组弹窗（同意申请时显示） -->
+<van-popup 
+  show="{{ showProcessDialog }}" 
+  position="bottom" 
+  bind:close="onCloseProcessDialog"
+  closeable
+  round
+>
+  <view class="process-dialog">
+    <view class="dialog-header">
+      <view class="dialog-title">选择用户分组</view>
+      <view class="dialog-subtitle">同意申请后，该用户将加入所选分组</view>
+    </view>
+
+    <view class="dialog-content">
+      <view class="applicant-info">
+        <view class="info-item">
+          <text class="label">申请人：</text>
+          <text class="value">{{ currentApplication.user.nickname }}</text>
+        </view>
+        <view class="info-item">
+          <text class="label">手机号：</text>
+          <text class="value">{{ currentApplication.user.phone }}</text>
+        </view>
+      </view>
+
+      <!-- 选择用户分组 -->
+      <view class="form-section">
+        <view class="section-title">请选择用户分组</view>
+        <van-radio-group value="{{ selectedGroupId }}" bind:change="onGroupSelect">
+          <van-cell-group>
+            <van-cell wx:for="{{ userGroups }}" wx:key="id" clickable data-name="{{ item.id }}">
+              <van-radio name="{{ item.id }}" checked-color="#4CAF50">{{ item.name }}</van-radio>
+            </van-cell>
+          </van-cell-group>
+        </van-radio-group>
+      </view>
+    </view>
+
+    <view class="dialog-actions">
+      <van-button size="large" type="default" bind:click="onCloseProcessDialog">取消</van-button>
+      <van-button size="large" type="primary" bind:click="onConfirmApprove">确认同意</van-button>
+    </view>
+  </view>
+</van-popup>
+
+<!-- 添加条件弹窗 -->
+<van-popup 
+  show="{{ showAddConditionDialog }}" 
+  position="bottom" 
+  bind:close="onCloseAddConditionDialog"
+  closeable
+  round
+>
+  <view class="add-condition-dialog">
+    <view class="dialog-header">
+      <view class="dialog-title">添加推广员申请条件</view>
+      <view class="dialog-subtitle">选择条件类型并设置金额</view>
+    </view>
+
+    <view class="dialog-content">
+      <!-- 选择条件类型 -->
+      <van-cell-group>
+        <van-cell title="条件类型">
+          <van-radio-group value="{{ addConditionForm.type }}" bind:change="onConditionTypeSelect">
+            <van-cell-group>
+              <van-cell clickable data-name="1">
+                <van-radio name="1" checked-color="#4CAF50">个人消费</van-radio>
+              </van-cell>
+              <van-cell clickable data-name="2">
+                <van-radio name="2" checked-color="#4CAF50">团队消费</van-radio>
+              </van-cell>
+            </van-cell-group>
+          </van-radio-group>
+        </van-cell>
+      </van-cell-group>
+
+      <!-- 输入金额 -->
+      <van-cell-group wx:if="{{ addConditionForm.type }}">
+        <van-cell>
+          <van-field
+            value="{{ addConditionForm.amount }}"
+            type="digit"
+            placeholder="请输入金额"
+            bind:input="onAddConditionAmountInput"
+          >
+            <text slot="label">{{ addConditionForm.type === '1' ? '个人消费满' : '团队消费满' }}</text>
+            <text slot="right-icon">元</text>
+          </van-field>
+        </van-cell>
+      </van-cell-group>
+
+      <view wx:if="{{ addConditionForm.type === '2' }}" class="condition-tips">
+        <van-icon name="info-o" color="#999" />
+        <text>团队消费指该用户推荐的所有客户的消费总和</text>
+      </view>
+    </view>
+
+    <view class="dialog-actions">
+      <van-button size="large" type="default" bind:click="onCloseAddConditionDialog">取消</van-button>
+      <van-button size="large" type="primary" bind:click="onConfirmAddCondition">确认添加</van-button>
+    </view>
+  </view>
+</van-popup>
+
+<!-- 编辑条件弹窗 -->
+<van-popup 
+  show="{{ showEditConditionDialog }}" 
+  position="bottom" 
+  bind:close="onCloseEditConditionDialog"
+  closeable
+  round
+>
+  <view class="edit-condition-dialog">
+    <view class="dialog-header">
+      <view class="dialog-title">编辑条件</view>
+      <view class="dialog-subtitle">修改条件金额</view>
+    </view>
+
+    <view class="dialog-content">
+      <van-cell-group>
+        <van-cell>
+          <van-field
+            value="{{ editConditionForm.amount }}"
+            type="digit"
+            placeholder="请输入金额"
+            bind:input="onEditConditionAmountInput"
+          >
+            <text slot="label">{{ editConditionForm.type === 1 ? '个人消费满' : '团队消费满' }}</text>
+            <text slot="right-icon">元</text>
+          </van-field>
+        </van-cell>
+      </van-cell-group>
+
+      <view wx:if="{{ editConditionForm.type === 2 }}" class="condition-tips">
+        <van-icon name="info-o" color="#999" />
+        <text>团队消费指该用户推荐的所有客户的消费总和</text>
+      </view>
+    </view>
+
+    <view class="dialog-actions">
+      <van-button size="large" type="default" bind:click="onCloseEditConditionDialog">取消</van-button>
+      <van-button size="large" type="primary" bind:click="onConfirmEditCondition">确认修改</van-button>
+    </view>
+  </view>
+</van-popup>
+
+<van-dialog id="van-dialog" />

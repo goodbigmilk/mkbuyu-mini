@@ -1,0 +1,15 @@
+{
+  "usingComponents": {
+    "van-nav-bar": "@vant/weapp/nav-bar/index",
+    "van-button": "@vant/weapp/button/index",
+    "van-empty": "@vant/weapp/empty/index",
+    "van-loading": "@vant/weapp/loading/index",
+    "van-dialog": "@vant/weapp/dialog/index",
+    "van-search": "@vant/weapp/search/index",
+    "van-icon": "@vant/weapp/icon/index",
+    "merchant-tabbar": "/components/merchant-tabbar/merchant-tabbar"
+  },
+  "navigationBarTitleText": "分组成员管理",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark"
+}

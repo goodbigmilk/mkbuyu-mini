@@ -1,0 +1,209 @@
+<view class="container">
+  <!-- 操作栏 -->
+  <view class="action-bar">
+    <van-button 
+      type="primary" 
+      size="small" 
+      icon="plus"
+      bindtap="showAddDialog"
+    >
+      添加成员
+    </van-button>
+    
+    <view class="stats-info">
+      <text class="stats-text"> {{groupName}} :共 {{total}} 名成员</text>
+    </view>
+    
+    <!-- 批量操作按钮 -->
+    <view class="batch-actions" wx:if="{{memberList.length > 0}}">
+      <!-- 批量模式切换按钮 -->
+      <van-button 
+        wx:if="{{!isBatchMode}}"
+        type="default" 
+        size="small" 
+        bindtap="toggleBatchMode"
+      >
+        批量操作
+      </van-button>
+      
+              <!-- 批量模式下的操作按钮 -->
+        <view wx:else class="batch-mode-actions">
+          <van-button 
+            type="danger" 
+            size="small" 
+            bindtap="batchRemoveSelectedMembers"
+            disabled="{{selectedMembers.length === 0}}"
+          >
+            移除选中({{selectedMembers.length}})
+          </van-button>
+          
+          <van-button 
+            type="primary" 
+            size="small" 
+            plain
+            bindtap="toggleSelectAll"
+          >
+            {{selectedMembers.length === memberList.length && memberList.length > 0 ? '取消全选' : '全选'}}
+          </van-button>
+          
+          <van-button 
+            type="default" 
+            size="small" 
+            bindtap="toggleBatchMode"
+          >
+            取消
+          </van-button>
+        </view>
+    </view>
+  </view>
+
+  <!-- 成员列表 -->
+  <view wx:if="{{memberList.length > 0}}" class="member-list">
+    <view 
+      wx:for="{{memberList}}" 
+      wx:key="id" 
+      class="member-item {{item.isSelected ? 'selected' : ''}}"
+      bindtap="{{isBatchMode ? 'toggleMemberSelection' : ''}}"
+      data-member="{{item}}"
+    >
+      <!-- 批量选择模式下的选择框 -->
+      <view wx:if="{{isBatchMode}}" class="member-select">
+        <van-icon 
+          name="{{item.isSelected ? 'checked' : 'circle'}}"
+          color="{{item.isSelected ? '#1989fa' : '#c8c9cc'}}"
+          size="20"
+        />
+      </view>
+      
+      <view class="member-avatar">
+        <image 
+          class="avatar-img" 
+          src="{{item.avatar || '/assets/images/default-avatar.png'}}" 
+          mode="aspectFill"
+        />
+      </view>
+      
+      <view class="member-info">
+        <text class="member-name">{{item.nickname || item.phone || '未设置昵称'}}</text>
+        <text class="member-detail">手机: {{item.phone || '未设置'}}</text>
+        <text class="member-detail">加入时间: {{item.created_at}}</text>
+      </view>
+      
+      <!-- 非批量模式下的操作按钮 -->
+      <view wx:if="{{!isBatchMode}}" class="member-actions">
+        <van-button 
+          size="mini" 
+          type="default" 
+          bindtap="viewUserDetail"
+          data-member="{{item}}"
+        >
+          详情
+        </van-button>
+        
+        <van-button 
+          size="mini" 
+          type="danger" 
+          bindtap="removeMember"
+          data-member="{{item}}"
+        >
+          移除
+        </van-button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <van-empty 
+    wx:else
+    image="friends" 
+    description="暂无分组成员"
+  >
+    <van-button 
+      type="primary" 
+      size="small"
+      bindtap="showAddDialog"
+    >
+      立即添加
+    </van-button>
+  </van-empty>
+
+  <!-- 加载更多 -->
+  <van-loading wx:if="{{loading}}" type="spinner" class="loading-more">
+    加载中...
+  </van-loading>
+
+  <!-- 添加成员对话框 -->
+  <van-dialog
+    use-slot
+    title="添加成员"
+    show="{{showAddDialog}}"
+    show-cancel-button
+    bind:close="closeAddDialog"
+    bind:confirm="addSelectedUsers"
+    confirm-button-text="添加选中用户"
+  >
+    <view class="dialog-content">
+      <!-- 搜索框 -->
+      <van-search
+        placeholder="请输入用户名、昵称或手机号搜索"
+        value="{{searchKeyword}}"
+        bind:change="onSearchUser"
+        use-action-slot
+      >
+        <view slot="action" bindtap="onSearchClick">搜索</view>
+      </van-search>
+      
+      <!-- 已选用户提示 -->
+      <view wx:if="{{selectedUsers.length > 0}}" class="selected-tip">
+        <text>已选中 {{selectedUsers.length}} 名用户</text>
+      </view>
+      
+      <!-- 调试信息 -->
+      <view style="padding: 10px; background: #f0f0f0; margin: 10px 0; font-size: 12px;">
+        <text>搜索关键词: {{searchKeyword || '无'}}</text><br/>
+        <text>用户列表长度: {{allUserList.length}}</text><br/>
+        <text>已选用户数: {{selectedUsers.length}}</text>
+      </view>
+      
+      <!-- 用户列表 -->
+      <view class="user-list">
+        <view 
+          wx:for="{{allUserList}}" 
+          wx:key="id"
+          class="user-item {{item.isSelected ? 'selected' : ''}}"
+          data-user="{{item}}"
+          bindtap="toggleUserSelection"
+        >
+          <view class="user-avatar">
+            <image 
+              class="avatar-img" 
+              src="{{item.avatar || '/assets/images/default-avatar.png'}}" 
+              mode="aspectFill"
+            />
+          </view>
+          
+          <view class="user-info">
+            <text class="user-name">{{item.nickname || item.phone || '未设置昵称'}}</text>
+            <text class="user-detail">{{item.phone || '未设置手机号'}}</text>
+          </view>
+          
+          <view class="user-select">
+            <van-icon 
+              name="{{item.isSelected ? 'checked' : 'circle'}}"
+              color="{{item.isSelected ? '#1989fa' : '#c8c9cc'}}"
+              size="20"
+            />
+          </view>
+        </view>
+        
+        <view wx:if="{{allUserList.length === 0 && searchKeyword}}" class="no-users">
+          <text>未找到该手机号对应的用户</text>
+        </view>
+
+      </view>
+    </view>
+  </van-dialog>
+
+  <!-- 商家端TabBar -->
+  <merchant-tabbar current="{{tabbarCurrent}}" />
+</view>

@@ -1,19 +1,25 @@
+// API配置
+const API_CONFIG = {
+  BASE_URL: 'http://localhost:8080/api',
+  TIMEOUT: 15000
+}
+
 // 用户角色常量
-export const USER_ROLES = {
+const USER_ROLES = {
   USER: 'user',        // 普通用户
   MERCHANT: 'shop',    // 商家
   ADMIN: 'admin'       // 管理员
 }
 
 // 用户角色标签
-export const USER_ROLE_LABELS = {
+const USER_ROLE_LABELS = {
   [USER_ROLES.USER]: '用户',
   [USER_ROLES.MERCHANT]: '商家', 
   [USER_ROLES.ADMIN]: '管理员'
 }
 
 // 根据用户角色获取默认首页路径
-export const getDefaultPageByRole = (role) => {
+const getDefaultPageByRole = (role) => {
   switch (role) {
     case USER_ROLES.MERCHANT:
       return '/pages/merchant/dashboard/dashboard'
@@ -26,16 +32,26 @@ export const getDefaultPageByRole = (role) => {
 }
 
 // 判断是否为商家用户
-export const isMerchant = (role) => {
+const isMerchant = (role) => {
   return role === USER_ROLES.MERCHANT
 }
 
 // 判断是否为管理员
-export const isAdmin = (role) => {
+const isAdmin = (role) => {
   return role === USER_ROLES.ADMIN
 }
 
 // 判断是否为普通用户
-export const isUser = (role) => {
+const isUser = (role) => {
   return role === USER_ROLES.USER
+}
+
+module.exports = {
+  API_CONFIG,
+  USER_ROLES,
+  USER_ROLE_LABELS,
+  getDefaultPageByRole,
+  isMerchant,
+  isAdmin,
+  isUser
 } 

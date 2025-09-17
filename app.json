@@ -5,16 +5,29 @@
     "pages/user/cart/cart",
     "pages/user/order/order",
     "pages/user/profile/profile",
+    "pages/user/distribution/distribution",
+    "pages/user/distribution-detail/distribution-detail",
+    "pages/user/customers/customers",
+    "pages/user/user-orders/user-orders",
+    "pages/user/group-pricing/index",
     "pages/user/product/detail/detail",
     "pages/user/product/list/list",
+    "pages/user/refund/refund-apply",
+    "pages/user/apply-agent/apply-agent",
     "pages/auth/register/register",
     "pages/merchant/dashboard/dashboard",
     "pages/merchant/products/products",
     "pages/merchant/products/edit/edit",
     "pages/merchant/orders/orders",
+    "pages/merchant/refunds/refunds",
+    "pages/merchant/refund-detail/refund-detail",
     "pages/merchant/categories/categories",
     "pages/merchant/categories/select-parent/select-parent",
     "pages/merchant/settings/settings",
+    "pages/merchant/group-members/group-members",
+    "pages/merchant/group-pricing/group-pricing",
+    "pages/merchant/user-groups/user-groups",
+    "pages/merchant/agent-management/agent-management",
     "pages/common/order-detail/order-detail",
     "pages/common/payment/payment"
   ],
@@ -119,5 +132,6 @@
     "van-tree-select": "@vant/weapp/tree-select/index",
     "van-uploader": "@vant/weapp/uploader/index"
   },
-  "sitemapLocation": "sitemap.json"
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
 } 

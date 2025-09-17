@@ -1,0 +1,296 @@
+/* pages/merchant/agent-management/agent-management.wxss */
+.container {
+  min-height: 100vh;
+  background-color: #f8f8f8;
+}
+
+.tab-content {
+  padding: 20rpx;
+}
+
+/* 申请列表样式 */
+.applications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.application-item {
+  background: white;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+}
+
+.application-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background-color: #f5f5f5;
+}
+
+.user-details .nickname {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 8rpx;
+}
+
+.user-details .phone {
+  font-size: 28rpx;
+  color: #666;
+}
+
+.status-container {
+  position: relative;
+  z-index: 2;
+}
+
+/* 让状态标签更突出 */
+.status-container .van-tag {
+  font-weight: 500;
+  border-radius: 20rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+.application-data {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+  padding: 20rpx;
+  background-color: #f8f9fa;
+  border-radius: 12rpx;
+}
+
+.data-item {
+  text-align: center;
+}
+
+.data-label {
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 8rpx;
+}
+
+.data-value {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #333;
+}
+
+.application-time {
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 20rpx;
+}
+
+.application-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 20rpx;
+}
+
+/* 条件设置样式 */
+.condition-display {
+  margin-top: 30rpx;
+  padding: 30rpx;
+  background: white;
+  border-radius: 16rpx;
+}
+
+.condition-title {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+
+.no-conditions {
+  text-align: center;
+  color: #999;
+  font-size: 28rpx;
+  padding: 40rpx 0;
+}
+
+.conditions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.condition-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx;
+  background-color: #f0f9ff;
+  border-radius: 8rpx;
+}
+
+.condition-content {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  flex: 1;
+}
+
+.condition-text {
+  font-size: 28rpx;
+  color: #333;
+}
+
+.condition-actions {
+  display: flex;
+  gap: 16rpx;
+  margin-left: 20rpx;
+}
+
+.condition-note {
+  margin-top: 20rpx;
+  padding: 16rpx;
+  background-color: #fff3cd;
+  border-radius: 8rpx;
+  font-size: 24rpx;
+  color: #856404;
+  text-align: center;
+}
+
+/* 弹窗样式 */
+.process-dialog,
+.condition-dialog,
+.add-condition-dialog,
+.edit-condition-dialog {
+  background: white;
+  border-radius: 24rpx 24rpx 0 0;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.dialog-header {
+  padding: 40rpx 40rpx 20rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.dialog-title {
+  font-size: 36rpx;
+  font-weight: 500;
+  color: #333;
+  text-align: center;
+}
+
+.dialog-subtitle {
+  font-size: 24rpx;
+  color: #999;
+  text-align: center;
+  margin-top: 10rpx;
+}
+
+.dialog-content {
+  padding: 30rpx 40rpx;
+}
+
+.applicant-info {
+  background-color: #f8f9fa;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  margin-bottom: 30rpx;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10rpx 0;
+}
+
+.info-item .label {
+  font-size: 28rpx;
+  color: #666;
+}
+
+.info-item .value {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.form-section {
+  margin-bottom: 30rpx;
+}
+
+.section-title {
+  font-size: 28rpx;
+  color: #333;
+  margin-bottom: 20rpx;
+  font-weight: 500;
+}
+
+.condition-tips {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 20rpx;
+  background-color: #f8f9fa;
+  border-radius: 12rpx;
+  margin-top: 20rpx;
+}
+
+.condition-tips text {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 20rpx;
+  padding: 20rpx 40rpx 40rpx;
+}
+
+.dialog-actions .van-button {
+  flex: 1;
+  border-radius: 50rpx !important; /* 椭圆形 */
+  padding: 24rpx 32rpx !important; /* 增加内边距，让文字边缘有空间 */
+  font-size: 32rpx !important; /* 统一字体大小 */
+  font-weight: 500 !important; /* 适中的字重 */
+  min-height: 88rpx !important; /* 统一按钮高度 */
+  box-sizing: border-box !important;
+}
+
+/* 加载状态 */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40rpx 0;
+}
+
+/* 响应式调整 */
+@media (max-width: 500px) {
+  .application-data {
+    flex-direction: column;
+    gap: 20rpx;
+  }
+  
+  .data-item {
+    display: flex;
+    justify-content: space-between;
+    text-align: left;
+  }
+  
+  .data-label {
+    margin-bottom: 0;
+  }
+}

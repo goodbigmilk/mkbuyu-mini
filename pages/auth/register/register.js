@@ -1,4 +1,3 @@
-const userStore = require('../../../store/user.js');
 const authApi = require('../../../api/auth.js');
 const { validatePhone, validatePassword } = require('../../../utils/index.js');
 
@@ -12,7 +11,7 @@ Page({
     smsCode: '',
     password: '',
     confirmPassword: '',
-    inviteCode: '',
+    referralCode: '',
     
     // 卖家专用字段
     shopName: '',
@@ -24,7 +23,6 @@ Page({
     smsCountdown: 0,
     agreePolicy: false,
     canSendSms: false,
-    canRegister: false,
     
     // 定时器
     smsTimer: null
@@ -32,33 +30,16 @@ Page({
 
   // 更新计算状态
   updateComputedState() {
-    const { role, phone, smsCode, password, confirmPassword, agreePolicy, shopName, ownerName } = this.data;
+    const { phone, agreePolicy } = this.data;
     
     // 防止 undefined，给默认值
     const phoneValue = phone || '';
-    const passwordValue = password || '';
-    const confirmPasswordValue = confirmPassword || '';
-    const shopNameValue = shopName || '';
-    const ownerNameValue = ownerName || '';
     
     // 计算是否可以发送短信
     const canSendSms = validatePhone(phoneValue) && agreePolicy;
     
-    // 计算是否可以注册
-    let canRegister = false;
-    if (agreePolicy && validatePhone(phoneValue) && passwordValue.length >= 6 && passwordValue === confirmPasswordValue) {
-      if (role === 'shop') {
-        // 卖家注册需要额外验证店铺信息
-        canRegister = shopNameValue.trim().length > 0 && ownerNameValue.trim().length > 0;
-      } else {
-        // 买家注册
-        canRegister = true;
-      }
-    }
-    
     this.setData({
-      canSendSms,
-      canRegister
+      canSendSms
     });
   },
 
@@ -77,9 +58,9 @@ Page({
 
   // 初始化页面
   initPage(options) {
-    // 如果有邀请码，自动填入
-    if (options.inviteCode) {
-      this.setData({ inviteCode: options.inviteCode });
+    // 如果有推荐码，自动填入
+    if (options.referralCode) {
+      this.setData({ referralCode: options.referralCode});
     }
     
     // 从参数中获取用户角色
@@ -102,42 +83,25 @@ Page({
       shopName: '',
       ownerName: ''
     });
-    this.updateComputedState(); // 切换身份类型时也更新计算状态
   },
 
-  // 输入框变化处理
-  onPhoneInput(e) {
-    this.setData({ phone: e.detail.value });
-    this.updateComputedState(); // 手机号变化时更新计算状态
+  // 统一的输入框变化处理（模仿编辑页面）
+  onFieldChange(e) {
+    const { field } = e.currentTarget.dataset;
+    const { detail } = e;
+    
+    console.log(`${field}输入变化:`, detail);
+    
+    this.setData({
+      [field]: detail
+    });
+    
+    // 如果是手机号变化，需要更新计算状态
+    if (field === 'phone') {
+      this.updateComputedState();
+    }
   },
 
-  onSmsCodeInput(e) {
-    this.setData({ smsCode: e.detail.value });
-  },
-
-  onPasswordInput(e) {
-    this.setData({ password: e.detail.value });
-    this.updateComputedState(); // 密码变化时更新计算状态
-  },
-
-  onConfirmPasswordInput(e) {
-    this.setData({ confirmPassword: e.detail.value });
-    this.updateComputedState(); // 确认密码变化时更新计算状态
-  },
-
-  onInviteCodeInput(e) {
-    this.setData({ inviteCode: e.detail.value });
-  },
-
-  onShopNameInput(e) {
-    this.setData({ shopName: e.detail.value });
-    this.updateComputedState(); // 店铺名称变化时更新计算状态
-  },
-
-  onOwnerNameInput(e) {
-    this.setData({ ownerName: e.detail.value });
-    this.updateComputedState(); // 店主姓名变化时更新计算状态
-  },
 
   // 发送短信验证码
   async onSendSms() {
@@ -149,7 +113,7 @@ Page({
     if (!validatePhone(phoneValue)) {
       wx.showToast({
         title: '请输入正确的手机号',
-        icon: 'error'
+        icon: 'none'
       });
       return;
     }
@@ -158,7 +122,7 @@ Page({
     if (!agreePolicy) {
       wx.showToast({
         title: '请先同意用户协议',
-        icon: 'error'
+        icon: 'none'
       });
       return;
     }
@@ -207,13 +171,26 @@ Page({
 
   // 注册
   async onRegister() {
-    const { role, phone, smsCode, password, confirmPassword, inviteCode, shopName, ownerName, agreePolicy } = this.data;
+    const { role, phone, smsCode, password, confirmPassword, referralCode, shopName, ownerName, agreePolicy } = this.data;
+    
+    console.log('开始注册 - 当前数据状态:', {
+      role,
+      phone,
+      smsCode,
+      password: password ? '已输入' : '未输入',
+      confirmPassword: confirmPassword ? '已输入' : '未输入',
+      referralCode,
+      shopName,
+      ownerName,
+      agreePolicy
+    });
     
     // 防止 undefined，给默认值
     const phoneValue = phone || '';
     const smsCodeValue = smsCode || '';
     const passwordValue = password || '';
     const confirmPasswordValue = confirmPassword || '';
+    const referralCodeValue = referralCode || '';
     const shopNameValue = shopName || '';
     const ownerNameValue = ownerName || '';
     
@@ -221,7 +198,7 @@ Page({
     if (!agreePolicy) {
       wx.showToast({
         title: '请先同意用户协议',
-        icon: 'error'
+        icon: 'none'
       });
       return;
     }
@@ -230,7 +207,7 @@ Page({
     if (!validatePhone(phoneValue)) {
       wx.showToast({
         title: '请输入正确的手机号',
-        icon: 'error'
+        icon: 'none'
       });
       return;
     }
@@ -239,7 +216,7 @@ Page({
     if (smsCodeValue.length !== 6) {
       wx.showToast({
         title: '请输入6位验证码',
-        icon: 'error'
+        icon: 'none'
       });
       return;
     }
@@ -256,8 +233,8 @@ Page({
     // 验证确认密码
     if (passwordValue !== confirmPasswordValue) {
       wx.showToast({
-        title: '两次输入的密码不一致',
-        icon: 'error'
+        title: '两次密码不一致',
+        icon: 'none'
       });
       return;
     }
@@ -267,7 +244,7 @@ Page({
       if (!shopNameValue.trim()) {
         wx.showToast({
           title: '请输入店铺名称',
-          icon: 'error'
+          icon: 'none'
         });
         return;
       }
@@ -275,7 +252,7 @@ Page({
       if (!ownerNameValue.trim()) {
         wx.showToast({
           title: '请输入店主姓名',
-          icon: 'error'
+          icon: 'none'
         });
         return;
       }
@@ -298,7 +275,7 @@ Page({
         };
         
         console.log('卖家注册数据:', registerData);
-        registerResult = await userStore.registerShop(registerData);
+        registerResult = await authApi.registerShop(registerData);
       } else {
         // 买家注册
         const registerData = {
@@ -308,7 +285,7 @@ Page({
         };
         
         console.log('买家注册数据:', registerData);
-        registerResult = await userStore.register(registerData);
+        registerResult = await authApi.register(registerData);
       }
       
       console.log('注册结果:', registerResult);
@@ -319,7 +296,7 @@ Page({
       });
       
       // 注册成功后的处理
-      this.handleRegisterSuccess(registerResult);
+      this.handleRegisterSuccess(registerResult, referralCodeValue);
       
     } catch (error) {
       console.error('注册失败:', error);
@@ -333,7 +310,65 @@ Page({
   },
 
   // 注册成功处理
-  handleRegisterSuccess(registerResult) {
+  async handleRegisterSuccess(registerResult, referralCode) {
+    // 如果是买家注册且有推荐码，尝试绑定推荐人
+    if (this.data.role === 'user' && referralCode && referralCode.trim()) {
+      try {
+        console.log('尝试绑定推荐人，推荐码:', referralCode);
+        
+        // 先登录获取token（注册成功但未登录状态）
+        const loginData = {
+          phone: this.data.phone,
+          password: this.data.password,
+          role: 'user'
+        };
+        
+        const loginResult = await authApi.login(loginData);
+        
+        if (loginResult.code === 200) {
+          // 登录成功，保存token
+          wx.setStorageSync('token', loginResult.data.token);
+          wx.setStorageSync('userInfo', loginResult.data.user_info);
+          
+          // 绑定推荐人
+          const bindResult = await authApi.bindReferrer(referralCode.trim());
+          
+          if (bindResult.code === 200) {
+            console.log('推荐人绑定成功');
+            wx.showModal({
+              title: '注册成功',
+              content: '推荐人绑定成功，欢迎加入买不语！',
+              showCancel: false,
+              confirmText: '好的'
+            });
+          } else {
+            console.log('推荐人绑定失败:', bindResult.message);
+            wx.showModal({
+              title: '注册成功',
+              content: '推荐码无效或已过期，注册已完成！',
+              showCancel: false,
+              confirmText: '知道了'
+            });
+          }
+        } else {
+          console.log('自动登录失败，跳过推荐人绑定');
+          wx.showToast({
+            title: '注册成功',
+            icon: 'success',
+            duration: 2000
+          });
+        }
+      } catch (error) {
+        console.error('绑定推荐人失败:', error);
+        wx.showModal({
+          title: '注册成功',
+          content: '推荐码处理异常，但注册已完成！',
+          showCancel: false,
+          confirmText: '知道了'
+        });
+      }
+    }
+
     // 延迟跳转，让用户看到成功提示
     setTimeout(() => {
       if (this.data.role === 'shop') {
@@ -347,18 +382,21 @@ Page({
           }
         });
       } else {
-        // 买家注册成功，直接跳转到登录页
-        wx.showToast({
-          title: '注册成功，请登录',
-          icon: 'success',
-          duration: 2000
-        });
-        
-        setTimeout(() => {
-          wx.navigateBack();
-        }, 2000);
+        // 买家注册成功，跳转到登录页或主页
+        const hasToken = wx.getStorageSync('token');
+        if (hasToken) {
+          // 如果已经有token（推荐人绑定成功），跳转到主页
+          wx.reLaunch({
+            url: '/pages/user/home/home'
+          });
+        } else {
+          // 否则跳转到登录页
+          setTimeout(() => {
+            wx.navigateBack();
+          }, 1500);
+        }
       }
-    }, 1500);
+    }, referralCode && referralCode.trim() ? 3500 : 1500);
   },
 
   // 协议同意状态变化

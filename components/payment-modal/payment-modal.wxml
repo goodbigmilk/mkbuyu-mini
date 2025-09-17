@@ -1,0 +1,56 @@
+<!-- 支付方式选择弹窗组件 -->
+<wxs module="utils">
+  // 格式化价格（分转元）
+  function formatPrice(price) {
+    if (!price) return '0.00';
+    return (price / 100).toFixed(2);
+  }
+  
+  module.exports = {
+    formatPrice: formatPrice
+  };
+</wxs>
+
+<van-popup show="{{show}}" 
+           position="bottom" 
+           round="{{true}}"
+           closeable="{{true}}"
+           bind:close="onHidePayment"
+           custom-style="padding: 40rpx 40rpx 80rpx;">
+  
+  <view class="payment-modal">
+    <view class="modal-header">
+      <text class="modal-title">选择支付方式</text>
+      <text class="modal-amount">¥{{utils.formatPrice(paymentAmount || (orderInfo ? orderInfo.total_amount : 0))}}</text>
+    </view>
+    
+    <van-radio-group value="{{selectedPaymentMethod}}" bind:change="onSelectPaymentMethod">
+      <van-cell-group>
+        <van-cell wx:for="{{paymentMethods}}" 
+                  wx:key="id"
+                  title="{{item.name}}"
+                  clickable="{{!item.disabled}}"
+                  custom-class="{{item.disabled ? 'disabled-cell' : ''}}"
+                  bind:click="onSelectPaymentMethod"
+                  data-method="{{item.id}}">
+          <view slot="icon" class="payment-icon">
+            <van-icon name="{{item.icon}}" size="40rpx" />
+          </view>
+          <van-radio slot="right-icon" 
+                     name="{{item.id}}" 
+                     disabled="{{item.disabled}}"
+                     checked-color="#07c160" />
+        </van-cell>
+      </van-cell-group>
+    </van-radio-group>
+    
+    <view class="modal-actions">
+      <van-button type="primary" 
+                  size="large" 
+                  round="{{true}}"
+                  bindtap="onConfirmPayment">
+        确认付款
+      </van-button>
+    </view>
+  </view>
+</van-popup>

@@ -1,6 +1,6 @@
-const userStore = require('../../../store/user.js');
 const authApi = require('../../../api/auth.js');
 const { validatePhone } = require('../../../utils/index.js');
+const { userState } = require('../../../utils/state.js');
 
 Page({
   data: {
@@ -8,7 +8,7 @@ Page({
     role: 'user',
     
     // 登录方式：phone(手机号) | password(密码)
-    loginType: 'phone',
+    loginType: 'password',
     
     // 手机号登录
     phone: '',
@@ -25,7 +25,6 @@ Page({
     smsCountdown: 0,
     agreePolicy: false,
     canSendSms: false,
-    canLogin: false,
     
     // 定时器
     smsTimer: null,
@@ -38,8 +37,8 @@ Page({
 
   // 数据监听器
   observers: {
-    'phone, smsCode, username, password, agreePolicy': function() {
-      console.log('数据监听器触发 - phone:', this.data.phone, 'smsCode:', this.data.smsCode, 'username:', this.data.username, 'password:', this.data.password, 'agreePolicy:', this.data.agreePolicy);
+    'phone, agreePolicy': function() {
+      console.log('数据监听器触发 - phone:', this.data.phone, 'agreePolicy:', this.data.agreePolicy);
       this.updateComputedState();
     }
   },
@@ -96,35 +95,16 @@ Page({
 
   // 更新计算状态
   updateComputedState() {
-    const { loginType, phone, smsCode, username, password, agreePolicy } = this.data;
-    
-    console.log('updateComputedState - 当前登录类型:', loginType);
+    const { phone, agreePolicy } = this.data;
     
     // 防止 undefined，给默认值
     const phoneValue = phone || '';
-    const smsCodeValue = smsCode || '';
-    const usernameValue = username || '';
-    const passwordValue = password || '';
     
     // 计算是否可以发送短信
     const canSendSms = validatePhone(phoneValue) && agreePolicy;
     
-    // 计算是否可以登录
-    let canLogin = false;
-    if (agreePolicy) {
-      if (loginType === 'phone') {
-        canLogin = validatePhone(phoneValue) && smsCodeValue.length === 6;
-        console.log('手机号登录 - 手机号有效:', validatePhone(phoneValue), '验证码长度:', smsCodeValue.length, 'canLogin:', canLogin);
-      } else {
-        // 密码登录也必须输入有效的11位手机号
-        canLogin = validatePhone(usernameValue.trim()) && passwordValue.length >= 6;
-        console.log('密码登录 - 手机号有效:', validatePhone(usernameValue.trim()), '密码长度:', passwordValue.length, 'canLogin:', canLogin);
-      }
-    }
-    
     this.setData({
-      canSendSms,
-      canLogin
+      canSendSms
     });
   },
 
@@ -136,17 +116,14 @@ Page({
 
   onSmsCodeInput(e) {
     this.setData({ smsCode: e.detail.value });
-    this.updateComputedState();
   },
 
   onUsernameInput(e) {
     this.setData({ username: e.detail.value });
-    this.updateComputedState();
   },
 
   onPasswordInput(e) {
     this.setData({ password: e.detail.value });
-    this.updateComputedState();
   },
 
   // 输入框数据变化处理（兼容性方法）
@@ -225,7 +202,6 @@ Page({
       username: '',
       password: ''
     });
-    this.updateComputedState();
   },
 
   // 切换登录方式
@@ -243,7 +219,6 @@ Page({
     });
     
     console.log('登录类型切换完成，当前loginType:', this.data.loginType);
-    this.updateComputedState();
   },
 
   // 发送短信验证码
@@ -256,7 +231,7 @@ Page({
     if (!validatePhone(phoneValue)) {
       wx.showToast({
         title: '请输入正确的手机号',
-        icon: 'error'
+        icon: 'none'
       });
       return;
     }
@@ -265,7 +240,7 @@ Page({
     if (!agreePolicy) {
       wx.showToast({
         title: '请先同意用户协议',
-        icon: 'error'
+        icon: 'none'
       });
       return;
     }
@@ -322,7 +297,7 @@ Page({
     if (!agreePolicy) {
       wx.showToast({
         title: '请先同意用户协议',
-        icon: 'error'
+        icon: 'none'
       });
       return;
     }
@@ -355,7 +330,7 @@ Page({
           role 
         };
         console.log('短信登录数据:', loginData);
-        loginResult = await userStore.loginWithSms(loginData);
+        loginResult = await authApi.loginWithSmsLogic(loginData);
         
       } else {
         // 用户名密码登录（实际是手机号密码登录）
@@ -373,7 +348,7 @@ Page({
           role 
         };
         console.log('密码登录数据:', loginData);
-        loginResult = await userStore.login(loginData);
+        loginResult = await authApi.loginWithLogic(loginData);
       }
       
       console.log('登录结果:', loginResult);
@@ -385,7 +360,7 @@ Page({
       
       // 登录成功后的跳转
       this.handleLoginSuccess(loginResult);
-      
+
     } catch (error) {
       console.error('登录失败:', error);
       wx.showToast({
@@ -402,7 +377,7 @@ Page({
     if (!this.data.agreePolicy) {
       wx.showToast({
         title: '请先同意用户协议',
-        icon: 'error'
+        icon: 'none'
       });
       return;
     }
@@ -410,7 +385,7 @@ Page({
     this.setData({ wechatLogging: true });
     
     try {
-      const loginResult = await userStore.loginWithWechat();
+      const loginResult = await authApi.wxLoginLogic();
       
       wx.showToast({
         title: '登录成功',
@@ -501,7 +476,7 @@ Page({
   // 联系客服
   onContactService() {
     wx.showToast({
-      title: '客服功能开发中',
+      title: '功能开发中',
       icon: 'none'
     });
   }

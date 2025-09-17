@@ -2,59 +2,18 @@
 <view class="container">
   <!-- 搜索栏 -->
   <view class="search-section">
-    <van-search 
-      value="{{searchKeyword}}" 
-      placeholder="搜索商品名称或关键词"
-      bind:search="onSearch"
-      bind:change="onSearchChange"
-      bind:clear="onSearchClear"
-      show-action="{{searchKeyword}}"
-      action-text="搜索"
-      bind:action="onSearch"
-    />
-  </view>
-
-  <!-- 轮播图 -->
-  <view wx:if="{{banners.length > 0}}" class="banner-section">
-    <swiper 
-      indicator-dots="true" 
-      autoplay="true" 
-      interval="3000" 
-      duration="500"
-      indicator-color="rgba(255,255,255,0.5)"
-      indicator-active-color="#fff"
-      class="banner-swiper"
-    >
-      <swiper-item 
-        wx:for="{{banners}}" 
-        wx:key="id"
-        bindtap="onBannerTap"
-        data-banner="{{item}}"
-      >
-        <image src="{{item.image_url}}" mode="aspectFill" class="banner-image" />
-      </swiper-item>
-    </swiper>
-  </view>
-
-  <!-- 分类快捷入口 -->
-  <view wx:if="{{categories.length > 0}}" class="category-section">
-    <scroll-view scroll-x="true" class="category-scroll">
-      <view class="category-list">
-        <view 
-          wx:for="{{categories}}" 
-          wx:key="id"
-          class="category-item"
-          bindtap="onCategoryTap"
-          data-category="{{item}}"
-        >
-          <image wx:if="{{item.icon}}" src="{{item.icon}}" class="category-icon" />
-          <view wx:else class="category-icon-placeholder">
-            <van-icon name="bag" size="20px" />
-          </view>
-          <text class="category-name">{{item.name}}</text>
-        </view>
-      </view>
-    </scroll-view>
+    <view class="search-input-wrapper">
+      <input 
+        class="search-input" 
+        placeholder="搜索商品名称或关键词" 
+        value="{{searchKeyword}}"
+        bindinput="onSearchInput"
+        confirm-type="search"
+        bindconfirm="onSearch"
+      />
+      <text class="clear-btn" wx:if="{{searchKeyword}}" bindtap="clearSearch">✕</text>
+      <text class="search-btn" bindtap="onSearch">搜索</text>
+    </view>
   </view>
 
   <!-- 筛选和排序 -->
@@ -98,7 +57,7 @@
         <!-- 商品图片 -->
         <view class="product-image">
           <image 
-            src="{{item.images && item.images.length > 0 ? item.images[0].url : '/assets/images/default-product.png'}}" 
+            src="{{item.images && item.images.length > 0 ? item.images[0].url : ''}}" 
             mode="aspectFill"
           />
           <view wx:if="{{item.is_hot}}" class="product-tag hot-tag">热</view>
@@ -140,8 +99,8 @@
       <!-- 空状态 -->
       <view wx:if="{{productList.length === 0 && !loading}}" class="empty-state">
         <van-empty 
-          description="{{searchKeyword ? '没有找到相关商品' : '暂无商品'}}"
-          image="search"
+          description="{{noShopMessage ? '未绑定推荐人' : (searchKeyword ? '没有找到相关商品' : '暂无商品')}}"
+          image="{{noShopMessage ? 'network' : 'search'}}"
         />
       </view>
 

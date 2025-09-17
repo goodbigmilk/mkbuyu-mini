@@ -6,6 +6,7 @@ const order = require('./order')
 const upload = require('./upload')
 const user = require('./user')
 const shop = require('./shop')
+const userGroups = require('./user-groups')
 
 module.exports = {
   auth,
@@ -14,5 +15,6 @@ module.exports = {
   order,
   upload,
   user,
-  shop
+  shop,
+  userGroups
 } 

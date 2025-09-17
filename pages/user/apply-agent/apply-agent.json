@@ -1,0 +1,16 @@
+{
+  "navigationBarTitleText": "申请成为推广员",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "van-card": "@vant/weapp/card/index",
+    "van-cell": "@vant/weapp/cell/index",
+    "van-cell-group": "@vant/weapp/cell-group/index",
+    "van-button": "@vant/weapp/button/index",
+    "van-icon": "@vant/weapp/icon/index",
+    "van-tag": "@vant/weapp/tag/index",
+    "van-notice-bar": "@vant/weapp/notice-bar/index",
+    "van-empty": "@vant/weapp/empty/index",
+    "van-loading": "@vant/weapp/loading/index",
+    "van-dialog": "@vant/weapp/dialog/index"
+  }
+}

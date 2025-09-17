@@ -12,6 +12,37 @@
   margin-bottom: 20rpx;
 }
 
+.search-input-wrapper {
+  display: flex;
+  align-items: center;
+  background-color: #f8f9fa;
+  border-radius: 50rpx;
+  padding: 0 16rpx;
+  border: 1rpx solid #e9ecef;
+}
+
+.search-input {
+  flex: 1;
+  height: 64rpx;
+  line-height: 64rpx;
+  padding: 0 12rpx;
+  font-size: 26rpx;
+}
+
+.clear-btn {
+  color: #adb5bd;
+  font-size: 28rpx;
+  padding: 0 8rpx;
+  font-weight: bold;
+}
+
+.search-btn {
+  color: #007aff;
+  font-size: 26rpx;
+  padding: 0 12rpx;
+  font-weight: 500;
+}
+
 /* 筛选栏样式 */
 .filter-section {
   background: white;
@@ -218,7 +249,7 @@
 .floating-add-btn {
   position: fixed;
   right: 30rpx;
-  bottom: 30rpx;
+  bottom: 200rpx;
   width: 112rpx;
   height: 112rpx;
   background: linear-gradient(135deg, #1989fa 0%, #1976d2 100%);
@@ -227,7 +258,7 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 8rpx 24rpx rgba(25, 137, 250, 0.4);
-  z-index: 999;
+  z-index: 1000;
   transition: all 0.3s ease;
 }
 

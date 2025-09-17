@@ -3,13 +3,18 @@
 <view class="container">
   <!-- 搜索栏 -->
   <view class="search-section">
-    <van-search 
-      value="{{searchKeyword}}" 
-      placeholder="搜索商品名称或关键词"
-      bind:search="onSearch"
-      bind:change="onSearchChange"
-      bind:clear="onSearchClear"
-    />
+    <view class="search-input-wrapper">
+      <input 
+        class="search-input" 
+        placeholder="搜索商品名称或关键词" 
+        value="{{searchKeyword}}"
+        bindinput="onSearchChange"
+        confirm-type="search"
+        bindconfirm="onSearch"
+      />
+      <text class="clear-btn" wx:if="{{searchKeyword}}" bindtap="onSearchClear">✕</text>
+      <text class="search-btn" bindtap="onSearch">搜索</text>
+    </view>
   </view>
 
   <!-- 筛选和排序 -->
@@ -65,7 +70,7 @@
       <!-- 商品图片 -->
       <view class="product-image">
         <image 
-          src="{{item.images && item.images.length > 0 ? item.images[0].url : '/assets/images/default-product.png'}}" 
+          src="{{item.images && item.images.length > 0 ? item.images[0].url : ''}}" 
           mode="aspectFill"
         />
         <view wx:if="{{item.status === 2}}" class="status-tag off-sale">已下架</view>

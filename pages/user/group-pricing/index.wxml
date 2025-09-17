@@ -1,0 +1,181 @@
+<view class="container">
+  <!-- 页面头部 -->
+  <view class="header">
+    <view class="title">用户特权</view>
+    <view class="subtitle">专享分组优惠价格</view>
+  </view>
+
+  <!-- 分组信息卡片 -->
+  <view wx:if="{{groupSummary}}" class="group-info">
+    <view class="group-card">
+      <view class="group-title">我的分组</view>
+      <view class="group-details">
+        <view class="group-item">
+          <text class="label">所属分组：</text>
+          <text class="value">{{groupSummary.group_count}}个</text>
+        </view>
+        <view class="group-item">
+          <text class="label">专享商品：</text>
+          <text class="value">{{groupSummary.product_count}}件</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 搜索和筛选 -->
+  <view class="search-filter">
+    <van-search 
+      value="{{keyword}}" 
+      placeholder="搜索商品" 
+      bind:search="onSearch"
+      bind:change="onSearchChange"
+    />
+    <view class="filter-bar">
+      <view class="filter-item">
+        <van-dropdown-menu>
+          <van-dropdown-item 
+            value="{{sortType}}" 
+            options="{{sortOptions}}"
+            bind:change="onSortChange"
+          />
+        </van-dropdown-menu>
+      </view>
+    </view>
+  </view>
+
+  <!-- 商品列表 -->
+  <view class="product-list">
+    <view 
+      wx:for="{{productList}}" 
+      wx:key="id"
+      class="product-item {{item.selected ? 'selected' : ''}}"
+      bindtap="onProductTap"
+      data-product="{{item}}"
+    >
+      <!-- 选择按钮 -->
+      <view class="select-checkbox" catchtap="onSelectProduct" data-index="{{index}}">
+        <van-icon 
+          name="{{item.selected ? 'checked' : 'circle'}}" 
+          size="20"
+          color="{{item.selected ? '#07c160' : '#c8c9cc'}}"
+        />
+      </view>
+
+      <!-- 商品图片 -->
+      <image class="product-image" src="{{item.image}}" mode="aspectFill" />
+
+      <!-- 商品信息 -->
+      <view class="product-info">
+        <view class="product-name">{{item.name}}</view>
+        <view class="product-subtitle">{{item.sub_title}}</view>
+        
+        <!-- 价格对比 -->
+        <view class="price-section">
+          <view class="group-price">
+            <text class="price-label">特权价：</text>
+            <text class="price-value">¥{{item.group_price / 100}}</text>
+          </view>
+          <view wx:if="{{item.has_discount}}" class="original-price">
+            <text class="origin-price">原价：¥{{item.origin_price / 100}}</text>
+            <text class="discount-rate">{{item.discount_rate}}折</text>
+          </view>
+        </view>
+
+        <!-- 库存信息 -->
+        <view class="stock-info">
+          <text class="stock-text">库存：{{item.stock}}件</text>
+          <text class="sales-text">已售：{{item.sales_count}}件</text>
+        </view>
+
+        <!-- 数量选择（仅选中时显示） -->
+        <view wx:if="{{item.selected}}" class="batch-qty" catchtap="onStopTap">
+          <text class="qty-label">数量：</text>
+          <van-stepper 
+            value="{{item.batch_quantity || 1}}" 
+            min="1" 
+            max="{{item.stock}}"
+            data-index="{{index}}"
+            bind:change="onBatchQuantityChange"
+          />
+        </view>
+      </view>
+
+      <!-- 快速购买按钮 -->
+      <view class="quick-buy-btn" catchtap="onQuickBuy" data-product="{{item}}">
+        <van-icon name="shopping-cart-o" size="18"/>
+      </view>
+    </view>
+
+    <!-- 加载更多 -->
+    <view wx:if="{{loading}}" class="loading">
+      <van-loading size="24px">加载中...</van-loading>
+    </view>
+
+    <!-- 没有更多数据 -->
+    <view wx:if="{{!hasMore && productList.length > 0}}" class="no-more">
+      没有更多商品了
+    </view>
+
+    <!-- 空状态 -->
+    <view wx:if="{{!loading && productList.length === 0}}" class="empty-state">
+      <van-empty description="暂无专享商品" />
+    </view>
+  </view>
+
+  <!-- 底部操作栏 -->
+  <view wx:if="{{selectedProducts.length > 0}}" class="bottom-actions">
+    <view class="selected-info">
+      <text>共{{totalSelectedQuantity}}件，预计：¥{{estimatedTotalAmountDisplay}}</text>
+    </view>
+    <view class="action-buttons">
+      <van-button 
+        type="primary" 
+        size="large"
+        bind:click="onBatchOrder"
+        loading="{{batchOrderLoading}}"
+      >
+        批量下单
+      </van-button>
+    </view>
+  </view>
+</view>
+
+<!-- 快速购买弹窗 -->
+<van-popup show="{{showQuickBuyPopup}}" position="bottom" round>
+  <view class="quick-buy-popup">
+    <view class="popup-header">
+      <view class="popup-title">立即购买</view>
+      <van-icon name="cross" size="18" bind:click="onCloseQuickBuy" />
+    </view>
+    
+    <view wx:if="{{selectedProduct}}" class="popup-product">
+      <image class="popup-product-image" src="{{selectedProduct.image}}" mode="aspectFill" />
+      <view class="popup-product-info">
+        <view class="popup-product-name">{{selectedProduct.name}}</view>
+        <view class="popup-product-price">¥{{selectedProduct.group_price / 100}}</view>
+      </view>
+    </view>
+
+    <view class="quantity-selector">
+      <text class="quantity-label">购买数量：</text>
+      <van-stepper 
+        value="{{quickBuyQuantity}}" 
+        min="1" 
+        max="{{selectedProduct.stock}}"
+        bind:change="onQuantityChange"
+      />
+    </view>
+
+    <view class="popup-actions">
+      <van-button 
+        type="primary" 
+        size="large" 
+        block
+        bind:click="onConfirmQuickBuy"
+        loading="{{quickBuyLoading}}"
+      >
+        立即购买
+      </van-button>
+    </view>
+  </view>
+</van-popup>

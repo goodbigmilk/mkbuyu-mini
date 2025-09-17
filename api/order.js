@@ -33,11 +33,6 @@ function confirmReceipt(orderId) {
   return put(`/user/orders/${orderId}/receipt`)
 }
 
-// 获取用户订单统计
-function getUserOrderStatistics() {
-  return get('/user/orders/statistics')
-}
-
 // 搜索用户订单
 function searchUserOrders(params = {}) {
   return get('/user/orders/search', params)
@@ -49,8 +44,12 @@ function getAvailableCoupons(orderAmount) {
 }
 
 // 支付订单回调
-function payOrder(orderNo) {
-  return post('/user/orders/pay', { order_no: orderNo })
+function payOrder(orderNo, paymentAmount, paymentMethod) {
+  return post('/user/orders/pay', { 
+    order_no: orderNo,
+    payment_amount: paymentAmount,
+    payment_method: paymentMethod
+  })
 }
 
 // ==================== 商家订单相关 ====================
@@ -115,7 +114,6 @@ module.exports = {
   getOrderDetail,
   cancelOrder,
   confirmReceipt,
-  getUserOrderStatistics,
   searchUserOrders,
   getAvailableCoupons,
   payOrder,

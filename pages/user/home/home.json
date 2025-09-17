@@ -3,7 +3,6 @@
   "enablePullDownRefresh": true,
   "onReachBottomDistance": 50,
   "usingComponents": {
-    "search-bar": "/components/search-bar/search-bar",
     "custom-tabbar": "/components/custom-tabbar/custom-tabbar"
   }
 } 

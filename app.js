@@ -1,5 +1,6 @@
 // app.js
-const { store } = require('./store/index')
+const { userState, stateManager } = require('./utils/state')
+const { API_CONFIG } = require('./utils/constants')
 
 App({
   onLaunch(options) {
@@ -39,10 +40,12 @@ App({
     this.globalData.systemInfo = systemInfo
     
     // 设置API基础路径
-    this.globalData.apiBaseUrl = 'http://localhost:8080/api'
+    this.globalData.apiBaseUrl = API_CONFIG.BASE_URL
     
-    // 初始化store
-    this.globalData.store = store
+    // 初始化状态管理
+    stateManager.init()
+    this.globalData.stateManager = stateManager
+    this.globalData.userState = userState
 
     console.log('应用初始化完成', this.globalData)
   },
@@ -84,11 +87,9 @@ App({
       const userInfo = wx.getStorageSync('userInfo')
       
       if (token && userInfo) {
-        // 通过store设置用户信息
-        if (store.user && store.user.setUserInfo) {
-          store.user.setUserInfo(userInfo)
-          store.user.setLoginStatus(true)
-        }
+        // 设置用户信息到状态管理
+        userState.setUserInfo(userInfo)
+        userState.setLoginStatus(true, token)
         
         // 验证token有效性并自动跳转
         this.validateTokenAndRedirect(token, userInfo)
@@ -118,10 +119,8 @@ App({
       console.log('验证token响应:', response)
       
       if (response.code === 200) {
-        // 更新store中的用户信息
-        if (store.user && store.user.setUserInfo) {
-          store.user.setUserInfo(response.data)
-        }
+        // 更新用户信息
+        userState.setUserInfo(response.data)
         
         // 获取用户角色
         let role = response.data?.role || 
@@ -221,12 +220,7 @@ App({
 
   // 清除登录状态
   clearLoginState() {
-    wx.removeStorageSync('token')
-    wx.removeStorageSync('userInfo')
-    if (store.user) {
-      if (store.user.setUserInfo) store.user.setUserInfo(null)
-      if (store.user.setLoginStatus) store.user.setLoginStatus(false)
-    }
+    userState.logout()
   },
 
   // 检查网络状态
@@ -237,7 +231,7 @@ App({
         if (res.networkType === 'none') {
           wx.showToast({
             title: '网络连接失败',
-            icon: 'error'
+            icon: 'none'
           })
         }
       }

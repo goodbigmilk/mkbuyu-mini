@@ -1,5 +1,5 @@
 // pages/merchant/products/edit/edit.js
-const { createProduct, updateProduct, getProductDetail, uploadImage } = require('../../../../api/product')
+const { createProduct, updateProduct, getProductDetail, getShopProductDetail, uploadImage } = require('../../../../api/product')
 const { getAllCategories } = require('../../../../api/category')
 const { showToast, showModal, showLoading, hideLoading } = require('../../../../utils/index')
 
@@ -148,7 +148,7 @@ Page({
     try {
       this.setData({ loading: true })
       
-      const response = await getProductDetail(productId)
+      const response = await getShopProductDetail(productId)
       console.log('商品详情响应:', response)
       
       if (response.code === 200 && response.data) {
@@ -450,7 +450,7 @@ Page({
     }
     
     // 这里可以实现商品预览功能
-    showToast('预览功能开发中')
+    showToast('功能开发中')
   },
 
   // 保存商品

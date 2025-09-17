@@ -1,6 +1,7 @@
 {
   "navigationBarTitleText": "商家工作台",
   "enablePullDownRefresh": true,
+  "homeButton": false,
   "usingComponents": {
     "van-icon": "@vant/weapp/icon/index",
     "van-empty": "@vant/weapp/empty/index",

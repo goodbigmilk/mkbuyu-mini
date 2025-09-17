@@ -1,7 +1,6 @@
 // pages/user/cart/cart.js
 const cartApi = require('../../../api/cart')
 const orderApi = require('../../../api/order')
-const cartStore = require('../../../store/cart')
 
 Page({
   data: {
@@ -398,20 +397,11 @@ Page({
   // 从购物车创建订单
   async createOrderFromCart(selectedItems) {
     try {
-      // 先弹出收货人信息输入框
-      const receiverInfo = await this.getReceiverInfo()
-      if (!receiverInfo) {
-        return // 用户取消输入
-      }
-      
       wx.showLoading({ title: '正在下单...' })
       
       // 准备订单数据 - 使用购物车ID列表
       const orderData = {
         cart_ids: selectedItems.map(item => item.id), // 使用购物车记录的ID
-        receiver_name: receiverInfo.name,
-        receiver_phone: receiverInfo.phone,
-        payment_method: 'wechat',
         remark: ''
       }
       
@@ -538,63 +528,5 @@ Page({
       title: '我的购物车',
       path: '/pages/user/cart/cart'
     }
-  },
-
-  // 获取收货人信息
-  getReceiverInfo() {
-    return new Promise((resolve) => {
-      wx.showModal({
-        title: '收货人信息',
-        content: '请先完善收货人信息',
-        showCancel: true,
-        success: (res) => {
-          if (res.confirm) {
-            // 跳转到收货人信息填写页面或使用简单的输入框
-            this.showReceiverForm(resolve)
-          } else {
-            resolve(null)
-          }
-        }
-      })
-    })
-  },
-
-  // 显示收货人信息表单
-  showReceiverForm(callback) {
-    // 简单的输入方式，实际项目中可能需要更复杂的表单
-    wx.showModal({
-      title: '请输入收货人姓名',
-      editable: true,
-      placeholderText: '请输入姓名',
-      success: (res) => {
-        if (res.confirm && res.content) {
-          const name = res.content.trim()
-          // 继续输入电话
-          wx.showModal({
-            title: '请输入收货人电话',
-            editable: true,
-            placeholderText: '请输入手机号',
-            success: (phoneRes) => {
-              if (phoneRes.confirm && phoneRes.content) {
-                const phone = phoneRes.content.trim()
-                if (phone.length === 11) {
-                  callback({ name, phone })
-                } else {
-                  wx.showToast({
-                    title: '请输入正确的手机号',
-                    icon: 'none'
-                  })
-                  callback(null)
-                }
-              } else {
-                callback(null)
-              }
-            }
-          })
-        } else {
-          callback(null)
-        }
-      }
-    })
   }
 })

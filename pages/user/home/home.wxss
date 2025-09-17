@@ -12,67 +12,32 @@
   margin-bottom: 20rpx;
 }
 
-/* 轮播图样式 */
-.banner-section {
-  background: white;
-  margin-bottom: 20rpx;
-}
-
-.banner-swiper {
-  height: 320rpx;
-}
-
-.banner-image {
-  width: 100%;
-  height: 100%;
-}
-
-/* 分类样式 */
-.category-section {
-  background: white;
-  padding: 30rpx 20rpx;
-  margin-bottom: 20rpx;
-}
-
-.category-scroll {
-  width: 100%;
-}
-
-.category-list {
-  display: flex;
-  white-space: nowrap;
-}
-
-.category-item {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  margin-right: 40rpx;
-  min-width: 120rpx;
-}
-
-.category-icon,
-.category-icon-placeholder {
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: 50%;
-  background-color: #f7f8fa;
+.search-input-wrapper {
   display: flex;
   align-items: center;
-  justify-content: center;
-  margin-bottom: 12rpx;
+  background: #f7f8fa;
+  border-radius: 8rpx;
+  padding: 0 20rpx;
 }
 
-.category-icon {
-  background-size: cover;
-  background-position: center;
-}
-
-.category-name {
-  font-size: 24rpx;
+.search-input {
+  flex: 1;
+  height: 70rpx;
+  font-size: 28rpx;
   color: #323233;
-  text-align: center;
-  line-height: 1.2;
+}
+
+.clear-btn {
+  color: #adb5bd;
+  font-size: 32rpx;
+  padding: 0 15rpx;
+  font-weight: bold;
+}
+
+.search-btn {
+  color: #1989fa;
+  font-size: 28rpx;
+  font-weight: 500;
 }
 
 /* 筛选栏样式 */

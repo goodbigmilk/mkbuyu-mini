@@ -1,0 +1,124 @@
+<view class="distribution-page">
+  <!-- 顶部统计 -->
+  <view class="stats-section">
+    <view class="stats-card">
+      <view class="stats-item">
+        <text class="stats-value">{{stats.total_amount || 0}}</text>
+        <text class="stats-label">总金额</text>
+      </view>
+      <view class="stats-item">
+        <text class="stats-value">{{stats.pending_amount || 0}}</text>
+        <text class="stats-label">待分账</text>
+      </view>
+      <view class="stats-item">
+        <text class="stats-value">{{stats.settled_amount || 0}}</text>
+        <text class="stats-label">已结算</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 功能导航 -->
+  <view class="nav-section">
+    <view class="nav-item" bindtap="goToCustomers">
+      <view class="nav-content">
+        <text class="nav-icon">👥</text>
+        <view class="nav-text">
+          <text class="nav-title">推荐用户</text>
+          <text class="nav-desc">查看我的推荐客户</text>
+        </view>
+      </view>
+      <text class="nav-arrow">></text>
+    </view>
+  </view>
+
+  <!-- 分账订单列表 -->
+  <view class="order-list">
+    <view class="list-header">
+      <text class="list-title">分账订单列表</text>
+    </view>
+
+    <view class="order-item" wx:for="{{distributionList}}" wx:key="id" data-status="{{item.order.status}}">
+      <!-- 订单状态角标 -->
+      <view class="order-status-corner status-{{item.order.status}}">
+        {{item.order.status_text}}
+      </view>
+      
+      <!-- 客户信息（不显示手机号） -->
+      <view class="order-header">
+        <view class="customer-info">
+          <image 
+            class="customer-avatar" 
+            src="{{item.customer.avatar || '/images/default-avatar.png'}}" 
+            mode="aspectFill"
+          />
+          <view class="customer-details">
+            <text class="customer-name">{{item.customer.nickname || '用户' + item.customer.id}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 商品列表 -->
+      <view class="product-container">
+        <scroll-view class="product-scroll" scroll-x="true" show-scrollbar="false">
+          <view class="product-list">
+            <view class="product-item" wx:for="{{item.order.items}}" wx:for-item="product" wx:key="id">
+              <image 
+                wx:if="{{product.product && product.product.image}}" 
+                class="product-image" 
+                src="{{product.product.image}}" 
+                mode="aspectFill" 
+              />
+              <view class="product-quantity">x{{product.quantity}}</view>
+            </view>
+          </view>
+        </scroll-view>
+      </view>
+
+      <!-- 订单信息 -->
+      <view class="order-info-section">
+        <view class="order-meta">
+          <text class="order-no">订单号：{{item.order_no}}</text>
+          <view class="order-time">{{item.created_at}}</view>
+        </view>
+        <view class="order-amount">
+          <text>共{{item.order.items.length}}件商品 分账 <text class="amount-value">¥{{item.display_amount}}</text></text>
+        </view>
+      </view>
+
+      <!-- 分账状态 -->
+      <view class="distribution-status">
+        <view class="status-badge status-{{item.status}}">
+          {{item.status_text}}
+        </view>
+        <button 
+          class="detail-btn" 
+          size="mini"
+          data-distribution-id="{{item.id}}"
+          bindtap="viewDistributionDetail"
+        >查看明细</button>
+      </view>
+    </view>
+
+    <!-- 加载更多 -->
+    <view class="loading-more" wx:if="{{loading}}">
+      <text>加载中...</text>
+    </view>
+
+    <!-- 没有更多数据 -->
+    <view class="no-more" wx:if="{{!hasMore && distributionList.length > 0}}">
+      <text>没有更多数据了</text>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{!loading && distributionList.length === 0}}">
+      <text class="empty-text">暂无分账订单</text>
+      <text class="empty-desc">当推荐的客户购买特权商品时，您将获得分账收益</text>
+    </view>
+  </view>
+  
+  <!-- 底部间距 -->
+  <view class="bottom-space"></view>
+</view>
+
+<!-- 用户底部导航栏 -->
+<custom-tabbar />

@@ -1,63 +1,22 @@
 <view class="container">
   <!-- 用户信息卡片 -->
   <view class="user-card">
-    <view class="user-header">
-      <image class="user-avatar" src="{{userInfo.avatar || '/images/default-avatar.png'}}" />
+    <view class="user-header" bindtap="onAvatarTap">
+      <image wx:if="{{userInfo.avatar}}" class="user-avatar" src="{{userInfo.avatar}}" />
       <view class="user-info">
         <view class="user-name">{{userInfo.nickname || '微信用户'}}</view>
+        <view class="user-phone" wx:if="{{userInfo.phone}}">手机号: {{userInfo.phone}}</view>
         <view class="user-level">{{userInfo.level_name || '普通会员'}}</view>
       </view>
       <view class="user-actions">
-        <van-icon name="arrow" size="16" />
+        <van-icon name="edit" size="16" />
       </view>
     </view>
     
-    <view class="user-stats">
-      <view class="stat-item" bindtap="onStatTap" data-type="points">
-        <text class="stat-value">{{userInfo.points || 0}}</text>
-        <text class="stat-label">积分</text>
-      </view>
-      <view class="stat-item" bindtap="onStatTap" data-type="coupons">
-        <text class="stat-value">{{userInfo.coupon_count || 0}}</text>
-        <text class="stat-label">优惠券</text>
-      </view>
-      <view class="stat-item" bindtap="onStatTap" data-type="favorites">
-        <text class="stat-value">{{userInfo.favorite_count || 0}}</text>
-        <text class="stat-label">收藏</text>
-      </view>
-      <view class="stat-item" bindtap="onStatTap" data-type="history">
-        <text class="stat-value">{{userInfo.view_count || 0}}</text>
-        <text class="stat-label">足迹</text>
-      </view>
-    </view>
+
   </view>
 
-  <!-- 订单快捷入口 -->
-  <view class="order-shortcuts">
-    <view class="section-header">
-      <text class="section-title">我的订单</text>
-      <view class="section-more" bindtap="onOrderMore">
-        <text>查看全部</text>
-        <van-icon name="arrow" size="12" />
-      </view>
-    </view>
-    
-    <view class="shortcuts-grid">
-      <view 
-        wx:for="{{orderShortcuts}}" 
-        wx:key="type"
-        class="shortcut-item"
-        data-type="{{item.type}}"
-        bindtap="onOrderShortcut"
-      >
-        <view class="shortcut-icon">
-          <van-icon name="{{item.icon}}" size="24" />
-          <view wx:if="{{item.count > 0}}" class="shortcut-badge">{{item.count}}</view>
-        </view>
-        <text class="shortcut-label">{{item.label}}</text>
-      </view>
-    </view>
-  </view>
+
 
   <!-- 功能菜单 -->
   <view class="menu-section">
@@ -68,6 +27,7 @@
           wx:for="{{item.items}}" 
           wx:for-item="menuItem"
           wx:key="key"
+          wx:if="{{menuItem.show !== false}}"
           class="menu-item"
           data-key="{{menuItem.key}}"
           bindtap="onMenuTap"
@@ -84,6 +44,110 @@
       </view>
     </view>
   </view>
+
+  <!-- 推荐码模态框 -->
+  <van-popup 
+    show="{{showReferralModal}}" 
+    position="bottom" 
+    closeable 
+    bind:close="closeReferralModal"
+    safe-area-inset-bottom
+    z-index="9999"
+  >
+    <view class="referral-modal">
+      <view class="modal-title">推荐码</view>
+      
+      <!-- 我的推荐码 -->
+      <view class="referral-section">
+        <view class="section-title">我的推荐码</view>
+        <view class="referral-code-card" bindtap="copyReferralCode">
+          <view class="code-text">{{referralInfo.referral_code || '获取中...'}}</view>
+          <van-icon name="copy" size="16" />
+          <text class="copy-hint">点击复制</text>
+        </view>
+      </view>
+
+      <!-- 推荐人信息 -->
+      <view class="referral-section" wx:if="{{referralInfo.has_referrer && referralInfo.referrer_info}}">
+        <view class="section-title">我的推荐人</view>
+        <view class="referrer-info">
+          <view class="referrer-name">{{referralInfo.referrer_info.nickname}}</view>
+          <view class="referrer-code" bindtap="copyReferrerCode">
+            推荐码：{{referralInfo.referrer_info.referral_code}}
+            <van-icon name="copy" size="14" />
+          </view>
+        </view>
+      </view>
+
+      <!-- 操作按钮 -->
+      <view class="referral-actions">
+        <van-button 
+          wx:if="{{!referralInfo.has_referrer}}" 
+          type="primary" 
+          size="large" 
+          bindtap="showBindReferrerModal"
+        >
+          绑定推荐人
+        </van-button>
+        <van-button 
+          wx:else 
+          type="default" 
+          size="large" 
+          bindtap="showUpdateReferrerModal"
+        >
+          修改推荐人
+        </van-button>
+      </view>
+    </view>
+  </van-popup>
+
+  <!-- 绑定/修改推荐人输入框 -->
+  <van-popup 
+    show="{{showInputDialog}}" 
+    position="center"
+    closeable
+    bind:close="cancelReferralInput"
+    z-index="10000"
+    round
+    overlay-style="background: rgba(0,0,0,0.7)"
+  >
+    <view class="referral-input-dialog">
+      <view class="input-dialog-header">
+        <text class="input-dialog-title">{{inputDialogTitle}}</text>
+      </view>
+      
+      <view class="input-dialog-content">
+        <van-field 
+          value="{{inputReferralCode}}" 
+          placeholder="请输入推荐码" 
+          bind:input="onReferralCodeInput"
+          bind:change="onReferralCodeInput"
+          clearable
+          border="{{false}}"
+          custom-style="background: #f8f9fa; border-radius: 12rpx; padding: 20rpx;"
+        />
+      </view>
+      
+      <view class="input-dialog-actions">
+        <van-button 
+          class="cancel-btn" 
+          size="large" 
+          plain
+          bindtap="cancelReferralInput"
+        >
+          取消
+        </van-button>
+        <van-button 
+          class="confirm-btn" 
+          size="large" 
+          type="primary"
+          bindtap="confirmReferralCode"
+        >
+          确认
+        </van-button>
+      </view>
+    </view>
+  </van-popup>
 
   <!-- 设置入口 -->
   <view class="settings-section">

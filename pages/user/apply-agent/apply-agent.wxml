@@ -1,0 +1,157 @@
+<!--pages/user/apply-agent/apply-agent.wxml-->
+<view class="container">
+  <!-- 提示信息 -->
+  <van-notice-bar 
+    wx:if="{{ !hasApplication || applicationStatus === 3 }}"
+    left-icon="info-o" 
+    text="成为推广员后可享受分销权限，通过推荐客户获得收益"
+    color="#1989fa"
+    background="#ecf9ff"
+  />
+  
+  <van-notice-bar 
+    wx:if="{{ hasApplication && applicationStatus === 1 }}"
+    left-icon="clock-o" 
+    text="您的申请正在审核中，请耐心等待"
+    color="#ff976a"
+    background="#fff7cc"
+  />
+
+  <van-notice-bar 
+    wx:if="{{ hasApplication && applicationStatus === 2 }}"
+    left-icon="success" 
+    text="恭喜！您的申请已通过，现在可以进行分销推广了"
+    color="#07c160"
+    background="#f0f9ff"
+  />
+
+  <van-notice-bar 
+    wx:if="{{ hasApplication && applicationStatus === 3 }}"
+    left-icon="cross" 
+    text="很遗憾，您的申请未通过，满足条件后可重新申请"
+    color="#ee0a24"
+    background="#ffeaea"
+  />
+
+  <!-- 申请条件 -->
+  <view class="section">
+    <view class="section-title">申请条件</view>
+    <view class="section-subtitle">满足以下任意一个条件即可申请</view>
+    
+    <view wx:if="{{ conditions.length > 0 }}" class="conditions-list">
+      <view wx:for="{{ conditions }}" wx:key="id" class="condition-item">
+        <view class="condition-header">
+          <view class="condition-type">{{ item.typeText }}</view>
+          <van-tag 
+            type="{{ item.isMet ? 'success' : 'default' }}" 
+            size="large"
+          >
+            {{ item.isMet ? '已达成' : '未达成' }}
+          </van-tag>
+        </view>
+        <view class="condition-desc">
+          需要{{ item.typeText }}满 ¥{{ item.amountText }}
+        </view>
+        <view class="condition-progress">
+          <view class="progress-label">当前：</view>
+          <view class="progress-value">
+            ¥{{ item.currentAmountText }}
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <van-empty wx:else description="暂无申请条件" image="search" />
+  </view>
+
+  <!-- 我的数据 -->
+  <view class="section">
+    <view class="section-title">我的数据</view>
+    
+    <van-cell-group>
+      <van-cell title="个人消费" value="¥{{ userStats.personalConsumeText }}" />
+      <van-cell title="团队消费" value="¥{{ userStats.teamConsumeText }}" />
+      <van-cell title="推荐客户" value="{{ userStats.customerCountText }}" />
+    </van-cell-group>
+  </view>
+
+  <!-- 申请状态 -->
+  <view wx:if="{{ hasApplication }}" class="section">
+    <view class="section-title">申请状态</view>
+    
+    <van-cell-group>
+      <van-cell title="当前状态">
+        <van-tag type="{{ statusColor[applicationStatus] }}" size="large">
+          {{ statusText[applicationStatus] }}
+        </van-tag>
+      </van-cell>
+    </van-cell-group>
+  </view>
+
+  <!-- 申请按钮 -->
+  <view class="action-section">
+    <!-- 可以申请的情况 -->
+    <van-button 
+      wx:if="{{ canApply && (!hasApplication || applicationStatus === 3) }}"
+      type="primary" 
+      size="large" 
+      bind:click="onApply"
+      class="action-button"
+    >
+      {{ applicationStatus === 3 ? '重新申请' : '申请成为推广员' }}
+    </van-button>
+
+    <!-- 不能申请的情况 -->
+    <van-button 
+      wx:if="{{ !canApply && (!hasApplication || applicationStatus === 3) }}"
+      type="default" 
+      size="large" 
+      disabled
+      class="action-button"
+    >
+      条件不满足，暂不可申请
+    </van-button>
+
+    <!-- 待审核状态 -->
+    <view wx:if="{{ hasApplication && applicationStatus === 1 }}" class="pending-section">
+      <van-button 
+        type="default" 
+        size="large" 
+        bind:click="onCancelApplication"
+        class="action-button"
+      >
+        取消申请
+      </van-button>
+      <view class="pending-tip">申请已提交，商家将在1-3个工作日内审核</view>
+    </view>
+
+    <!-- 已通过状态 -->
+    <van-button 
+      wx:if="{{ hasApplication && applicationStatus === 2 }}"
+      type="primary" 
+      size="large" 
+      bind:click="onGoToDistribution"
+      class="action-button"
+    >
+      前往分销中心
+    </van-button>
+  </view>
+
+  <!-- 说明信息 -->
+  <view class="info-section">
+    <view class="info-title">申请说明</view>
+    <view class="info-content">
+      <view class="info-item">1. 提交申请后，商家将在1-3个工作日内审核</view>
+      <view class="info-item">2. 成为推广员后可获得分销权限</view>
+      <view class="info-item">3. 推荐客户购买可获得相应佣金奖励</view>
+      <view class="info-item">4. 团队消费指您推荐的所有客户的消费总和</view>
+    </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view wx:if="{{ loading }}" class="loading-container">
+    <van-loading size="24px">加载中...</van-loading>
+  </view>
+</view>
+
+<van-dialog id="van-dialog" />

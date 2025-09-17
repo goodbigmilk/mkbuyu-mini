@@ -112,7 +112,6 @@
         type="primary" 
         size="large"
         loading="{{logging}}"
-        disabled="{{!canLogin}}"
         bindtap="onLogin"
         custom-class="login-btn"
       >

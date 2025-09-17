@@ -1,0 +1,466 @@
+<view class="container">
+  
+  <!-- 操作栏 -->
+  <view class="action-bar">
+    <van-button 
+      type="primary" 
+      size="small" 
+      icon="add-o"
+      bindtap="showProductSearchDialog"
+    >
+      添加商品
+    </van-button>
+    
+    <van-button 
+      type="info" 
+      size="small" 
+      icon="orders-o"
+      bindtap="showBatchDialog"
+    >
+      批量定价
+    </van-button>
+    
+
+    
+    <view class="stats-info">
+      <text class="stats-text">{{groupName}} :共 {{total}} 个定价</text>
+    </view>
+    
+    <!-- 批量操作按钮 -->
+    <view class="batch-actions" wx:if="{{priceList.length > 0}}">
+      <!-- 批量模式切换按钮 -->
+      <van-button 
+        wx:if="{{!isBatchMode}}"
+        type="default" 
+        size="small" 
+        bindtap="toggleBatchMode"
+      >
+        批量操作
+      </van-button>
+      
+      <!-- 批量模式下的操作按钮 -->
+      <view wx:else class="batch-mode-actions">
+        <van-button 
+          type="danger" 
+          size="small" 
+          bindtap="batchDeleteSelectedPrices"
+          disabled="{{selectedPrices.length === 0}}"
+        >
+          删除选中({{selectedPrices.length}})
+        </van-button>
+        
+        <van-button 
+          type="primary" 
+          size="small" 
+          plain
+          bindtap="toggleSelectAll"
+        >
+          {{selectedPrices.length === priceList.length && priceList.length > 0 ? '取消全选' : '全选'}}
+        </van-button>
+        
+        <van-button 
+          type="default" 
+          size="small" 
+          bindtap="toggleBatchMode"
+        >
+          取消
+        </van-button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 定价列表 -->
+  <view wx:if="{{priceList.length > 0}}" class="price-list">
+    <!-- 列表头部 -->
+    <view class="list-header">
+      <text class="header-item product">商品</text>
+      <text class="header-item price">分组价格</text>
+      <text class="header-item original">原价</text>
+      <text class="header-item time">有效期</text>
+      <text class="header-item status">状态</text>
+      <text class="header-item actions">操作</text>
+    </view>
+    
+    <!-- 定价项 -->
+    <view 
+      wx:for="{{priceList}}" 
+      wx:key="id" 
+      class="price-item {{item.status === 2 ? 'disabled' : ''}} {{item.isSelected ? 'selected' : ''}}"
+      bindtap="{{isBatchMode ? 'togglePriceSelection' : ''}}"
+      data-price="{{item}}"
+    >
+      <!-- 批量选择模式下的选择框 -->
+      <view wx:if="{{isBatchMode}}" class="price-select">
+        <van-icon 
+          name="{{item.isSelected ? 'checked' : 'circle'}}"
+          color="{{item.isSelected ? '#1989fa' : '#c8c9cc'}}"
+          size="20"
+        />
+      </view>
+      
+      <view class="item-content">
+        <view class="product-info product">
+          <view class="product-image-container">
+            <image 
+              class="product-image" 
+              src="{{item.product.images[0]}}" 
+              mode="aspectFill"
+            />
+          </view>
+          <view class="product-details">
+            <scroll-view class="product-name-scroll" scroll-x="true">
+              <view class="product-name-inner">{{item.product.name}}</view>
+            </scroll-view>
+          </view>
+        </view>
+        
+        <view class="price-value price">
+          <text class="group-price">¥{{item.groupPrice / 100}}</text>
+        </view>
+        
+        <view class="original-price original">
+          <text class="original-value">¥{{item.originalPrice / 100}}</text>
+          <text class="discount-rate">{{item.discountRate}}%OFF</text>
+        </view>
+        
+        <view class="time-range time">
+          <text wx:if="{{item.start_time}}" class="time-text">{{item.start_time}}</text>
+          <text wx:if="{{item.start_time && item.end_time}}" class="time-separator">至</text>
+          <text wx:if="{{item.end_time}}" class="time-text">{{item.end_time}}</text>
+          <text wx:if="{{!item.start_time && !item.end_time}}" class="time-text">永久有效</text>
+        </view>
+        
+        <view class="price-status status">
+          <van-tag 
+            type="{{item.status === 1 ? 'success' : 'default'}}"
+            size="medium"
+          >
+            {{item.status === 1 ? '启用' : '禁用'}}
+          </van-tag>
+        </view>
+        
+        <!-- 非批量模式下的操作按钮 -->
+        <view wx:if="{{!isBatchMode}}" class="price-actions actions">
+          <van-button 
+            size="mini" 
+            type="default" 
+            bindtap="showEditDialog"
+            data-price="{{item}}"
+          >
+            编辑
+          </van-button>
+          
+          <van-button 
+            size="mini" 
+            type="{{item.status === 1 ? 'default' : 'success'}}" 
+            bindtap="togglePriceStatus"
+            data-price="{{item}}"
+          >
+            {{item.status === 1 ? '禁用' : '启用'}}
+          </van-button>
+          
+          <van-button 
+            size="mini" 
+            type="danger" 
+            bindtap="deletePrice"
+            data-price="{{item}}"
+          >
+            删除
+          </van-button>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <van-empty 
+    wx:else
+    image="goods" 
+    description="暂无定价数据"
+  >
+    <van-button 
+      type="primary" 
+      size="small"
+      bindtap="showProductSearchDialog"
+    >
+      立即添加
+    </van-button>
+  </van-empty>
+
+  <!-- 加载更多 -->
+  <van-loading wx:if="{{loading}}" type="spinner" class="loading-more">
+    加载中...
+  </van-loading>
+
+  <!-- 添加/编辑定价对话框 -->
+  <van-dialog
+    use-slot
+    title="{{editingPrice ? '编辑定价' : '添加定价'}}"
+    show="{{showAddDialog}}"
+    show-cancel-button
+    bind:close="closeDialog"
+    bind:confirm="submitForm"
+  >
+    <view class="dialog-content">
+      <van-field
+        wx:if="{{!editingPrice}}"
+        label="选择商品"
+        placeholder="请选择商品"
+        border="{{false}}"
+        readonly
+        is-link
+        bind:click-input="showProductSelector"
+        value="{{selectedProductName}}"
+        required
+      />
+      
+      <van-field
+        label="分组价格"
+        placeholder="请输入价格（元）"
+        border="{{false}}"
+        type="digit"
+        value="{{formData.price}}"
+        data-field="price"
+        bind:input="onFormInput"
+        required
+      />
+      
+      <van-field
+        label="生效时间" 
+        placeholder="选择开始时间（可选）"
+        border="{{false}}"
+        value="{{formData.start_time}}"
+        data-field="start_time"
+        bind:input="onFormInput"
+      />
+      
+      <van-field
+        label="失效时间" 
+        placeholder="选择结束时间（可选）"
+        border="{{false}}"
+        value="{{formData.end_time}}"
+        data-field="end_time"  
+        bind:input="onFormInput"
+      />
+    </view>
+  </van-dialog>
+
+  <!-- 批量定价对话框 -->
+  <van-dialog
+    use-slot
+    title="批量定价"
+    show="{{showBatchDialog}}"
+    show-cancel-button
+    bind:close="closeDialog"
+    bind:confirm="submitBatchForm"
+    confirm-button-text="批量设置"
+  >
+    <view class="dialog-content">
+      <!-- 搜索框 -->
+      <van-search
+        placeholder="搜索商品"
+        value="{{searchKeyword}}"
+        bind:change="onSearchProduct"
+        use-action-slot
+      >
+        <view slot="action" bindtap="onSearchClick">搜索</view>
+      </van-search>
+      
+      <!-- 已选商品提示 -->
+      <view wx:if="{{selectedProducts.length > 0}}" class="selected-tip">
+        <text>已选中 {{selectedProducts.length}} 个商品</text>
+      </view>
+      
+      <!-- 批量价格设置 -->
+      <view class="batch-price-form">
+        <!-- 定价模式选择 -->
+        <view class="pricing-mode-selector">
+          <van-radio-group 
+            value="{{batchFormData.pricingMode}}" 
+            direction="horizontal"
+            bind:change="onPricingModeChange"
+          >
+            <van-radio name="fixed" checked-color="#1989fa">固定价格</van-radio>
+            <van-radio name="percentage" checked-color="#1989fa">百分比定价</van-radio>
+          </van-radio-group>
+        </view>
+        
+        <!-- 固定价格模式 -->
+        <van-field
+          wx:if="{{batchFormData.pricingMode === 'fixed'}}"
+          label="统一价格"
+          placeholder="请输入价格（元）"
+          border="{{false}}"
+          type="digit"
+          value="{{batchFormData.price}}"
+          data-field="price"
+          data-type="batch"
+          bind:input="onFormInput"
+          required
+        />
+        
+        <!-- 百分比定价模式 -->
+        <van-field
+          wx:if="{{batchFormData.pricingMode === 'percentage'}}"
+          label="折扣比例"
+          placeholder="请输入百分比（如：80 表示8折）"
+          border="{{false}}"
+          type="number"
+          value="{{batchFormData.percentage}}"
+          data-field="percentage"
+          data-type="batch"
+          bind:input="onFormInput"
+          required
+          right-icon="percent"
+        />
+        
+        <!-- 百分比模式说明 -->
+        <view wx:if="{{batchFormData.pricingMode === 'percentage'}}" class="percentage-tip">
+          <van-icon name="info-o" size="14" color="#969799" />
+          <text class="tip-text">按商品原价的{{batchFormData.percentage || 100}}%计算分组价格</text>
+        </view>
+        
+        <van-field
+          label="生效时间"
+          placeholder="选择开始时间（可选）"
+          border="{{false}}"
+          value="{{batchFormData.start_time}}"
+          data-field="start_time"
+          data-type="batch"
+          bind:input="onFormInput"
+        />
+        
+        <van-field
+          label="失效时间"
+          placeholder="选择结束时间（可选）"
+          border="{{false}}"
+          value="{{batchFormData.end_time}}"
+          data-field="end_time"
+          data-type="batch"
+          bind:input="onFormInput"
+        />
+      </view>
+      
+      <!-- 商品列表操作区 -->
+      <view class="product-list-header">
+        <view class="header-left">
+          <text class="header-title">选择商品</text>
+          <view class="selected-count">
+            已选择 {{selectedProducts.length}} / {{allProductList.length}} 个
+          </view>
+        </view>
+        <van-button 
+          type="primary" 
+          size="mini" 
+          plain
+          bindtap="toggleSelectAllProducts"
+        >
+          {{allProductsSelected ? '取消全选' : '全选'}}
+        </van-button>
+      </view>
+      
+      <!-- 商品列表 -->
+      <view class="product-list">
+        <view 
+          wx:for="{{allProductList}}" 
+          wx:key="id" 
+          class="product-item {{item.isSelected ? 'selected' : ''}}"
+          data-product="{{item}}"
+          bindtap="toggleProductSelection"
+        >
+          <view class="product-avatar">
+            <image 
+              class="product-img" 
+              src="{{item.images[0]}}" 
+              mode="aspectFill"
+            />
+          </view>
+          
+          <view class="product-info">
+            <text class="product-name">{{item.name}}</text>
+            <text class="product-price">原价: ¥{{item.price / 100}}</text>
+          </view>
+          
+          <view class="product-select">
+            <van-icon 
+              name="{{item.isSelected ? 'checked' : 'circle'}}" 
+              color="{{item.isSelected ? '#1989fa' : '#c8c9cc'}}"
+              size="20"
+            />
+          </view>
+        </view>
+        
+        <view wx:if="{{allProductList.length === 0}}" class="no-products">
+          <text>暂无商品</text>
+        </view>
+      </view>
+    </view>
+  </van-dialog>
+
+  <!-- 商品搜索添加对话框 -->
+  <van-dialog
+    use-slot
+    title="搜索添加商品"
+    show="{{showProductSearchDialog}}"
+    show-cancel-button
+    bind:close="closeDialog"
+    bind:confirm="addSelectedProductsWithOriginalPrice"
+    confirm-button-text="添加选中商品"
+  >
+    <view class="dialog-content">
+      <!-- 搜索框 -->
+      <van-search
+        placeholder="搜索商品名称"
+        value="{{searchKeyword}}"
+        bind:change="onSearchProduct"
+        use-action-slot
+      >
+        <view slot="action" bindtap="onSearchClick">搜索</view>
+      </van-search>
+      
+      <!-- 已选商品提示 -->
+      <view wx:if="{{selectedProducts.length > 0}}" class="selected-tip">
+        <text>已选中 {{selectedProducts.length}} 个商品，将以原价添加到分组</text>
+      </view>
+      
+      <!-- 商品列表 -->
+      <view class="product-list">
+        <view 
+          wx:for="{{allProductList}}" 
+          wx:key="id" 
+          class="product-item {{item.isSelected ? 'selected' : ''}}"
+          data-product="{{item}}"
+          bindtap="toggleProductSelection"
+        >
+          <view class="product-avatar">
+            <image 
+              class="product-img" 
+              src="{{item.images[0]}}" 
+              mode="aspectFill"
+            />
+          </view>
+          
+          <view class="product-info">
+            <text class="product-name">{{item.name}}</text>
+            <text class="product-price">原价: ¥{{item.price / 100}}</text>
+          </view>
+          
+          <view class="product-select">
+            <van-icon 
+              name="{{item.isSelected ? 'checked' : 'circle'}}" 
+              color="{{item.isSelected ? '#1989fa' : '#c8c9cc'}}"
+              size="20"
+            />
+          </view>
+        </view>
+        
+        <view wx:if="{{allProductList.length === 0}}" class="no-products">
+          <text>暂无商品，请尝试其他关键词</text>
+        </view>
+      </view>
+    </view>
+  </van-dialog>
+
+  <!-- 商家端TabBar -->
+  <merchant-tabbar current="{{tabbarCurrent}}" />
+</view>

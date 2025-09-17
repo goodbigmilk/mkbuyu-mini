@@ -1,6 +1,9 @@
+// 导入统一的API配置
+const { API_CONFIG } = require('./constants')
+
 const config = {
-  baseURL: 'http://localhost:8080/api',
-  timeout: 15000
+  baseURL: API_CONFIG.BASE_URL,
+  timeout: API_CONFIG.TIMEOUT
 }
 
 // 统一的请求函数
@@ -9,12 +12,34 @@ function request(options) {
     // 获取存储的token
     const token = wx.getStorageSync('token')
     
-    console.log('请求准备 - Token检查:', {
+    console.log('🔍 请求准备 - Token检查:', {
       hasToken: !!token,
       tokenLength: token ? token.length : 0,
+      tokenPreview: token ? `${token.substring(0, 20)}...` : '❌ 无token',
       url: options.url,
       method: options.method || 'GET'
     })
+    
+    // 如果没有token，检查本地存储中的所有相关数据
+    if (!token) {
+      console.error('❌ Token为空，检查本地存储状态:')
+      try {
+        const userInfo = wx.getStorageSync('userInfo')
+        const allKeys = wx.getStorageInfoSync()
+        console.error('📋 本地存储详情:', {
+          userInfo: userInfo ? '✅ 存在' : '❌ 不存在',
+          用户角色: userInfo?.role || '未知',
+          用户ID: userInfo?.id || '未知',
+          用户手机: userInfo?.phone || '未知',
+          所有存储keys: allKeys.keys,
+          存储使用量: `${allKeys.currentSize}KB / ${allKeys.limitSize}KB`
+        })
+      } catch (storageError) {
+        console.error('❌ 读取本地存储失败:', storageError)
+      }
+    } else {
+      console.log('✅ Token正常，长度:', token.length, '预览:', `${token.substring(0, 30)}...`)
+    }
 
     // 构建完整URL
     let fullUrl = config.baseURL + options.url
@@ -46,9 +71,28 @@ function request(options) {
               resolve(res.data)
             } else if (res.data.code === 401) {
               // token过期，跳转到登录页
-              console.log('Token失效，清除登录状态')
+              console.error('🚨 API返回401错误 - Token失效，清除登录状态')
+              console.error('🚨 请求详情:', {
+                url: options.url,
+                method: options.method || 'GET',
+                响应数据: res.data,
+                当前token长度: wx.getStorageSync('token')?.length || 0
+              })
+              
+              // 记录清除前的状态
+              const tokenBeforeClear = wx.getStorageSync('token')
+              const userInfoBeforeClear = wx.getStorageSync('userInfo')
+              console.error('🗑️ 即将清除的数据:', {
+                token长度: tokenBeforeClear?.length || 0,
+                用户信息: userInfoBeforeClear ? '存在' : '不存在',
+                用户角色: userInfoBeforeClear?.role
+              })
+              
               wx.removeStorageSync('token')
               wx.removeStorageSync('userInfo')
+              
+              console.error('🗑️ Token和用户信息已被清除')
+              
               wx.showToast({
                 title: '登录已过期',
                 icon: 'none'
@@ -76,9 +120,30 @@ function request(options) {
             errorMessage = '服务器内部错误'
           } else if (res.statusCode === 401) {
             errorMessage = '认证失败，请重新登录'
+            
+            console.error('🚨 HTTP状态码401 - 认证失败，清除登录状态')
+            console.error('🚨 请求详情:', {
+              url: options.url,
+              method: options.method || 'GET',
+              HTTP状态码: res.statusCode,
+              响应数据: res.data,
+              当前token长度: wx.getStorageSync('token')?.length || 0
+            })
+            
+            // 记录清除前的状态
+            const tokenBeforeClear = wx.getStorageSync('token')
+            const userInfoBeforeClear = wx.getStorageSync('userInfo')
+            console.error('🗑️ 即将清除的数据:', {
+              token长度: tokenBeforeClear?.length || 0,
+              用户信息: userInfoBeforeClear ? '存在' : '不存在',
+              用户角色: userInfoBeforeClear?.role
+            })
+            
             // 清除token
             wx.removeStorageSync('token')
             wx.removeStorageSync('userInfo')
+            
+            console.error('🗑️ Token和用户信息已被清除')
           }
           reject(new Error(errorMessage))
         }
@@ -191,6 +256,118 @@ function del(url, data = {}, options = {}) {
   })
 }
 
+// 文件上传
+function upload(url, filePath, formData = {}, options = {}) {
+  return new Promise((resolve, reject) => {
+    // 获取存储的token
+    const token = wx.getStorageSync('token')
+    
+    // 构建完整URL
+    const fullUrl = config.baseURL + url
+    
+    // 显示加载提示
+    if (options.showLoading !== false) {
+      wx.showLoading({
+        title: options.loadingText || '上传中...',
+        mask: true
+      })
+    }
+
+    console.log('文件上传请求:', {
+      url: url,
+      fullUrl: fullUrl,
+      filePath: filePath,
+      name: options.name || 'file',
+      formData: formData,
+      hasToken: !!token
+    })
+
+    wx.uploadFile({
+      url: fullUrl,
+      filePath: filePath,
+      name: options.name || 'file',
+      formData: formData,
+      header: {
+        'Authorization': token ? `Bearer ${token}` : '',
+        ...options.header
+      },
+      success: (res) => {
+        console.log('文件上传成功:', {
+          url: url,
+          statusCode: res.statusCode,
+          data: res.data
+        })
+
+        try {
+          const data = JSON.parse(res.data)
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            if (data.code === 200) {
+              resolve(data)
+            } else if (data.code === 401) {
+              // token过期
+              wx.removeStorageSync('token')
+              wx.removeStorageSync('userInfo')
+              wx.showToast({
+                title: '登录已过期',
+                icon: 'none'
+              })
+              setTimeout(() => {
+                wx.redirectTo({
+                  url: '/pages/auth/login/login'
+                })
+              }, 1500)
+              reject(new Error('登录已过期，请重新登录'))
+            } else {
+              const message = data.message || '上传失败'
+              reject(new Error(message))
+            }
+          } else {
+            let errorMessage = '上传失败'
+            if (res.statusCode === 404) {
+              errorMessage = '上传接口不存在'
+            } else if (res.statusCode === 500) {
+              errorMessage = '服务器内部错误'
+            } else if (res.statusCode === 401) {
+              errorMessage = '认证失败，请重新登录'
+              wx.removeStorageSync('token')
+              wx.removeStorageSync('userInfo')
+            }
+            reject(new Error(errorMessage))
+          }
+        } catch (parseError) {
+          console.error('解析上传响应失败:', parseError, res.data)
+          reject(new Error('服务器响应格式错误'))
+        }
+      },
+      fail: (err) => {
+        console.error('文件上传失败:', {
+          url: url,
+          error: err
+        })
+
+        let errorMessage = '上传失败'
+        if (err.errMsg) {
+          if (err.errMsg.includes('timeout')) {
+            errorMessage = '上传超时，请检查网络'
+          } else if (err.errMsg.includes('fail')) {
+            errorMessage = '网络连接失败，请检查网络设置'
+          } else if (err.errMsg.includes('file not exist')) {
+            errorMessage = '文件不存在'
+          }
+        }
+
+        reject(new Error(errorMessage))
+      },
+      complete: () => {
+        // 隐藏加载提示
+        if (options.showLoading !== false) {
+          wx.hideLoading()
+        }
+      }
+    })
+  })
+}
+
 // 导出模块
 module.exports = {
   request,
@@ -198,5 +375,6 @@ module.exports = {
   post,
   put,
   delete: del,
+  upload,
   config
 }

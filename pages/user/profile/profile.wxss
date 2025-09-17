@@ -34,6 +34,17 @@
   margin-bottom: 8rpx;
 }
 
+.user-phone {
+  font-size: 24rpx;
+  opacity: 0.9;
+  margin-bottom: 8rpx;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  display: inline-block;
+  max-width: 300rpx;
+}
+
 .user-level {
   font-size: 24rpx;
   opacity: 0.8;
@@ -224,4 +235,131 @@
 /* 底部间距 */
 .bottom-space {
   height: calc(100rpx + env(safe-area-inset-bottom));
+}
+
+/* 推荐码模态框样式 */
+.referral-modal {
+  padding: 40rpx;
+  padding-bottom: calc(40rpx + env(safe-area-inset-bottom));
+  background: white;
+  border-radius: 24rpx 24rpx 0 0;
+  max-height: 75vh;
+  overflow-y: auto;
+}
+
+.modal-title {
+  font-size: 36rpx;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 40rpx;
+  color: #333;
+}
+
+.referral-section {
+  margin-bottom: 40rpx;
+}
+
+.section-title {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+
+.referral-code-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 30rpx;
+  border-radius: 16rpx;
+  color: white;
+  position: relative;
+}
+
+.code-text {
+  font-size: 32rpx;
+  font-weight: bold;
+  letter-spacing: 4rpx;
+  flex: 1;
+}
+
+.copy-hint {
+  font-size: 24rpx;
+  opacity: 0.8;
+  margin-left: 16rpx;
+}
+
+.referrer-info {
+  background: #f8f9fa;
+  padding: 30rpx;
+  border-radius: 16rpx;
+  border-left: 6rpx solid #667eea;
+}
+
+.referrer-name {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 16rpx;
+}
+
+.referrer-code {
+  display: flex;
+  align-items: center;
+  font-size: 24rpx;
+  color: #666;
+}
+
+.referral-actions {
+  margin-top: 40rpx;
+}
+
+/* 推荐码输入对话框样式 */
+.referral-input-dialog {
+  width: 600rpx;
+  background: white;
+  border-radius: 24rpx;
+  overflow: hidden;
+}
+
+.input-dialog-header {
+  padding: 40rpx 40rpx 20rpx 40rpx;
+  text-align: center;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.input-dialog-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.input-dialog-content {
+  padding: 40rpx;
+}
+
+.input-dialog-actions {
+  display: flex;
+  padding: 20rpx 40rpx 40rpx 40rpx;
+  gap: 20rpx;
+}
+
+.cancel-btn {
+  flex: 1;
+}
+
+.confirm-btn {
+  flex: 1;
+}
+
+/* 推荐码卡片hover效果 */
+.referral-code-card:active {
+  transform: scale(0.98);
+  transition: transform 0.2s ease;
+}
+
+.referrer-code:active {
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
 } 

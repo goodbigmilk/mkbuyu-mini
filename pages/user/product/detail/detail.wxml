@@ -1,2 +1,118 @@
 <!--pages/user/product/detail/detail.wxml-->
-<text>pages/user/product/detail/detail.wxml</text>
+<view class="container">
+  <!-- 加载状态 -->
+  <van-loading wx:if="{{loading}}" size="40rpx" color="#ff6d00">加载中...</van-loading>
+  
+  <!-- 商品详情 -->
+  <view wx:elif="{{productDetail}}" class="product-detail">
+    <!-- 商品图片 -->
+    <view class="product-images">
+      <swiper 
+        class="images-swiper" 
+        indicator-dots="{{productDetail.images.length > 1}}" 
+        indicator-color="rgba(255,255,255,0.5)" 
+        indicator-active-color="#ff6d00" 
+        circular="{{productDetail.images.length > 1}}" 
+        autoplay="{{false}}"
+        duration="300"
+        easing-function="easeInOutCubic"
+        bindchange="onSwiperChange">
+        <swiper-item wx:for="{{productDetail.images}}" wx:key="index">
+          <image 
+            src="{{item}}" 
+            mode="aspectFill" 
+            class="product-image"
+            lazy-load="{{true}}"
+            show-menu-by-longpress="{{true}}"></image>
+        </swiper-item>
+      </swiper>
+      <view wx:if="{{productDetail.images.length > 1}}" class="image-counter">
+        {{currentImageIndex + 1}}/{{productDetail.images.length}}
+      </view>
+    </view>
+
+    <!-- 商品信息 -->
+    <view class="product-info">
+      <view class="product-name">{{productDetail.name}}</view>
+      <view class="product-price">
+        <text class="price-symbol">¥</text>
+        <text class="price-number">{{productDetail.displayPrice}}</text>
+      </view>
+      <view class="product-stock-sales">
+        <text class="stock-text">库存：{{productDetail.stock}}件</text>
+        <text class="sales-text">已售：{{productDetail.salesCount}}件</text>
+      </view>
+    </view>
+
+    <!-- 商品描述 -->
+    <view class="product-description">
+      <view class="section-title">商品描述</view>
+      <view class="description-content">{{productDetail.description}}</view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view wx:else class="empty-wrapper">
+    <van-empty description="商品不存在或已下架" />
+  </view>
+</view>
+
+<!-- 底部操作栏 -->
+<view wx:if="{{productDetail}}" class="bottom-bar">
+  <view class="bar-content">
+    <view class="left-actions">
+      <button class="action-btn cart-btn" data-type="cart" bindtap="onShowBuyModal">
+        <van-icon name="shopping-cart-o" size="20px" />
+        <text>加入购物车</text>
+      </button>
+    </view>
+    <button class="buy-now-btn" data-type="now" bindtap="onShowBuyModal">
+      立即购买
+    </button>
+  </view>
+  <view class="safe-area-inset-bottom"></view>
+</view>
+
+<!-- 购买弹窗 -->
+<van-popup 
+  show="{{showBuyModal}}" 
+  position="bottom" 
+  round="{{true}}"
+  closeable="{{true}}"
+  z-index="2000"
+  bind:close="onHideBuyModal"
+  custom-style="padding: 40rpx;">
+  
+  <view class="buy-modal">
+    <view class="modal-title">{{buyType === 'cart' ? '加入购物车' : '立即购买'}}</view>
+    
+    <!-- 商品信息 -->
+    <view class="modal-product">
+      <image src="{{productDetail.images[0]}}" class="modal-product-image"></image>
+      <view class="modal-product-info">
+        <view class="modal-product-name">{{productDetail.name}}</view>
+        <view class="modal-product-price">¥{{productDetail.displayPrice}}</view>
+      </view>
+    </view>
+    
+    <!-- 数量选择 -->
+    <view class="quantity-section">
+      <view class="quantity-label">购买数量</view>
+      <van-stepper 
+        value="{{buyQuantity}}" 
+        min="1" 
+        max="{{productDetail.stock}}"
+        bind:change="onQuantityChange" />
+    </view>
+    
+    <!-- 确认按钮 -->
+    <van-button 
+      type="primary" 
+      size="large" 
+      block="{{true}}"
+      custom-class="confirm-btn"
+      bind:click="onConfirmBuy">
+      {{buyType === 'cart' ? '加入购物车' : '立即购买'}}
+    </van-button>
+  </view>
+</van-popup>

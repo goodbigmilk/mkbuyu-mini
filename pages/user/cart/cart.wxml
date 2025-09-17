@@ -42,7 +42,7 @@
         >
           <view class="item-image">
             <image 
-              src="{{item.product.images && item.product.images.length > 0 ? item.product.images[0].url : '/assets/images/default-product.png'}}" 
+              src="{{item.product.image || '/assets/images/default-product.png'}}" 
               mode="aspectFill"
             />
             <view class="invalid-mask">失效</view>
@@ -85,7 +85,7 @@
             <!-- 商品图片 -->
             <view class="item-image">
               <image 
-                src="{{item.product.images && item.product.images.length > 0 ? item.product.images[0].url : '/assets/images/default-product.png'}}" 
+                src="{{item.product.image || '/assets/images/default-product.png'}}" 
                 mode="aspectFill"
               />
               <!-- 商品标签 -->

@@ -1,0 +1,38 @@
+/* 支付弹窗样式 */
+.payment-modal {
+  width: 100%;
+}
+
+.modal-header {
+  text-align: center;
+  margin-bottom: 40rpx;
+  padding-bottom: 20rpx;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.modal-title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #323233;
+  margin-bottom: 20rpx;
+}
+
+.modal-amount {
+  display: block;
+  font-size: 48rpx;
+  font-weight: 700;
+  color: #ff6d00;
+}
+
+.payment-icon {
+  margin-right: 20rpx;
+}
+
+.disabled-cell {
+  opacity: 0.5;
+}
+
+.modal-actions {
+  margin-top: 60rpx;
+}

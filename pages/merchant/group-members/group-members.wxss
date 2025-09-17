@@ -1,0 +1,222 @@
+/* pages/merchant/group-members/group-members.wxss */
+
+.container {
+  padding: 20rpx;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+/* 操作栏 */
+.action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx;
+  background-color: #fff;
+  border-radius: 12rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+.stats-info {
+  flex: 1;
+  margin: 0 20rpx;
+}
+
+.stats-text {
+  font-size: 28rpx;
+  color: #666;
+}
+
+/* 批量操作按钮 */
+.batch-actions {
+  display: flex;
+  align-items: center;
+}
+
+.batch-mode-actions {
+  display: flex;
+  gap: 10rpx;
+  align-items: center;
+}
+
+/* 成员列表 */
+.member-list {
+  background-color: #fff;
+  border-radius: 12rpx;
+  overflow: hidden;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1);
+}
+
+.member-item {
+  display: flex;
+  align-items: center;
+  padding: 30rpx 20rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+  transition: background-color 0.3s ease;
+}
+
+.member-item:last-child {
+  border-bottom: none;
+}
+
+.member-item.selected {
+  background-color: #e6f3ff;
+}
+
+.member-item:active {
+  background-color: #f0f0f0;
+}
+
+/* 成员选择框 */
+.member-select {
+  margin-right: 20rpx;
+  display: flex;
+  align-items: center;
+}
+
+/* 成员头像 */
+.member-avatar {
+  margin-right: 20rpx;
+}
+
+.avatar-img {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background-color: #f0f0f0;
+}
+
+/* 成员信息 */
+.member-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.member-name {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #333;
+}
+
+.member-detail {
+  font-size: 26rpx;
+  color: #999;
+}
+
+/* 成员操作按钮 */
+.member-actions {
+  display: flex;
+  gap: 10rpx;
+}
+
+/* 加载更多 */
+.loading-more {
+  text-align: center;
+  padding: 40rpx;
+  color: #999;
+}
+
+/* 对话框内容 */
+.dialog-content {
+  padding: 20rpx;
+  max-height: 600rpx;
+  overflow-y: auto;
+}
+
+.selected-tip {
+  background-color: #e6f3ff;
+  padding: 20rpx;
+  border-radius: 8rpx;
+  margin: 20rpx 0;
+  text-align: center;
+}
+
+.selected-tip text {
+  color: #1989fa;
+  font-size: 28rpx;
+}
+
+/* 用户列表 */
+.user-list {
+  margin-top: 20rpx;
+}
+
+.user-item {
+  display: flex;
+  align-items: center;
+  padding: 20rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+  transition: background-color 0.3s ease;
+}
+
+.user-item:last-child {
+  border-bottom: none;
+}
+
+.user-item.selected {
+  background-color: #e6f3ff;
+}
+
+.user-item:active {
+  background-color: #f0f0f0;
+}
+
+/* 用户头像 */
+.user-avatar {
+  margin-right: 20rpx;
+}
+
+/* 用户信息 */
+.user-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.user-name {
+  font-size: 30rpx;
+  font-weight: 500;
+  color: #333;
+}
+
+.user-detail {
+  font-size: 26rpx;
+  color: #999;
+}
+
+/* 用户选择框 */
+.user-select {
+  display: flex;
+  align-items: center;
+}
+
+/* 无用户提示 */
+.no-users {
+  text-align: center;
+  padding: 60rpx 20rpx;
+  color: #999;
+  font-size: 28rpx;
+}
+
+/* 响应式设计 */
+@media (max-width: 750rpx) {
+  .action-bar {
+    flex-direction: column;
+    gap: 20rpx;
+    align-items: stretch;
+  }
+  
+  .batch-mode-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .member-actions {
+    flex-direction: column;
+    gap: 10rpx;
+  }
+}

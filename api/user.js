@@ -211,6 +211,79 @@ const deleteAccount = (data) => {
   return post('/user/delete-account', data)
 }
 
+/**
+ * 通过手机号搜索用户（用于商家添加用户到分组）
+ * @param {Object} params 查询参数
+ * @param {string} params.phone 手机号
+ * @returns {Promise} 用户信息
+ */
+const getUserByPhone = (phone) => {
+  return get('/shop/user-info/search-by-phone', { phone })
+}
+
+/**
+ * 获取用户列表
+ * @param {Object} params 查询参数
+ * @param {number} params.page 页码，默认 1
+ * @param {number} params.page_size 每页数量，默认 20
+ * @param {string} params.keyword 搜索关键词（用户名、昵称或手机号）
+ * @returns {Promise} 用户列表
+ */
+const getUserList = (params = {}) => {
+  // 直接调用后端用户列表API，支持搜索和分页
+  return get('/shop/user-info/list', params)
+}
+
+/**
+ * 获取分销统计数据
+ * @returns {Promise} 分销统计数据
+ */
+const getDistributionStats = () => {
+  return get('/user/distribution/stats')
+}
+
+/**
+ * 获取推荐用户列表（已废弃，请使用 getDistributionCustomers）
+ * @param {Object} params 查询参数
+ * @param {number} params.page 页码，默认 1  
+ * @param {number} params.page_size 每页数量，默认 20
+ * @returns {Promise} 推荐用户列表
+ */
+const getReferredUsers = (params = {}) => {
+  return get('/user/distribution/customers', params)
+}
+
+/**
+ * 获取分账订单列表
+ * @param {Object} params 查询参数
+ * @param {number} params.page 页码，默认 1  
+ * @param {number} params.page_size 每页数量，默认 10
+ * @returns {Promise} 分账订单列表
+ */
+const getDistributionOrders = (params = {}) => {
+  return get('/user/distribution/orders', params)
+}
+
+/**
+ * 获取推荐客户列表
+ * @param {Object} params 查询参数
+ * @param {number} params.page 页码，默认 1  
+ * @param {number} params.page_size 每页数量，默认 20
+ * @returns {Promise} 推荐客户列表
+ */
+const getDistributionCustomers = (params = {}) => {
+  return get('/user/distribution/customers', params)
+}
+
+/**
+ * 获取分账详情
+ * @param {number} distributionId 分账ID
+ * @returns {Promise} 分账详情
+ */
+const getDistributionDetail = (distributionId) => {
+  return get(`/user/distribution/${distributionId}`)
+}
+
 module.exports = {
   getUserProfile,
   updateUserProfile,
@@ -232,5 +305,12 @@ module.exports = {
   unfollowShop,
   getUserFeedbacks,
   submitFeedback,
-  deleteAccount
+  deleteAccount,
+  getUserByPhone,
+  getUserList,
+  getDistributionStats,
+  getReferredUsers,
+  getDistributionOrders,
+  getDistributionCustomers,
+  getDistributionDetail
 } 

@@ -1,24 +1,9 @@
-const { store, getStore } = require('../../../store/index.js')
 const { formatPrice, formatTime, showToast, showModal } = require('../../../utils/index.js')
+const { shopState } = require('../../../utils/state.js')
 
 Page({
   data: {
     shopInfo: {},
-    todayStats: {
-      orderCount: 0,
-      sales: 0,
-      visitorCount: 0,
-      conversionRate: 0,
-      orderChange: 0,
-      salesChange: 0,
-      visitorChange: 0,
-      conversionChange: 0
-    },
-    chartPeriod: 'week',
-    chartData: {
-      totalSales: 0,
-      data: []
-    },
     pendingCounts: {
       orders: 0,
       refunds: 0,
@@ -35,6 +20,11 @@ Page({
   onLoad() {
     this.checkMerchantAuth()
     this.initDashboard()
+    
+    // 隐藏home按钮
+    if (wx.hideHomeButton) {
+      wx.hideHomeButton()
+    }
   },
 
   onShow() {
@@ -54,14 +44,13 @@ Page({
 
   // 检查商家权限
   checkMerchantAuth() {
-    const userStore = getStore('user')
-    const userInfo = userStore.getUserInfo()
+    const userInfo = wx.getStorageSync('userInfo')
     
     // 检查用户角色是否为商家(shop)或管理员(admin)
     if (!userInfo.id || (userInfo.role !== 'shop' && userInfo.role !== 'admin')) {
       showModal('权限不足', '您没有商家权限，请联系管理员开通。').then(() => {
         wx.switchTab({
-          url: '/pages/home/home'
+          url: '/pages/login/login'
         })
       })
       return false
@@ -79,8 +68,6 @@ Page({
     try {
       await Promise.all([
         this.loadShopInfo(),
-        this.loadTodayStats(),
-        this.loadChartData(),
         this.loadPendingCounts(),
         this.loadRecentActivities()
       ])
@@ -96,7 +83,6 @@ Page({
   async refreshData() {
     try {
       await Promise.all([
-        this.loadTodayStats(),
         this.loadPendingCounts(),
         this.loadRecentActivities()
       ])
@@ -108,47 +94,35 @@ Page({
   // 加载店铺信息
   async loadShopInfo() {
     try {
-      const shopStore = getStore('shop')
-      await shopStore.loadShopInfo()
+      const { getMyShopInfo } = require('../../../api/shop.js')
+      const response = await getMyShopInfo()
       
-      const shopInfo = shopStore.getShopInfo()
-      this.setData({ shopInfo })
+      if (response.code === 200 && response.data) {
+        shopState.setShopInfo(response.data)
+        this.setData({ shopInfo: response.data })
+      }
     } catch (error) {
       console.error('加载店铺信息失败:', error)
     }
   },
 
-  // 加载今日统计数据
-  async loadTodayStats() {
-    try {
-      const shopStore = getStore('shop')
-      const stats = await shopStore.getTodayStats()
-      
-      this.setData({ todayStats: stats })
-    } catch (error) {
-      console.error('加载今日统计失败:', error)
-    }
-  },
 
-  // 加载图表数据
-  async loadChartData() {
-    try {
-      const shopStore = getStore('shop')
-      const chartData = await shopStore.getSalesChart(this.data.chartPeriod)
-      
-      this.setData({ chartData })
-    } catch (error) {
-      console.error('加载图表数据失败:', error)
-    }
-  },
 
   // 加载待处理数量
   async loadPendingCounts() {
     try {
-      const shopStore = getStore('shop')
-      const counts = await shopStore.getPendingCounts()
+      const { getShopAnalytics } = require('../../../api/shop.js')
+      const response = await getShopAnalytics({ type: 'order_stats' })
       
-      this.setData({ pendingCounts: counts })
+      if (response.code === 200 && response.data) {
+        const counts = {
+          orders: response.data.pending_orders || 0,
+          refunds: response.data.pending_refunds || 0,
+          lowStock: response.data.low_stock_products || 0,
+          reviews: response.data.pending_reviews || 0
+        }
+        this.setData({ pendingCounts: counts })
+      }
     } catch (error) {
       console.error('加载待处理数量失败:', error)
     }
@@ -157,73 +131,22 @@ Page({
   // 加载最新动态
   async loadRecentActivities() {
     try {
-      const shopStore = getStore('shop')
-      const activities = await shopStore.getRecentActivities()
+      const { getShopAnalytics } = require('../../../api/shop.js')
+      const response = await getShopAnalytics({ 
+        type: 'recent_activities',
+        limit: 10
+      })
       
-      this.setData({ activities })
+      if (response.code === 200 && response.data) {
+        this.setData({ activities: response.data.activities || [] })
+      }
     } catch (error) {
       console.error('加载最新动态失败:', error)
     }
   },
 
-  // 切换店铺营业状态
-  async onToggleShopStatus() {
-    const { shopInfo } = this.data
-    const newStatus = shopInfo.status === 'open' ? 'closed' : 'open'
-    const statusText = newStatus === 'open' ? '营业' : '打烊'
-    
-    const confirmed = await showModal('确认操作', `确定要${statusText}吗？`)
-    if (!confirmed) return
-    
-    try {
-      const shopStore = getStore('shop')
-      await shopStore.updateShopStatus(newStatus)
-      
-      this.setData({
-        'shopInfo.status': newStatus
-      })
-      
-      showToast(`已${statusText}`)
-    } catch (error) {
-      console.error('切换营业状态失败:', error)
-      showToast('操作失败')
-    }
-  },
 
-  // 统计数据点击
-  onStatTap(e) {
-    const { type } = e.currentTarget.dataset
-    
-    switch (type) {
-      case 'orders':
-        wx.navigateTo({
-          url: '/pages/merchant/orders/orders'
-        })
-        break
-      case 'sales':
-        wx.navigateTo({
-          url: '/pages/merchant/analytics/analytics?tab=sales'
-        })
-        break
-      case 'visitors':
-        wx.navigateTo({
-          url: '/pages/merchant/analytics/analytics?tab=traffic'
-        })
-        break
-      case 'conversion':
-        wx.navigateTo({
-          url: '/pages/merchant/analytics/analytics?tab=conversion'
-        })
-        break
-    }
-  },
 
-  // 图表周期切换
-  async onChartPeriodChange(e) {
-    const { period } = e.currentTarget.dataset
-    this.setData({ chartPeriod: period })
-    await this.loadChartData()
-  },
 
   // 待处理事务点击
   onPendingTap(e) {
@@ -308,6 +231,21 @@ Page({
     wx.navigateTo({
       url: '/pages/merchant/settings/settings'
     })
+  },
+
+  // 最新动态点击
+  onActivityTap(e) {
+    const { activity } = e.currentTarget.dataset
+    
+    if (activity && activity.type === 'order' && activity.order_id) {
+      // 跳转到订单详情页面
+      wx.navigateTo({
+        url: `/pages/merchant/orders/detail/detail?id=${activity.order_id}`
+      })
+    } else {
+      // 其他类型的动态暂不处理
+      console.log('点击了动态:', activity)
+    }
   },
 
   // 工具方法

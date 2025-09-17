@@ -1,5 +1,6 @@
 // 文件上传相关API
 const { post, delete: del } = require('../utils/request')
+const { API_CONFIG } = require('../utils/constants')
 
 /**
  * 上传图片
@@ -12,7 +13,7 @@ const uploadImage = (filePath, options = {}) => {
   return new Promise((resolve, reject) => {
     const token = wx.getStorageSync('token')
     wx.uploadFile({
-      url: 'http://localhost:8080/api/upload/image',
+      url: API_CONFIG.BASE_URL + '/upload/image',
       filePath: filePath,
       name: 'file',
       header: {
@@ -70,7 +71,7 @@ const uploadFile = (filePath, options = {}) => {
   return new Promise((resolve, reject) => {
     const token = wx.getStorageSync('token')
     wx.uploadFile({
-      url: 'http://localhost:8080/api/upload/file',
+      url: API_CONFIG.BASE_URL + '/upload/file',
       filePath: filePath,
       name: 'file',
       header: {

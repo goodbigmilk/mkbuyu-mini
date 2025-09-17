@@ -1,0 +1,374 @@
+/* pages/merchant/refunds/refunds.wxss */
+.refund-page {
+  background-color: #f8f9fa;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 120rpx; /* 为底部导航栏预留空间 */
+}
+
+/* 搜索栏样式 */
+.search-bar {
+  background-color: #fff;
+  padding: 20rpx 16rpx;
+  border-bottom: 1rpx solid #e9ecef;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+}
+
+.search-input-wrapper {
+  display: flex;
+  align-items: center;
+  background-color: #f8f9fa;
+  border-radius: 50rpx;
+  padding: 0 16rpx;
+  border: 1rpx solid #e9ecef;
+}
+
+.search-input {
+  flex: 1;
+  height: 64rpx;
+  line-height: 64rpx;
+  padding: 0 12rpx;
+  font-size: 26rpx;
+}
+
+.clear-btn {
+  color: #adb5bd;
+  font-size: 28rpx;
+  padding: 0 8rpx;
+  font-weight: bold;
+}
+
+.search-btn {
+  color: #007aff;
+  font-size: 26rpx;
+  padding: 0 12rpx;
+  font-weight: 500;
+}
+
+/* Tab切换样式 */
+.tabs {
+  background-color: #fff;
+  border-bottom: 1rpx solid #e9ecef;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+}
+
+.tabs-scroll {
+  white-space: nowrap;
+}
+
+.tab-list {
+  display: flex;
+  padding: 0 16rpx;
+  min-width: max-content;
+}
+
+.tab-item {
+  flex: 1;
+  text-align: center;
+  padding: 24rpx 16rpx;
+  position: relative;
+  min-width: 120rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.tab-item.active {
+  color: #007aff;
+}
+
+.tab-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60rpx;
+  height: 4rpx;
+  background: linear-gradient(90deg, #007aff, #5ac8fa);
+  border-radius: 2rpx;
+}
+
+.tab-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.tab-count {
+  position: absolute;
+  top: 8rpx;
+  right: 8rpx;
+  min-width: 32rpx;
+  height: 32rpx;
+  background: #dc3545;
+  color: #fff;
+  font-size: 18rpx;
+  text-align: center;
+  line-height: 32rpx;
+  border-radius: 16rpx;
+  padding: 0 6rpx;
+}
+
+/* 退款申请列表容器 */
+.refund-list-container {
+  flex: 1;
+  height: 0;
+}
+
+/* 退款申请列表样式 */
+.refund-list {
+  padding: 16rpx;
+}
+
+.refund-item {
+  background-color: #fff;
+  border-radius: 16rpx;
+  margin-bottom: 16rpx;
+  overflow: hidden;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
+  border: 1rpx solid #f1f3f4;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.refund-item:active {
+  transform: scale(0.98);
+  box-shadow: 0 1rpx 6rpx rgba(0, 0, 0, 0.1);
+}
+
+/* 退款申请头部 */
+.refund-header {
+  padding: 20rpx 16rpx;
+  border-bottom: 1rpx solid #f1f3f4;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+}
+
+.refund-main-info {
+  width: 100%;
+}
+
+/* 退款号行 */
+.refund-no-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.refund-no {
+  font-size: 28rpx;
+  color: #212529;
+  font-weight: 600;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 12rpx;
+}
+
+.refund-status {
+  font-size: 22rpx;
+  font-weight: 600;
+  padding: 6rpx 12rpx;
+  border-radius: 16rpx;
+  background-color: #f8f9fa;
+  color: #6c757d;
+  box-shadow: 0 1rpx 4rpx rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
+}
+
+.refund-status.status-pending {
+  background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+  color: #f57c00;
+}
+
+.refund-status.status-approved {
+  background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
+  color: #388e3c;
+}
+
+.refund-status.status-rejected {
+  background: linear-gradient(135deg, #ffebee, #ffcdd2);
+  color: #d32f2f;
+}
+
+/* 订单信息行 */
+.order-info-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8rpx;
+  padding: 6rpx 0;
+}
+
+.order-label {
+  font-size: 24rpx;
+  color: #6c757d;
+  margin-right: 8rpx;
+  min-width: 80rpx;
+  flex-shrink: 0;
+}
+
+.order-no {
+  font-size: 26rpx;
+  color: #495057;
+  font-weight: 500;
+  flex: 1;
+  word-break: break-all;
+  margin-right: 12rpx;
+}
+
+.refund-time {
+  font-size: 22rpx;
+  color: #6c757d;
+  flex-shrink: 0;
+}
+
+/* 用户信息行 */
+.user-info-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8rpx;
+  padding: 6rpx 0;
+}
+
+.user-label {
+  font-size: 24rpx;
+  color: #6c757d;
+  margin-right: 8rpx;
+  min-width: 80rpx;
+  flex-shrink: 0;
+}
+
+.user-name {
+  font-size: 26rpx;
+  color: #495057;
+  font-weight: 500;
+  margin-right: 12rpx;
+}
+
+.user-phone {
+  font-size: 24rpx;
+  color: #6c757d;
+  flex: 1;
+}
+
+/* 退款金额信息 */
+.amount-section {
+  display: flex;
+  align-items: center;
+  padding: 6rpx 0;
+}
+
+.amount-label {
+  font-size: 24rpx;
+  color: #495057;
+  margin-right: 8rpx;
+  min-width: 80rpx;
+  flex-shrink: 0;
+}
+
+.amount-value {
+  font-size: 30rpx;
+  color: #dc3545;
+  font-weight: 700;
+}
+
+/* 退款摘要 */
+.refund-summary {
+  padding: 16rpx;
+  border-bottom: 1rpx solid #f1f3f4;
+  background-color: #fafbfc;
+}
+
+.reason-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.reason-label {
+  font-size: 24rpx;
+  color: #6c757d;
+  margin-bottom: 6rpx;
+}
+
+.reason-detail {
+  font-size: 26rpx;
+  color: #495057;
+  line-height: 1.4;
+  word-break: break-all;
+}
+
+/* 退款申请操作按钮 */
+.refund-actions {
+  position: absolute;
+  bottom: 16rpx;
+  right: 16rpx;
+  display: flex;
+  gap: 12rpx;
+  z-index: 10;
+}
+
+.action-btn {
+  border-radius: 32rpx;
+  font-size: 22rpx !important;
+  padding: 0 24rpx !important;
+  height: 56rpx !important;
+  line-height: 56rpx !important;
+  border: 1rpx solid #dee2e6 !important;
+  background-color: #fff !important;
+  color: #495057 !important;
+  font-weight: 500 !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.1) !important;
+  min-width: 100rpx;
+  flex-shrink: 0;
+}
+
+.action-btn:active {
+  transform: scale(0.95);
+}
+
+.action-btn.reject-btn {
+  border-color: #dc3545 !important;
+  color: #dc3545 !important;
+}
+
+.action-btn.approve-btn {
+  border-color: #28a745 !important;
+  background: linear-gradient(135deg, #28a745, #20c997) !important;
+  color: #fff !important;
+  box-shadow: 0 2rpx 8rpx rgba(40, 167, 69, 0.3) !important;
+}
+
+.action-btn.detail-btn {
+  border-color: #007aff !important;
+  color: #007aff !important;
+}
+
+/* 加载状态 */
+.loading-more {
+  text-align: center;
+  padding: 40rpx 0;
+  color: #6c757d;
+  font-size: 26rpx;
+}
+
+.no-more {
+  text-align: center;
+  padding: 40rpx 0;
+  color: #adb5bd;
+  font-size: 24rpx;
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: 120rpx 32rpx;
+}

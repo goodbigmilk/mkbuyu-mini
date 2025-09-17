@@ -1,0 +1,104 @@
+<!--pages/user/user-orders/user-orders.wxml-->
+<view class="order-page">
+  <!-- 搜索栏 -->
+  <view class="search-bar">
+    <view class="search-input-wrapper">
+      <input 
+        class="search-input" 
+        placeholder="搜索订单号、商品名称" 
+        value="{{searchKeyword}}"
+        bindinput="onSearchInput"
+        confirm-type="search"
+        bindconfirm="onSearch"
+      />
+      <text class="clear-btn" wx:if="{{searchKeyword}}" bindtap="clearSearch">✕</text>
+      <text class="search-btn" bindtap="onSearch">搜索</text>
+    </view>
+  </view>
+
+  <!-- Tab切换 -->
+  <view class="tabs">
+    <scroll-view class="tabs-scroll" scroll-x="true">
+      <view class="tab-list">
+        <view 
+          class="tab-item {{activeTab === item.key ? 'active' : ''}}" 
+          wx:for="{{tabs}}" 
+          wx:key="key"
+          data-key="{{item.key}}"
+          bindtap="onTabChange"
+        >
+          <text class="tab-title">{{item.title}}</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 订单列表 -->
+  <view class="order-list">
+    <view class="order-item" wx:for="{{orderList}}" wx:key="id" data-status="{{item.status}}">
+      <!-- 右上角订单状态 -->
+      <view class="order-status-corner status-pending" wx:if="{{item.status === 1}}">
+        待付款
+      </view>
+      <view class="order-status-corner status-paid" wx:elif="{{item.status === 2}}">
+        待发货
+      </view>
+      <view class="order-status-corner status-shipped" wx:elif="{{item.status === 3}}">
+        待收货
+      </view>
+      <view class="order-status-corner status-completed" wx:elif="{{item.status === 4}}">
+        已完成
+      </view>
+      <view class="order-status-corner status-cancelled" wx:elif="{{item.status === 5}}">
+        已取消
+      </view>
+      
+      <!-- 店铺名称 -->
+      <view class="order-header">
+        <view class="shop-info">
+          <text class="shop-name">{{item.shop.name || '未知店铺'}}</text>
+        </view>
+      </view>
+
+      <!-- 商品列表 - 支持横向滑动 -->
+      <view class="product-container">
+        <scroll-view class="product-scroll" scroll-x="true" show-scrollbar="false">
+          <view class="product-list">
+            <view class="product-item" wx:for="{{item.items}}" wx:for-item="product" wx:key="id" bindtap="viewOrderDetail" data-order-id="{{item.id}}">
+              <image wx:if="{{product.product.images && product.product.images.length > 0}}" class="product-image" src="{{product.product.images[0].url}}" mode="aspectFill" />
+              <view class="product-quantity">x{{product.quantity}}</view>
+            </view>
+          </view>
+        </scroll-view>
+      </view>
+
+      <!-- 订单信息 -->
+      <view class="order-info-section" bindtap="viewOrderDetail" data-order-id="{{item.id}}">
+        <view class="order-meta">
+          <text class="order-no">订单号：{{item.order_no}}</text>
+          <view class="order-time">{{item.formatted_time}}</view>
+        </view>
+        <view class="order-amount">
+          <text wx:if="{{item.status === 1}}">共{{item.items.length}}件商品 需付 <text class="amount-value">¥{{item.formatted_total_amount}}</text></text>
+          <text wx:else>共{{item.items.length}}件商品 实付 <text class="amount-value">¥{{item.formatted_total_amount}}</text></text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 加载更多 -->
+    <view class="loading-more" wx:if="{{loading}}">
+      <text>加载中...</text>
+    </view>
+
+    <!-- 没有更多数据 -->
+    <view class="no-more" wx:if="{{!hasMore && orderList.length > 0}}">
+      <text>没有更多订单了</text>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{!loading && orderList.length === 0}}">
+      <text class="empty-text">暂无订单</text>
+      <button class="empty-btn" bindtap="goShopping">去购物</button>
+    </view>
+  </view>
+</view>

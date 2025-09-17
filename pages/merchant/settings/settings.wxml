@@ -1,19 +1,14 @@
 <view class="container">
   <!-- 用户和店铺信息 -->
   <view class="profile-section">
-    <view class="shop-card">
-      <image class="shop-avatar" src="{{shopInfo.avatar || '/assets/images/default-shop.png'}}" />
+    <view class="shop-card" bindtap="onEditShopInfo">
+      <image wx:if="{{shopInfo.avatar || userInfo.avatar}}" class="shop-avatar" src="{{shopInfo.avatar || userInfo.avatar}}" />
       <view class="shop-info">
-        <text class="shop-name">{{shopInfo.name || '未设置店铺名称'}}</text>
+        <text class="shop-name">{{shopInfo.name || userInfo.nickname || '未设置店铺名称'}}</text>
+        <text class="shop-phone" wx:if="{{userInfo.phone}}">手机号: {{userInfo.phone}}</text>
         <text class="shop-desc">{{shopInfo.description || '暂无店铺简介'}}</text>
       </view>
-      <van-button 
-        size="small" 
-        type="primary" 
-        bindtap="onEditShop"
-      >
-        编辑
-      </van-button>
+      <van-icon name="edit" size="16" />
     </view>
 
     <!-- 今日数据概览 -->

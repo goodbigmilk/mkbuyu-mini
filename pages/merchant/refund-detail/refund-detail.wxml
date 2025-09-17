@@ -1,0 +1,196 @@
+<!--pages/merchant/refund-detail/refund-detail.wxml-->
+<wxs module="utils">
+  // 格式化时间
+  function formatTime(timestamp) {
+    if (!timestamp) return '';
+    var date = getDate(timestamp);
+    var year = date.getFullYear();
+    var month = date.getMonth() + 1;
+    var day = date.getDate();
+    var hour = date.getHours();
+    var minute = date.getMinutes();
+    
+    month = month < 10 ? '0' + month : month;
+    day = day < 10 ? '0' + day : day;
+    hour = hour < 10 ? '0' + hour : hour;
+    minute = minute < 10 ? '0' + minute : minute;
+    
+    return year + '-' + month + '-' + day + ' ' + hour + ':' + minute;
+  }
+  
+  module.exports = {
+    formatTime: formatTime
+  };
+</wxs>
+
+<view class="refund-detail-page" wx:if="{{!loading && refundDetail}}">
+  <!-- 退款状态头部 -->
+  <view class="status-header">
+    <!-- 退款状态图标 -->
+    <view class="status-icon status-pending" wx:if="{{refundDetail.status === 1}}">
+      <van-icon name="pending-payment" size="48" />
+    </view>
+    <view class="status-icon status-approved" wx:elif="{{refundDetail.status === 2}}">
+      <van-icon name="passed" size="48" />
+    </view>
+    <view class="status-icon status-rejected" wx:elif="{{refundDetail.status === 3}}">
+      <van-icon name="clear" size="48" />
+    </view>
+    <view class="status-icon" wx:else>
+      <van-icon name="warning-o" size="48" />
+    </view>
+    
+    <view class="status-info">
+      <!-- 退款状态文本 -->
+      <view class="status-text" wx:if="{{refundDetail.status === 1}}">待处理</view>
+      <view class="status-text" wx:elif="{{refundDetail.status === 2}}">已同意</view>
+      <view class="status-text" wx:elif="{{refundDetail.status === 3}}">已拒绝</view>
+      <view class="status-text" wx:else>未知状态</view>
+      
+      <view class="status-desc" wx:if="{{refundDetail.status === 1}}">等待商家处理退款申请</view>
+      <view class="status-desc" wx:elif="{{refundDetail.status === 2}}">退款申请已通过，等待退款到账</view>
+      <view class="status-desc" wx:elif="{{refundDetail.status === 3}}">退款申请已被拒绝</view>
+    </view>
+  </view>
+
+  <!-- 退款申请信息 -->
+  <view class="info-section">
+    <view class="section-title">退款申请信息</view>
+    <view class="info-list">
+      <view class="info-item">
+        <text class="info-label">退款申请号</text>
+        <text class="info-value">{{refundDetail.refund_no}}</text>
+      </view>
+      <view class="info-item">
+        <text class="info-label">申请时间</text>
+        <text class="info-value">{{utils.formatTime(refundDetail.created_at)}}</text>
+      </view>
+      <view class="info-item">
+        <text class="info-label">退款金额</text>
+        <text class="info-value amount">¥{{refundDetail.refund_amount/100}}</text>
+      </view>
+      <view class="info-item" wx:if="{{refundDetail.processed_at}}">
+        <text class="info-label">处理时间</text>
+        <text class="info-value">{{utils.formatTime(refundDetail.processed_at)}}</text>
+      </view>
+      <view class="info-item" wx:if="{{refundDetail.admin_remark}}">
+        <text class="info-label">处理备注</text>
+        <text class="info-value">{{refundDetail.admin_remark}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 退款原因 -->
+  <view class="info-section">
+    <view class="section-title">退款原因</view>
+    <view class="reason-content">{{refundDetail.reason}}</view>
+  </view>
+
+  <!-- 退款凭证图片 -->
+  <view class="info-section" wx:if="{{refundDetail.images && refundDetail.images.length > 0}}">
+    <view class="section-title">退款凭证</view>
+    <view class="image-list">
+      <view 
+        class="image-item" 
+        wx:for="{{refundDetail.images}}" 
+        wx:key="id"
+        data-url="{{item.url}}"
+        bindtap="previewImage"
+      >
+        <van-image
+          width="120"
+          height="120"
+          src="{{item.url}}"
+          fit="cover"
+          round
+          lazy-load
+        />
+      </view>
+    </view>
+  </view>
+
+  <!-- 申请用户信息 -->
+  <view class="info-section" wx:if="{{refundDetail.user}}">
+    <view class="section-title">申请用户</view>
+    <view class="user-info">
+      <view class="user-avatar">
+        <van-image
+          width="60"
+          height="60"
+          src="{{refundDetail.user.avatar || '/images/default-avatar.png'}}"
+          fit="cover"
+          round
+        />
+      </view>
+      <view class="user-details">
+        <view class="user-name">{{refundDetail.user.nickname || '用户'}}</view>
+        <view class="user-phone" wx:if="{{refundDetail.user.phone}}">{{refundDetail.user.phone}}</view>
+      </view>
+      <view class="contact-btn" bindtap="contactUser">
+        <van-icon name="phone-o" size="20" />
+      </view>
+    </view>
+  </view>
+
+  <!-- 关联订单信息 -->
+  <view class="info-section" wx:if="{{refundDetail.order}}">
+    <view class="section-title">关联订单</view>
+    <view class="order-info" bindtap="viewOrderDetail">
+      <view class="order-header">
+        <text class="order-no">订单号：{{refundDetail.order.order_no}}</text>
+        <!-- 订单状态显示 -->
+        <view class="order-status" wx:if="{{refundDetail.order.status === 1}}">待支付</view>
+        <view class="order-status" wx:elif="{{refundDetail.order.status === 2}}">待发货</view>
+        <view class="order-status" wx:elif="{{refundDetail.order.status === 3}}">待收货</view>
+        <view class="order-status" wx:elif="{{refundDetail.order.status === 4}}">待评价</view>
+        <view class="order-status" wx:elif="{{refundDetail.order.status === 5}}">已完成</view>
+        <view class="order-status" wx:elif="{{refundDetail.order.status === 6}}">退款中</view>
+        <view class="order-status" wx:elif="{{refundDetail.order.status === 7}}">已退款</view>
+        <view class="order-status" wx:elif="{{refundDetail.order.status === 8}}">已取消</view>
+        <view class="order-status" wx:else>未知状态</view>
+      </view>
+      <view class="order-amount">
+        <text class="amount-label">订单金额：</text>
+        <text class="amount-value">¥{{refundDetail.order.payment_amount/100}}</text>
+      </view>
+      <view class="order-time">下单时间：{{utils.formatTime(refundDetail.order.created_at)}}</view>
+      <view class="view-order-detail">
+        <text>查看订单详情</text>
+        <van-icon name="arrow" size="16" />
+      </view>
+    </view>
+  </view>
+
+  <!-- 操作按钮 -->
+  <view class="action-section" wx:if="{{refundDetail.status === 1}}">
+    <view class="action-buttons">
+      <button 
+        class="action-btn reject-btn" 
+        data-approved="{{false}}"
+        bindtap="processRefund"
+        loading="{{processing}}"
+        disabled="{{processing}}"
+      >拒绝退款</button>
+      <button 
+        class="action-btn approve-btn" 
+        data-approved="{{true}}"
+        bindtap="processRefund"
+        loading="{{processing}}"
+        disabled="{{processing}}"
+      >同意退款</button>
+    </view>
+  </view>
+</view>
+
+<!-- 加载中状态 -->
+<view class="loading-container" wx:if="{{loading}}">
+  <van-loading size="24" vertical>加载中...</van-loading>
+</view>
+
+<!-- 空状态 -->
+<view class="empty-container" wx:if="{{!loading && !refundDetail}}">
+  <van-empty description="退款申请不存在" />
+</view>
+
+<!-- 弹窗组件 -->
+<van-dialog id="van-dialog" />
