@@ -26,7 +26,8 @@ Page({
   onLoad(options) {
     const { id } = options
     if (id) {
-      this.setData({ productId: parseInt(id) })
+      // 保持 ID 为字符串，避免大数精度丢失
+      this.setData({ productId: id })
       this.loadProductDetail()
     }
   },
@@ -51,6 +52,7 @@ Page({
 
       const detail = {
         id: data.id,
+        product_id: data.product_id, // 使用后端返回的product_id字符串（JSON标签设置为string）
         name: data.name,
         price: data.price,
         displayPrice: (data.price / 100).toFixed(2),
@@ -123,8 +125,9 @@ Page({
     try {
       wx.showLoading({ title: '加入中...' })
       
+      // 使用product_id业务ID,后端会自动将字符串转为int64
       const response = await cartApi.addToCart({
-        product_id: this.data.productDetail.id,
+        product_id: this.data.productDetail.product_id,
         quantity: this.data.buyQuantity
       })
       
@@ -153,9 +156,9 @@ Page({
     try {
       wx.showLoading({ title: '正在下单...' })
       
-      // 准备订单数据
+      // 准备订单数据，使用product_id字符串避免精度丢失
       const orderData = {
-        product_id: this.data.productDetail.id,
+        product_id: this.data.productDetail.product_id,
         quantity: this.data.buyQuantity,
         remark: ''
       }

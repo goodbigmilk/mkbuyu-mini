@@ -4,7 +4,7 @@ const { userGroups: userGroupsApi, product: productApi } = require('../../../api
 
 Page({
   data: {
-    groupId: 0,
+    groupId: '',  // 改为字符串类型,避免大数精度丢失
     groupName: '',
     priceList: [],
     allProductList: [],
@@ -52,8 +52,9 @@ Page({
 
   onLoad(options) {
     const { groupId, groupName } = options
+    // 保持 groupId 为字符串，避免大数精度丢失
     this.setData({
-      groupId: parseInt(groupId),
+      groupId: String(groupId),  // 确保为字符串类型
       groupName: decodeURIComponent(groupName || '')
     })
     
@@ -113,27 +114,32 @@ Page({
         const { list = [], total = 0 } = data;
         const safeList = Array.isArray(list) ? list : []; // 关键：确保list是数组
 
-        console.log(safeList)
+        console.log('后端返回的定价列表:', safeList)
         // 为每个定价项添加计算好的字段（用safeList代替list）
-        const processedList = safeList.map(item => ({
-          ...item,
-          // 使用后端返回的product对象，如果没有则构建一个
-          product: item.product || {
-            id: item.product_id,
-            name: item.product_name,
-            price: item.origin_price, // 原价
-            originalPrice: item.origin_price, // 原价
-            description: '', // 后端没有返回描述，设为空字符串
-            images: item.main_image ? [item.main_image] : [] // 使用后端返回的main_image字段
-          },
-          discountRate: item.origin_price > 0 && item.price > 0
-              ? ((item.origin_price - item.price) / item.origin_price * 100).toFixed(1)
-              : '0.0',
-          isSelected: false, // 初始化选中状态
-          // 确保价格数据正确
-          originalPrice: item.origin_price || 0,
-          groupPrice: item.price || 0
-        }));
+        const processedList = safeList.map(item => {
+          console.log('处理定价项:', item.product_name, 'group_pricing_id:', item.group_pricing_id)
+          return {
+            ...item,
+            // 使用后端返回的product对象，如果没有则构建一个
+            product: item.product || {
+              id: item.product_id,
+              name: item.product_name,
+              price: item.origin_price, // 原价
+              originalPrice: item.origin_price, // 原价
+              description: '', // 后端没有返回描述，设为空字符串
+              images: item.main_image ? [item.main_image] : [] // 使用后端返回的main_image字段
+            },
+            discountRate: item.origin_price > 0 && item.price > 0
+                ? ((item.origin_price - item.price) / item.origin_price * 100).toFixed(1)
+                : '0.0',
+            isSelected: false, // 初始化选中状态
+            // 确保价格数据正确
+            originalPrice: item.origin_price || 0,
+            groupPrice: item.price || 0,
+            // 确保 group_pricing_id 被正确传递
+            group_pricing_id: item.group_pricing_id
+          }
+        });
         const priceList = reset ? processedList : [...this.data.priceList, ...processedList];
         this.setData({
           priceList,
@@ -240,15 +246,15 @@ Page({
         // 获取当前分组已有的商品ID列表
         const existingProductIds = this.data.priceList.map(price => price.product_id)
         
-        // 过滤掉已在分组中的商品，避免重复
+        // 过滤掉已在分组中的商品，避免重复(使用product_id业务ID)
         const filteredProducts = productList.filter(product => 
-          !existingProductIds.includes(product.id)
+          !existingProductIds.includes(product.product_id)
         )
         
         // 为每个商品添加选中状态
         const processedProducts = filteredProducts.map(product => ({
           ...product,
-          isSelected: this.data.selectedProducts.some(p => p.id === product.id)
+          isSelected: this.data.selectedProducts.some(p => p.product_id === product.product_id)
         }))
         
         this.setData({
@@ -329,7 +335,7 @@ Page({
     
     const productOptions = this.data.allProductList.map(product => ({
       text: product.name,
-      value: product.id
+      value: product.product_id
     }))
     
     wx.showActionSheet({
@@ -337,7 +343,7 @@ Page({
       success: (res) => {
         const selectedProduct = this.data.allProductList[res.tapIndex]
         this.setData({
-          'formData.product_id': selectedProduct.id,
+          'formData.product_id': selectedProduct.product_id,
           selectedProductName: selectedProduct.name
         })
       }
@@ -359,7 +365,7 @@ Page({
   toggleProductSelection(e) {
     const { product } = e.currentTarget.dataset
     const { selectedProducts, allProductList } = this.data
-    const index = selectedProducts.findIndex(p => p.id === product.id)
+    const index = selectedProducts.findIndex(p => p.product_id === product.product_id)
     
     if (index > -1) {
       selectedProducts.splice(index, 1)
@@ -370,7 +376,7 @@ Page({
     // 更新产品列表中的选中状态
     const updatedProductList = allProductList.map(p => ({
       ...p,
-      isSelected: selectedProducts.some(sp => sp.id === p.id)
+      isSelected: selectedProducts.some(sp => sp.product_id === p.product_id)
     }))
     
     // 检查是否全选
@@ -443,7 +449,7 @@ Page({
     
     // 检查是否重复（仅在新增时检查）
     if (!editingPrice) {
-      const existingPrice = priceList.find(price => price.product_id === parseInt(formData.product_id))
+      const existingPrice = priceList.find(price => String(price.product_id) === String(formData.product_id))
       if (existingPrice) {
         showToast('该商品已存在定价，请直接编辑')
         return
@@ -451,17 +457,18 @@ Page({
     }
     
     try {
+      // 直接使用字符串product_id，后端会自动转换为int64
       const data = {
         group_id: groupId,
-        product_id: parseInt(formData.product_id),
+        product_id: formData.product_id,
         price: Math.round(parseFloat(formData.price) * 100), // 元转分
         start_time: formData.start_time || undefined,
         end_time: formData.end_time || undefined
       }
       
       if (editingPrice) {
-        // 编辑定价
-        await userGroupsApi.updateGroupProductPrice(editingPrice.id, {
+        // 编辑定价 - 使用group_pricing_id(字符串类型)
+        await userGroupsApi.updateGroupProductPrice(editingPrice.group_pricing_id, {
           product_id: data.product_id, // 添加商品ID
           price: data.price,
           start_time: data.start_time,
@@ -511,7 +518,7 @@ Page({
     // 检查是否有重复商品
     const existingProductIds = priceList.map(price => price.product_id)
     const duplicateProducts = selectedProducts.filter(product => 
-      existingProductIds.includes(product.id)
+      existingProductIds.includes(product.product_id)
     )
     
     if (duplicateProducts.length > 0) {
@@ -526,14 +533,14 @@ Page({
       if (batchFormData.pricingMode === 'fixed') {
         // 固定价格模式
         products = selectedProducts.map(product => ({
-          product_id: product.id,
+          product_id: product.product_id,
           price: Math.round(parseFloat(batchFormData.price) * 100) // 元转分
         }))
       } else {
         // 百分比定价模式
         const percentage = parseFloat(batchFormData.percentage) / 100 // 转换为小数
         products = selectedProducts.map(product => ({
-          product_id: product.id,
+          product_id: product.product_id,
           price: Math.round(product.price * percentage) // 原价 * 百分比
         }))
       }
@@ -568,7 +575,7 @@ Page({
     // 检查是否有重复商品
     const existingProductIds = priceList.map(price => price.product_id)
     const duplicateProducts = selectedProducts.filter(product => 
-      existingProductIds.includes(product.id)
+      existingProductIds.includes(product.product_id)
     )
     
     if (duplicateProducts.length > 0) {
@@ -581,7 +588,7 @@ Page({
       const data = {
         group_id: groupId,
         products: selectedProducts.map(product => ({
-          product_id: product.id,
+          product_id: product.product_id,
           price: product.price // 使用商品原价
         }))
         // 不设置时间限制，永久有效
@@ -606,7 +613,8 @@ Page({
     if (!confirmed) return
     
     try {
-      await userGroupsApi.deleteGroupProductPrice(price.id)
+      // 使用group_pricing_id(字符串类型)
+      await userGroupsApi.deleteGroupProductPrice(price.group_pricing_id)
       showToast('删除成功')
       this.refreshData()
     } catch (error) {
@@ -621,7 +629,8 @@ Page({
     const newStatus = price.status === 1 ? 2 : 1
     
     try {
-      await userGroupsApi.updateGroupProductPrice(price.id, {
+      // 使用group_pricing_id(字符串类型)
+      await userGroupsApi.updateGroupProductPrice(price.group_pricing_id, {
         price: price.price,
         start_time: price.start_time,
         end_time: price.end_time,
@@ -697,7 +706,8 @@ Page({
     
     const { price } = e.currentTarget.dataset
     const { selectedPrices, priceList } = this.data
-    const index = selectedPrices.findIndex(p => p.id === price.id)
+    // 使用group_pricing_id(业务ID字符串)进行比较
+    const index = selectedPrices.findIndex(p => p.group_pricing_id === price.group_pricing_id)
     
     if (index > -1) {
       selectedPrices.splice(index, 1)
@@ -708,7 +718,7 @@ Page({
     // 更新定价列表中的选中状态
     const updatedPriceList = priceList.map(p => ({
       ...p,
-      isSelected: selectedPrices.some(sp => sp.id === p.id)
+      isSelected: selectedPrices.some(sp => sp.group_pricing_id === p.group_pricing_id)
     }))
     
     this.setData({ 
@@ -730,9 +740,9 @@ Page({
     if (!confirmed) return
     
     try {
-      // 批量删除API调用
+      // 批量删除API调用 - 使用group_pricing_id(字符串类型)
       for (const price of selectedPrices) {
-        await userGroupsApi.deleteGroupProductPrice(price.id)
+        await userGroupsApi.deleteGroupProductPrice(price.group_pricing_id)
       }
       
       showToast('批量删除成功')

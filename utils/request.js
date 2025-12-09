@@ -20,23 +20,8 @@ function request(options) {
       method: options.method || 'GET'
     })
     
-    // 如果没有token，检查本地存储中的所有相关数据
     if (!token) {
-      console.error('❌ Token为空，检查本地存储状态:')
-      try {
-        const userInfo = wx.getStorageSync('userInfo')
-        const allKeys = wx.getStorageInfoSync()
-        console.error('📋 本地存储详情:', {
-          userInfo: userInfo ? '✅ 存在' : '❌ 不存在',
-          用户角色: userInfo?.role || '未知',
-          用户ID: userInfo?.id || '未知',
-          用户手机: userInfo?.phone || '未知',
-          所有存储keys: allKeys.keys,
-          存储使用量: `${allKeys.currentSize}KB / ${allKeys.limitSize}KB`
-        })
-      } catch (storageError) {
-        console.error('❌ 读取本地存储失败:', storageError)
-      }
+      console.error('❌ Token为空')
     } else {
       console.log('✅ Token正常，长度:', token.length, '预览:', `${token.substring(0, 30)}...`)
     }
@@ -70,46 +55,23 @@ function request(options) {
             if (res.data.code === 200) {
               resolve(res.data)
             } else if (res.data.code === 401) {
-              // token过期，跳转到登录页
-              console.error('🚨 API返回401错误 - Token失效，清除登录状态')
-              console.error('🚨 请求详情:', {
+              // token过期
+              console.error('API返回401错误 - Token失效')
+              console.error('请求详情:', {
                 url: options.url,
                 method: options.method || 'GET',
-                响应数据: res.data,
-                当前token长度: wx.getStorageSync('token')?.length || 0
+                响应数据: res.data
               })
               
-              // 记录清除前的状态
-              const tokenBeforeClear = wx.getStorageSync('token')
-              const userInfoBeforeClear = wx.getStorageSync('userInfo')
-              console.error('🗑️ 即将清除的数据:', {
-                token长度: tokenBeforeClear?.length || 0,
-                用户信息: userInfoBeforeClear ? '存在' : '不存在',
-                用户角色: userInfoBeforeClear?.role
-              })
-              
-              wx.removeStorageSync('token')
-              wx.removeStorageSync('userInfo')
-              
-              console.error('🗑️ Token和用户信息已被清除')
-              
-              wx.showToast({
-                title: '登录已过期',
-                icon: 'none'
-              })
-              setTimeout(() => {
-                wx.redirectTo({
-                  url: '/pages/auth/login/login'
-                })
-              }, 1500)
-              reject(new Error('登录已过期，请重新登录'))
+              const message = res.data.message || '认证失败，请重新登录'
+              reject(new Error(message))
             } else {
               const message = res.data.message || '请求失败'
               reject(new Error(message))
             }
           } else {
             // 如果没有响应数据，直接返回
-            resolve({ code: 200, message: 'success', data: null })
+            resolve(null)
           }
         } else {
           console.error('HTTP状态码错误:', res.statusCode, res.data)
@@ -121,29 +83,13 @@ function request(options) {
           } else if (res.statusCode === 401) {
             errorMessage = '认证失败，请重新登录'
             
-            console.error('🚨 HTTP状态码401 - 认证失败，清除登录状态')
-            console.error('🚨 请求详情:', {
+            console.error('HTTP状态码401 - 认证失败')
+            console.error('请求详情:', {
               url: options.url,
               method: options.method || 'GET',
               HTTP状态码: res.statusCode,
-              响应数据: res.data,
-              当前token长度: wx.getStorageSync('token')?.length || 0
+              响应数据: res.data
             })
-            
-            // 记录清除前的状态
-            const tokenBeforeClear = wx.getStorageSync('token')
-            const userInfoBeforeClear = wx.getStorageSync('userInfo')
-            console.error('🗑️ 即将清除的数据:', {
-              token长度: tokenBeforeClear?.length || 0,
-              用户信息: userInfoBeforeClear ? '存在' : '不存在',
-              用户角色: userInfoBeforeClear?.role
-            })
-            
-            // 清除token
-            wx.removeStorageSync('token')
-            wx.removeStorageSync('userInfo')
-            
-            console.error('🗑️ Token和用户信息已被清除')
           }
           reject(new Error(errorMessage))
         }
@@ -302,21 +248,11 @@ function upload(url, filePath, formData = {}, options = {}) {
           const data = JSON.parse(res.data)
           if (res.statusCode >= 200 && res.statusCode < 300) {
             if (data.code === 200) {
-              resolve(data)
+              resolve(data.data)
             } else if (data.code === 401) {
               // token过期
-              wx.removeStorageSync('token')
-              wx.removeStorageSync('userInfo')
-              wx.showToast({
-                title: '登录已过期',
-                icon: 'none'
-              })
-              setTimeout(() => {
-                wx.redirectTo({
-                  url: '/pages/auth/login/login'
-                })
-              }, 1500)
-              reject(new Error('登录已过期，请重新登录'))
+              const message = data.message || '认证失败，请重新登录'
+              reject(new Error(message))
             } else {
               const message = data.message || '上传失败'
               reject(new Error(message))
@@ -329,8 +265,6 @@ function upload(url, filePath, formData = {}, options = {}) {
               errorMessage = '服务器内部错误'
             } else if (res.statusCode === 401) {
               errorMessage = '认证失败，请重新登录'
-              wx.removeStorageSync('token')
-              wx.removeStorageSync('userInfo')
             }
             reject(new Error(errorMessage))
           }

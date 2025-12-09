@@ -62,7 +62,7 @@
   <view class="product-list">
     <view 
       wx:for="{{productList}}" 
-      wx:key="id"
+      wx:key="product_id"
       class="product-item"
       bindtap="onProductTap"
       data-item="{{item}}"

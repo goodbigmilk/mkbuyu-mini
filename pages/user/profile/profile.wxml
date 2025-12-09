@@ -2,11 +2,10 @@
   <!-- 用户信息卡片 -->
   <view class="user-card">
     <view class="user-header" bindtap="onAvatarTap">
-      <image wx:if="{{userInfo.avatar}}" class="user-avatar" src="{{userInfo.avatar}}" />
+      <image wx:if="{{userInfo.user.avatar}}" class="user-avatar" src="{{userInfo.user.avatar}}" />
       <view class="user-info">
-        <view class="user-name">{{userInfo.nickname || '微信用户'}}</view>
-        <view class="user-phone" wx:if="{{userInfo.phone}}">手机号: {{userInfo.phone}}</view>
-        <view class="user-level">{{userInfo.level_name || '普通会员'}}</view>
+        <view class="user-name">{{userInfo.user.nickname || '普通用户'}}</view>
+        <view class="user-phone" wx:if="{{userInfo.user.phone}}">手机号: {{userInfo.user.phone}}</view>
       </view>
       <view class="user-actions">
         <van-icon name="edit" size="16" />
@@ -159,6 +158,20 @@
       <view class="menu-extra">
         <van-icon name="arrow" size="12" />
       </view>
+    </view>
+  </view>
+
+  <!-- 商家端切换按钮 -->
+  <view wx:if="{{hasDualRole}}" class="role-switch-section">
+    <view>
+      <van-button
+              size="large"
+              type="primary"
+              bindtap="onSwitchToMerchant"
+              custom-class="switch-to-merchant-btn"
+      >
+        切换到商家端
+      </van-button>
     </view>
   </view>
 

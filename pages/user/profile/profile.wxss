@@ -45,17 +45,21 @@
   max-width: 300rpx;
 }
 
-.user-level {
-  font-size: 24rpx;
+.user-actions {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
   opacity: 0.8;
-  background: rgba(255, 255, 255, 0.2);
-  padding: 6rpx 16rpx;
-  border-radius: 12rpx;
-  display: inline-block;
 }
 
-.user-actions {
-  opacity: 0.8;
+/* 角色切换按钮样式 */
+.role-switch-btn {
+  border-color: rgba(255, 255, 255, 0.8) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  font-size: 22rpx !important;
+  padding: 8rpx 16rpx !important;
+  border-radius: 20rpx !important;
 }
 
 .user-stats {
@@ -362,4 +366,20 @@
 .referrer-code:active {
   opacity: 0.7;
   transition: opacity 0.2s ease;
+}
+
+/* 角色切换按钮区域 */
+.role-switch-section {
+  margin-top: 20rpx;
+  padding: 0 30rpx 30rpx 30rpx;
+}
+
+.switch-to-merchant-btn {
+  width: 100% !important;
+  border-radius: 30rpx !important;
+  font-size: 28rpx !important;
+  height: 88rpx !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  border: none !important;
+  box-shadow: 0 8rpx 20rpx rgba(102, 126, 234, 0.3) !important;
 } 

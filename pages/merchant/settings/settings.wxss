@@ -65,6 +65,87 @@ page {
   overflow: hidden;
 }
 
+/* 店铺操作按钮区域 */
+.shop-actions {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+/* 商家端角色切换按钮样式 */
+.role-switch-btn-merchant {
+  border-color: #1989fa !important;
+  color: #1989fa !important;
+  background: rgba(25, 137, 250, 0.08) !important;
+  font-size: 22rpx !important;
+  padding: 6rpx 12rpx !important;
+  border-radius: 16rpx !important;
+  min-width: 80rpx !important;
+}
+
+/* 切换端功能区域 */
+.switch-section {
+  margin-bottom: 20rpx;
+}
+
+.switch-section .section-title {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #646566;
+  padding: 24rpx 32rpx 16rpx;
+}
+
+.switch-list {
+  background: #fff;
+  margin: 0 20rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+}
+
+.switch-item {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  padding: 32rpx;
+  transition: background-color 0.3s;
+  border-left: 4rpx solid #1989fa;
+  background: linear-gradient(90deg, rgba(25, 137, 250, 0.05) 0%, rgba(255, 255, 255, 1) 10%);
+}
+
+.switch-item:active {
+  background-color: #f0f7ff;
+}
+
+.switch-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72rpx;
+  height: 72rpx;
+  background: linear-gradient(135deg, #1989fa 0%, #64b5f6 100%);
+  border-radius: 12rpx;
+  color: #fff;
+}
+
+.switch-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.switch-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1989fa;
+  margin-bottom: 4rpx;
+}
+
+.switch-desc {
+  font-size: 24rpx;
+  color: #969799;
+}
+
 /* 数据概览 */
 .stats-overview {
   display: flex;
@@ -265,4 +346,15 @@ page {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* 角色切换按钮区域 */
+.switch-to-user-btn {
+  width: 100% !important;
+  border-radius: 30rpx !important;
+  font-size: 28rpx !important;
+  height: 88rpx !important;
+  background: linear-gradient(135deg, #1989fa 0%, #64b5f6 100%) !important;
+  border: none !important;
+  box-shadow: 0 8rpx 20rpx rgba(25, 137, 250, 0.3) !important;
 } 

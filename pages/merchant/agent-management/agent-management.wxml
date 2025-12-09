@@ -133,8 +133,8 @@
         <view class="section-title">请选择用户分组</view>
         <van-radio-group value="{{ selectedGroupId }}" bind:change="onGroupSelect">
           <van-cell-group>
-            <van-cell wx:for="{{ userGroups }}" wx:key="id" clickable data-name="{{ item.id }}">
-              <van-radio name="{{ item.id }}" checked-color="#4CAF50">{{ item.name }}</van-radio>
+            <van-cell wx:for="{{ userGroups }}" wx:key="id" clickable data-name="{{ item.group_id }}">
+              <van-radio name="{{ item.group_id }}" checked-color="#4CAF50">{{ item.name }}</van-radio>
             </van-cell>
           </van-cell-group>
         </van-radio-group>

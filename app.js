@@ -1,6 +1,7 @@
 // app.js
 const { userState, stateManager } = require('./utils/state')
 const { API_CONFIG } = require('./utils/constants')
+const { casdoorSDK } = require('./api/auth.js')
 
 App({
   onLaunch(options) {
@@ -47,6 +48,9 @@ App({
     this.globalData.stateManager = stateManager
     this.globalData.userState = userState
 
+    // 初始化认证状态标志
+    this.globalData.isAuthenticating = false
+
     console.log('应用初始化完成', this.globalData)
   },
 
@@ -80,69 +84,147 @@ App({
     }
   },
 
-  // 初始化用户状态
-  initUserState() {
+  // 初始化用户状态（使用OAuth认证）
+  async initUserState() {
+    // 防止重复调用
+    if (this.globalData.isAuthenticating) {
+      console.log('正在认证中，跳过重复调用')
+      return
+    }
+
     try {
-      const token = wx.getStorageSync('token')
-      const userInfo = wx.getStorageSync('userInfo')
+      this.globalData.isAuthenticating = true
       
-      if (token && userInfo) {
-        // 设置用户信息到状态管理
-        userState.setUserInfo(userInfo)
-        userState.setLoginStatus(true, token)
+      // 优先从 SDK 获取存储的token
+      const token = wx.getStorageSync('token')
+      const storedUserId = casdoorSDK.getStoredUserId()
+      
+      if (token && storedUserId) {
+        // 使用 SDK 进行静默登录检查
+        const isValidToken = await casdoorSDK.silentSignin()
         
-        // 验证token有效性并自动跳转
-        this.validateTokenAndRedirect(token, userInfo)
-      } else {
-        // 没有登录信息，清除可能的旧数据
-        console.log('用户未登录，保持在登录页面')
-        this.clearLoginState()
+        if (isValidToken) {
+          // 使用OAuth验证token有效性并自动跳转
+          await this.validateOAuthTokenAndRedirect(token, storedUserId)
+          return
+        } else {
+          // Token无效，清除存储
+          casdoorSDK.clearUserInfo()
+        }
       }
+      
+      // 没有有效登录信息，使用OAuth认证
+      console.log('用户未登录，启动OAuth认证检查')
+      await this.checkOAuthAuthentication()
     } catch (error) {
       console.error('初始化用户状态失败', error)
-      // 出错时清除登录状态，保持在登录页面
-      this.clearLoginState()
+      // 出错时启动OAuth认证
+      await this.checkOAuthAuthentication()
+    } finally {
+      this.globalData.isAuthenticating = false
     }
   },
 
-  // 验证token有效性并处理自动跳转
-  async validateTokenAndRedirect(token, userInfo) {
+  // 使用OAuth验证token有效性并处理自动跳转
+  async validateOAuthTokenAndRedirect(token, userId) {
     try {
-      const response = await this.request({
-        url: '/auth/user',
-        method: 'GET',
-        header: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+      // 导入获取用户信息的方法和统一登录状态设置函数
+      const { getUserInfo, setUserLoginState } = require('./api/auth.js')
       
-      console.log('验证token响应:', response)
+      // token已通过silentSignin验证，直接获取用户信息
+      console.log('Token已验证有效，获取用户信息')
       
-      if (response.code === 200) {
-        // 更新用户信息
-        userState.setUserInfo(response.data)
+      const userInfoResponse = await getUserInfo()
+      console.log('获取用户信息响应:', userInfoResponse)
+      
+      if (userInfoResponse && (userInfoResponse.user || userInfoResponse.id)) {
+        const validUserInfo = userInfoResponse.user || userInfoResponse
         
         // 获取用户角色
-        let role = response.data?.role || 
-                  userInfo?.role || 
-                  'user'  // 默认为普通用户
+        const roles = validUserInfo.roles || userInfoResponse.roles || []
+        let role = this.extractMainRole(roles) || 'user'
         
-        console.log('获取到的用户角色:', role, '来源数据:', {
-          responseData: response.data,
-          userInfo: userInfo
-        })
+        console.log('OAuth验证成功，用户角色:', role, 'roles数组:', roles, '用户信息:', validUserInfo)
         
-        // token有效，根据用户角色自动跳转
+        // 使用统一的登录状态设置函数，确保角色数据正确规范化
+        setUserLoginState(validUserInfo, roles, token)
+        
+        // 根据用户角色自动跳转
         this.autoRedirectByRole(role)
       } else {
-        // token失效，清除登录状态
-        console.log('token验证失败:', response)
-        this.clearLoginState()
+        console.error('获取用户信息失败:', userInfoResponse)
+        // 清除无效状态，跳转到登录页
+        casdoorSDK.clearUserInfo()
+        wx.reLaunch({
+          url: '/pages/auth/login/login'
+        })
       }
     } catch (error) {
-      console.error('验证token失败', error)
-      this.clearLoginState()
+      console.error('获取用户信息失败', error)
+      // 获取失败，清除状态并跳转到登录页
+      casdoorSDK.clearUserInfo()
+      wx.reLaunch({
+        url: '/pages/auth/login/login'
+      })
     }
+  },
+
+  // 检查微信小程序认证状态
+  async checkOAuthAuthentication() {
+    console.log('认证状态无效，跳转到登录页面')
+    // 跳转到登录页面，让用户重新登录
+    wx.reLaunch({
+      url: '/pages/auth/login/login'
+    })
+  },
+
+  // 从角色数组中提取主要角色
+  extractMainRole(roles) {
+    if (!Array.isArray(roles) || roles.length === 0) {
+      return 'user'
+    }
+
+    // 角色优先级：admin > shop > user
+    const roleMap = {
+      'admin': 'admin',
+      'administrator': 'admin',
+      'merchant': 'shop',
+      'shop': 'shop',
+      'shop_owner': 'shop',
+      'user': 'user'
+    }
+
+    // 按优先级查找角色
+    for (const role of roles) {
+      const roleCode = typeof role === 'string' ? role : (role.role_code || role.code || role.name)
+      if (roleCode === 'admin' || roleCode === 'administrator') {
+        return 'admin'
+      }
+    }
+
+    for (const role of roles) {
+      const roleCode = typeof role === 'string' ? role : (role.role_code || role.code || role.name)
+      if (roleMap[roleCode] === 'shop') {
+        return 'shop'
+      }
+    }
+
+    return 'user'
+  },
+
+  // 检查用户是否拥有商家角色
+  checkHasShopRole(roles) {
+    if (!Array.isArray(roles) || roles.length === 0) {
+      return false
+    }
+    
+    // 商家相关角色代码
+    const shopRoleCodes = ['merchant', 'shop', 'shop_owner']
+    
+    return roles.some(role => {
+      const roleCode = typeof role === 'string' ? role : (role.role_code || role.code || role.name)
+      return shopRoleCodes.includes(roleCode)
+    })
   },
 
   // 根据用户角色自动跳转
@@ -220,6 +302,10 @@ App({
 
   // 清除登录状态
   clearLoginState() {
+    // 使用 SDK 清除用户信息
+    casdoorSDK.clearUserInfo()
+    
+    // 清除本地状态（保持向后兼容）
     userState.logout()
   },
 
@@ -308,6 +394,127 @@ App({
     apiBaseUrl: '',
     networkType: '',
     version: '1.0.0',
-    store: null
+    store: null,
+    isAuthenticating: false,  // 添加认证状态标志
+    
+    // 角色测试工具（仅开发环境）
+    roleTestTool: {
+      // 测试双重角色功能
+      testDualRole: function() {
+        console.log('🧪 开始测试双重角色功能...')
+        
+        const diagnosis = userState.diagnoseRoles()
+        const testResults = {
+          timestamp: new Date().toLocaleString(),
+          diagnosis: diagnosis,
+          tests: []
+        }
+        
+        // 测试1: 基础角色检查
+        testResults.tests.push({
+          name: '基础角色检查',
+          hasUserRole: userState.hasUserRole(),
+          hasShopRole: userState.hasShopRole(),
+          hasMultipleRoles: userState.hasMultipleRoles(),
+          passed: diagnosis.issues.length === 0
+        })
+        
+        // 测试2: 上下文切换
+        const originalContext = userState.getCurrentContext()
+        let switchTestPassed = true
+        let switchTestDetails = {}
+        
+        try {
+          if (userState.hasUserRole() && userState.hasShopRole()) {
+            // 测试切换到用户端
+            const switchToUser = userState.switchContext('user')
+            const afterUserSwitch = userState.getCurrentContext()
+            
+            // 测试切换到商家端
+            const switchToShop = userState.switchContext('shop')
+            const afterShopSwitch = userState.getCurrentContext()
+            
+            // 恢复原始上下文
+            userState.switchContext(originalContext)
+            
+            switchTestDetails = {
+              originalContext,
+              switchToUser,
+              afterUserSwitch,
+              switchToShop,
+              afterShopSwitch,
+              restored: userState.getCurrentContext()
+            }
+            
+            switchTestPassed = switchToUser && switchToShop && 
+                               afterUserSwitch === 'user' && 
+                               afterShopSwitch === 'shop'
+          } else {
+            switchTestPassed = false
+            switchTestDetails = { reason: '用户没有双重角色，无法测试切换' }
+          }
+        } catch (error) {
+          switchTestPassed = false
+          switchTestDetails = { error: error.message }
+        }
+        
+        testResults.tests.push({
+          name: '上下文切换测试',
+          passed: switchTestPassed,
+          details: switchTestDetails
+        })
+        
+        // 测试3: 权限验证
+        testResults.tests.push({
+          name: '权限验证测试',
+          currentPermission: userState.hasCurrentPermission(),
+          userContext: userState.isUserContext(),
+          shopContext: userState.isShopContext(),
+          passed: userState.hasCurrentPermission()
+        })
+        
+        console.log('🧪 角色功能测试结果:', testResults)
+        
+        // 显示测试摘要
+        const passedTests = testResults.tests.filter(t => t.passed).length
+        const totalTests = testResults.tests.length
+        console.log(`📊 测试摘要: ${passedTests}/${totalTests} 通过`)
+        
+        if (passedTests === totalTests) {
+          console.log('✅ 所有测试通过！角色功能正常')
+        } else {
+          console.warn('❌ 部分测试失败，角色功能可能存在问题')
+        }
+        
+        return testResults
+      },
+      
+      // 模拟角色数据（仅测试用）
+      simulateRoles: function(roles) {
+        console.log('🎭 模拟角色数据:', roles)
+        const originalRoles = userState.getRoles()
+        
+        try {
+          // 临时修改角色数据进行测试
+          const { stateManager } = require('./utils/state.js')
+          stateManager.setState('user', { roles: roles })
+          
+          console.log('📊 模拟后的诊断结果:')
+          const diagnosis = userState.diagnoseRoles()
+          
+          // 恢复原始角色数据
+          stateManager.setState('user', { roles: originalRoles })
+          console.log('🔄 已恢复原始角色数据')
+          
+          return diagnosis
+        } catch (error) {
+          // 确保恢复原始数据
+          const { stateManager } = require('./utils/state.js')
+          stateManager.setState('user', { roles: originalRoles })
+          console.error('❌ 模拟测试失败:', error)
+          return null
+        }
+      }
+    }
   }
 }) 

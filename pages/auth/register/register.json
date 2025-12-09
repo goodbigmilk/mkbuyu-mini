@@ -1,10 +1,14 @@
 {
-  "navigationBarTitleText": "注册",
+  "navigationBarTitleText": "注册账号",
+  "navigationBarBackgroundColor": "#1989fa",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#667eea",
+  "backgroundTextStyle": "light",
   "enablePullDownRefresh": false,
   "usingComponents": {
-    "van-field": "@vant/weapp/field/index",
     "van-button": "@vant/weapp/button/index",
+    "van-field": "@vant/weapp/field/index",
     "van-icon": "@vant/weapp/icon/index",
-    "van-checkbox": "@vant/weapp/checkbox/index"
+    "van-loading": "@vant/weapp/loading/index"
   }
-} 
+}

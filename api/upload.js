@@ -100,15 +100,15 @@ const uploadFile = (filePath, options = {}) => {
 }
 
 /**
- * 获取上传凭证
+ * 获取上传凭证（后端暂无此功能）
  * @param {Object} params 参数
  * @param {string} params.type 文件类型
  * @param {string} params.filename 文件名
  * @returns {Promise} 上传凭证
  */
-const getUploadToken = (params) => {
-  return post('/upload/token', params)
-}
+// const getUploadToken = (params) => {
+//   return post('/upload/token', params)
+// }
 
 /**
  * 删除文件
@@ -117,13 +117,13 @@ const getUploadToken = (params) => {
  * @returns {Promise} 删除结果
  */
 const deleteFile = (data) => {
-  return del('/upload/file', data)
+  return del('/upload/delete', data)
 }
 
 module.exports = {
   uploadImage,
   uploadImages,
   uploadFile,
-  getUploadToken,
+  // getUploadToken, // 后端暂无此功能
   deleteFile
 } 

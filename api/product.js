@@ -2,10 +2,19 @@
 const { request } = require('../utils/request')
 const { API_CONFIG } = require('../utils/constants')
 
-// 获取商品列表（店铺商品管理）
+// 获取商品列表（用户端，基于用户绑定商家）
 function getProductList(params = {}) {
   return request({
-    url: '/shop/products',
+    url: '/product/list',
+    method: 'GET',
+    data: params
+  })
+}
+
+// 获取商家端商品列表（仅显示商家自己店铺的商品）
+function getShopProductList(params = {}) {
+  return request({
+    url: '/product/shop/list',
     method: 'GET',
     data: params
   })
@@ -14,7 +23,7 @@ function getProductList(params = {}) {
 // 创建商品
 function createProduct(data) {
   return request({
-    url: '/shop/products',
+    url: '/product/',
     method: 'POST',
     data
   })
@@ -23,7 +32,7 @@ function createProduct(data) {
 // 更新商品
 function updateProduct(id, data) {
   return request({
-    url: `/shop/products/${id}`,
+    url: `/product/${id}`,
     method: 'PUT',
     data
   })
@@ -32,7 +41,7 @@ function updateProduct(id, data) {
 // 删除商品
 function deleteProduct(id) {
   return request({
-    url: `/shop/products/${id}`,
+    url: `/product/${id}`,
     method: 'DELETE'
   })
 }
@@ -40,7 +49,7 @@ function deleteProduct(id) {
 // 获取用户可见商品详情
 function getProductDetail(id) {
   return request({
-    url: `/user/products/${id}`,
+    url: `/product/${id}`,
     method: 'GET'
   })
 }
@@ -48,7 +57,7 @@ function getProductDetail(id) {
 // 获取商家端商品详情（用于编辑）
 function getShopProductDetail(id) {
   return request({
-    url: `/shop/products/${id}`,
+    url: `/product/${id}`,
     method: 'GET'
   })
 }
@@ -56,7 +65,7 @@ function getShopProductDetail(id) {
 // 上架商品
 function publishProduct(id) {
   return request({
-    url: `/shop/products/${id}/publish`,
+    url: `/product/${id}/publish`,
     method: 'PUT'
   })
 }
@@ -64,24 +73,27 @@ function publishProduct(id) {
 // 下架商品
 function unpublishProduct(id) {
   return request({
-    url: `/shop/products/${id}/unpublish`,
+    url: `/product/${id}/unpublish`,
     method: 'PUT'
   })
 }
 
-// 批量操作商品
-function batchProductOperation(data) {
-  return request({
-    url: '/shop/products/batch',
-    method: 'POST',
-    data
-  })
-}
+// 批量操作商品（后端暂无此接口，预留）
+// function batchProductOperation(data) {
+//   return request({
+//     url: '/product/batch',
+//     method: 'POST',
+//     data
+//   })
+// }
 
-// 更新库存
+// 更新库存（通过发布/下架接口实现）
 function updateStock(id, data) {
+  // 根据库存情况决定是发布还是下架
+  const isPublished = data.stock > 0 && data.status === 'published'
+  const url = isPublished ? `/product/${id}/publish` : `/product/${id}/unpublish`
   return request({
-    url: `/admin/products/${id}/stock`,
+    url: url,
     method: 'PUT',
     data
   })
@@ -90,7 +102,7 @@ function updateStock(id, data) {
 // 获取用户可见商品列表（基于用户绑定商家）
 function getPublicProductList(params = {}) {
   return request({
-    url: '/user/products/list',
+    url: '/product/list',
     method: 'GET',
     data: params
   })
@@ -99,7 +111,7 @@ function getPublicProductList(params = {}) {
 // 获取用户可见热门商品
 function getHotProducts(params = {}) {
   return request({
-    url: '/user/products/hot',
+    url: '/product/hot',
     method: 'GET',
     data: params
   })
@@ -108,27 +120,33 @@ function getHotProducts(params = {}) {
 // 获取用户可见推荐商品
 function getRecommendProducts(params = {}) {
   return request({
-    url: '/user/products/recommend',
+    url: '/product/recommend',
     method: 'GET',
     data: params
   })
 }
 
-// 获取轮播图
-function getBanners(params = {}) {
-  return request({
-    url: '/products/banners',
-    method: 'GET',
-    data: params
-  })
-}
+// 获取轮播图（后端暂无此接口，预留）
+// function getBanners(params = {}) {
+//   return request({
+//     url: '/product/banners',
+//     method: 'GET',
+//     data: params
+//   })
+// }
 
-// 获取用户可见商品分类
+// 获取用户可见商品分类(商家端,需要分页参数)
 function getCategories(params = {}) {
+  // 确保有默认的分页参数
+  const queryParams = {
+    page: params.page || 1,
+    page_size: params.page_size || 100,
+    ...params
+  }
   return request({
-    url: '/user/products/categories',
+    url: '/product/categories',
     method: 'GET',
-    data: params
+    data: queryParams
   })
 }
 
@@ -167,6 +185,7 @@ function uploadImage(filePath) {
 
 module.exports = {
   getProductList,
+  getShopProductList,
   createProduct,
   updateProduct,
   deleteProduct,
@@ -174,12 +193,10 @@ module.exports = {
   getShopProductDetail,
   publishProduct,
   unpublishProduct,
-  batchProductOperation,
   updateStock,
   getPublicProductList,
   getHotProducts,
   getRecommendProducts,
-  getBanners,
   getCategories,
   uploadImage
 } 

@@ -47,7 +47,8 @@ Page({
     }
     
     const userName = decodeURIComponent(options.userName || '')
-    const userId = parseInt(options.userId)
+    // 保持 userId 为字符串，避免大数精度丢失
+    const userId = options.userId
     
     this.setData({
       viewUserId: userId,

@@ -1,0 +1,155 @@
+.container {
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+/* 表单区域 */
+.form-section {
+  background: #fff;
+  margin: 20rpx;
+  border-radius: 16rpx;
+  padding: 0;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+  padding: 32rpx 32rpx 24rpx;
+  margin: 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+/* 上传字段 */
+.upload-field {
+  padding: 24rpx 32rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.upload-field:last-child {
+  border-bottom: none;
+}
+
+.field-label {
+  font-size: 28rpx;
+  color: #333;
+  margin-bottom: 16rpx;
+}
+
+.optional {
+  font-size: 24rpx;
+  color: #999;
+  margin-left: 8rpx;
+}
+
+/* 上传区域 */
+.upload-area {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 12rpx;
+  overflow: hidden;
+  position: relative;
+  border: 2rpx dashed #ddd;
+}
+
+.upload-area.banner {
+  width: 100%;
+  height: 200rpx;
+}
+
+.upload-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+}
+
+.upload-text {
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 8rpx;
+}
+
+/* 图片预览 */
+.image-preview {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.preview-image {
+  width: 100%;
+  height: 100%;
+}
+
+.image-actions {
+  position: absolute;
+  top: 8rpx;
+  right: 8rpx;
+  width: 40rpx;
+  height: 40rpx;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 操作按钮区域 */
+.action-section {
+  margin: 40rpx 20rpx;
+  display: flex;
+  gap: 20rpx;
+}
+
+.cancel-btn {
+  flex: 1;
+  height: 88rpx !important;
+  border-radius: 44rpx !important;
+  font-size: 30rpx !important;
+  font-weight: 500 !important;
+  border: 2rpx solid #e4e7ed !important;
+  color: #606266 !important;
+}
+
+.save-btn {
+  flex: 2;
+  height: 88rpx !important;
+  border-radius: 44rpx !important;
+  font-size: 30rpx !important;
+  font-weight: 600 !important;
+}
+
+/* 底部间距 */
+.bottom-space {
+  height: calc(120rpx + env(safe-area-inset-bottom));
+}
+
+/* 自定义 van-field 样式 */
+.van-field {
+  padding: 24rpx 32rpx !important;
+}
+
+.van-field__label {
+  color: #333 !important;
+  font-size: 28rpx !important;
+  font-weight: 500 !important;
+}
+
+.van-field__control {
+  font-size: 28rpx !important;
+}
+
+.van-field--error .van-field__control {
+  color: #ee0a24 !important;
+}
+
+.van-field__error-message {
+  font-size: 24rpx !important;
+  padding-left: 0 !important;
+  margin-top: 8rpx !important;
+}

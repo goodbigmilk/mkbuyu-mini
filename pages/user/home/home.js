@@ -1,6 +1,8 @@
 // 导入API接口
 const productApi = require('../../../api/product')
 const cartApi = require('../../../api/cart')
+const categoryApi = require('../../../api/category')
+const shopApi = require('../../../api/shop')
 
 Page({
   data: {
@@ -21,11 +23,15 @@ Page({
     loadingMore: false,
     
     // 筛选条件
+    shopFilter: '', // 店铺筛选，空字符串表示全部店铺
     categoryFilter: 0,
     priceFilter: '',
     sortType: 'created_desc',
     
     // 筛选选项
+    shopOptions: [
+      { text: '全部店铺', value: '' }
+    ],
     categoryOptions: [
       { text: '全部分类', value: 0 }
     ],
@@ -79,6 +85,7 @@ Page({
   async initPage() {
     try {
       await Promise.all([
+        this.loadBoundShops(),
         this.loadCategories(),
         this.loadProductList()
       ])
@@ -94,6 +101,33 @@ Page({
     }
   },
 
+  // 加载用户绑定的店铺列表
+  async loadBoundShops() {
+    try {
+      const res = await shopApi.getMyBoundShops()
+      if (res.code === 200) {
+        const shops = res.data || []
+        const shopOptions = [
+          { text: '全部店铺', value: '' }
+        ]
+        
+        shops.forEach(shop => {
+          shopOptions.push({
+            text: shop.shop_name || shop.name,
+            value: shop.shop_id
+          })
+        })
+        
+        this.setData({ 
+          shopOptions,
+          boundShops: shops // 保存店铺列表
+        })
+      }
+    } catch (error) {
+      console.error('加载店铺列表失败:', error)
+    }
+  },
+
   // 刷新数据
   async refreshData() {
     this.setData({ 
@@ -104,10 +138,18 @@ Page({
     await this.initPage()
   },
 
-  // 加载分类
+  // 加载分类（根据当前选择的店铺）
   async loadCategories() {
     try {
-      const res = await productApi.getCategories()
+      let res
+      // 如果选择了特定店铺，获取该店铺的分类
+      if (this.data.shopFilter) {
+        res = await categoryApi.getUserCategoriesByShop(this.data.shopFilter)
+      } else {
+        // 否则获取所有绑定店铺的分类
+        res = await categoryApi.getUserAllCategories()
+      }
+      
       if (res.code === 200) {
         // 处理分类数据结构 - 兼容不同的返回格式
         const categoriesData = (res.data && res.data.items) || res.data || []
@@ -127,7 +169,7 @@ Page({
             const prefix = '　'.repeat(level) // 使用全角空格缩进
             categoryOptions.push({ 
               text: prefix + item.name, 
-              value: item.id,
+              value: item.id || item.category_id,
               level: level
             })
             
@@ -191,6 +233,11 @@ Page({
         page_size: this.data.pageSize,
         status: 1, // 只查询上架商品
         sort: this.data.sortType
+      }
+      
+      // 添加店铺筛选
+      if (this.data.shopFilter) {
+        params.shop_id = this.data.shopFilter
       }
       
       // 添加搜索关键词
@@ -310,6 +357,19 @@ Page({
   },
 
   // 筛选功能
+  onShopFilterChange(e) {
+    this.setData({ 
+      shopFilter: e.detail,
+      categoryFilter: 0, // 切换店铺时重置分类筛选
+      page: 1,
+      productList: [],
+      hasMore: true
+    })
+    // 重新加载分类和商品列表
+    this.loadCategories()
+    this.loadProductList(true)
+  },
+
   onCategoryFilterChange(e) {
     this.setData({ 
       categoryFilter: e.detail,
@@ -343,8 +403,10 @@ Page({
   // 商品点击
   onProductTap(e) {
     const product = e.currentTarget.dataset.product
+    // 使用product_id业务ID
+    const productId = product.product_id
     wx.navigateTo({
-      url: `/pages/user/product/detail/detail?id=${product.id}`
+      url: `/pages/user/product/detail/detail?id=${productId}`
     })
   },
 
@@ -373,8 +435,9 @@ Page({
     try {
       wx.showLoading({ title: '加入中...' })
       
+      // 使用product_id业务ID,后端会自动将字符串转为int64
       const res = await cartApi.addToCart({
-        product_id: product.id,
+        product_id: product.product_id,
         quantity: 1
       })
       

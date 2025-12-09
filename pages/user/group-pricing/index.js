@@ -154,8 +154,9 @@ Page({
   // 商品点击
   onProductTap(e) {
     const product = e.currentTarget.dataset.product
+    // 使用product_id业务ID
     wx.navigateTo({
-      url: `/pages/user/product/detail?id=${product.id}&from=groupPricing`
+      url: `/pages/user/product/detail?id=${product.product_id}&from=groupPricing`
     })
   },
 
@@ -258,7 +259,7 @@ Page({
     try {
       const orderData = {
         items: [{
-          product_id: selectedProduct.id,
+          product_id: selectedProduct.product_id,
           quantity: quickBuyQuantity
         }]
       }
@@ -334,7 +335,7 @@ Page({
     try {
       const orderData = {
         items: selectedProducts.map(product => ({
-          product_id: product.id,
+          product_id: product.product_id,
           quantity: product.batch_quantity || 1
         }))
       }

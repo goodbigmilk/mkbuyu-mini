@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@vant/weapp": "^1.11.7",
+    "casdoor-js-sdk": "^0.16.0",
     "mobx-miniprogram": "^4.13.2",
     "mobx-miniprogram-bindings": "^1.2.1",
     "vant": "^4.9.21"

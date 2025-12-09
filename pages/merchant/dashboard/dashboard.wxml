@@ -13,7 +13,7 @@
       <view class="shop-info">
         <image class="shop-avatar" src="{{shopInfo.logo}}" />
         <view class="shop-details">
-          <view class="shop-name">{{shopInfo.name || '我的店铺'}}</view>
+          <view class="shop-name">{{shopInfo.name}}</view>
         </view>
       </view>
       <view class="quick-actions">

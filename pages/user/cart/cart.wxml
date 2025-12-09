@@ -80,7 +80,7 @@
           <view 
             class="item-content"
             bindtap="onProductTap"
-            data-product-id="{{item.product.id}}"
+            data-product-id="{{item.product.product_id}}"
           >
             <!-- 商品图片 -->
             <view class="item-image">
@@ -120,7 +120,7 @@
                   <van-stepper 
                     value="{{item.quantity}}"
                     min="1"
-                    max="999"
+                    max="99999"
                     bind:change="onQuantityChangeStepper"
                     data-cart-id="{{item.id}}"
                     button-size="24"

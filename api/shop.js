@@ -15,7 +15,15 @@ const getShopInfo = (shopId) => {
  * @returns {Promise} 我的店铺信息
  */
 const getMyShopInfo = () => {
-  return get('/shop/info')
+  return get('/shop/my')
+}
+
+/**
+ * 获取用户绑定的店铺列表
+ * @returns {Promise} 绑定的店铺列表
+ */
+const getMyBoundShops = () => {
+  return get('/user/shops')
 }
 
 /**
@@ -30,7 +38,7 @@ const getMyShopInfo = () => {
  * @returns {Promise} 创建结果
  */
 const createShop = (data) => {
-  return post('/shop/create', data)
+  return post('/shop/', data)
 }
 
 /**
@@ -39,7 +47,7 @@ const createShop = (data) => {
  * @returns {Promise} 更新结果
  */
 const updateShopInfo = (data) => {
-  return put('/shop/info', data)
+  return put('/shop/my', data)
 }
 
 /**
@@ -52,7 +60,7 @@ const updateShopInfo = (data) => {
  * @returns {Promise} 商品列表
  */
 const getShopProducts = (params = {}) => {
-  return get('/shop/products', params)
+  return get('/product/list', params)
 }
 
 /**
@@ -61,7 +69,7 @@ const getShopProducts = (params = {}) => {
  * @returns {Promise} 操作结果
  */
 const publishProduct = (productId) => {
-  return put(`/shop/products/${productId}/publish`)
+  return put(`/product/${productId}/publish`)
 }
 
 /**
@@ -70,7 +78,7 @@ const publishProduct = (productId) => {
  * @returns {Promise} 操作结果
  */
 const unpublishProduct = (productId) => {
-  return put(`/shop/products/${productId}/unpublish`)
+  return put(`/product/${productId}/unpublish`)
 }
 
 /**
@@ -79,26 +87,34 @@ const unpublishProduct = (productId) => {
  * @returns {Promise} 操作结果
  */
 const deleteProduct = (productId) => {
-  return del(`/shop/products/${productId}`)
+  return del(`/product/${productId}`)
 }
 
 /**
- * 批量操作商品
+ * 批量操作商品（后端暂无此功能）
  * @param {Array} productIds 商品ID数组
  * @param {string} operation 操作类型 publish|unpublish|delete
  * @returns {Promise} 操作结果
  */
-const batchProductOperation = (productIds, operation) => {
-  return post('/shop/products/batch', { productIds, operation })
-}
+// const batchProductOperation = (productIds, operation) => {
+//   return post('/product/batch', { productIds, operation })
+// }
 
 /**
  * 获取店铺分类
- * @param {number} shopId 店铺ID
+ * @param {Object} params 查询参数
+ * @param {number} params.page 页码,默认1
+ * @param {number} params.page_size 每页数量,默认100
  * @returns {Promise} 店铺分类
  */
-const getShopCategories = (shopId) => {
-  return get(`/shop/${shopId}/categories`)
+const getShopCategories = (params = {}) => {
+  // 确保有默认的分页参数
+  const queryParams = {
+    page: params.page || 1,
+    page_size: params.page_size || 100,
+    ...params
+  }
+  return get('/product/categories', queryParams)
 }
 
 /**
@@ -121,39 +137,39 @@ const getShopStatistics = (params = {}) => {
  * @returns {Promise} 订单列表
  */
 const getShopOrders = (params = {}) => {
-  return get('/shop/orders', params)
+  return get('/order/manage', params)
 }
 
 /**
- * 获取店铺评价列表
+ * 获取店铺评价列表（后端暂无此功能）
  * @param {Object} params 查询参数
  * @returns {Promise} 评价列表
  */
-const getShopReviews = (params = {}) => {
-  return get('/shop/reviews', params)
-}
+// const getShopReviews = (params = {}) => {
+//   return get('/shop/reviews', params)
+// }
 
 /**
- * 回复评价
+ * 回复评价（后端暂无此功能）
  * @param {number} reviewId 评价ID
  * @param {Object} data 回复数据
  * @param {string} data.content 回复内容
  * @returns {Promise} 回复结果
  */
-const replyReview = (reviewId, data) => {
-  return post(`/shop/reviews/${reviewId}/reply`, data)
-}
+// const replyReview = (reviewId, data) => {
+//   return post(`/shop/reviews/${reviewId}/reply`, data)
+// }
 
 /**
- * 获取店铺装修配置
+ * 获取店铺装修配置（后端暂无此功能）
  * @returns {Promise} 装修配置
  */
-const getShopDecoration = () => {
-  return get('/shop/decoration')
-}
+// const getShopDecoration = () => {
+//   return get('/shop/decoration')
+// }
 
 /**
- * 更新店铺装修配置
+ * 更新店铺装修配置（后端暂无此功能）
  * @param {Object} data 装修配置
  * @param {Array} data.banners 轮播图
  * @param {Array} data.notices 公告
@@ -161,9 +177,9 @@ const getShopDecoration = () => {
  * @param {Object} data.theme 主题配置
  * @returns {Promise} 更新结果
  */
-const updateShopDecoration = (data) => {
-  return put('/shop/decoration', data)
-}
+// const updateShopDecoration = (data) => {
+//   return put('/shop/decoration', data)
+// }
 
 /**
  * 获取店铺运营数据
@@ -175,63 +191,63 @@ const getShopAnalytics = (params = {}) => {
 }
 
 /**
- * 获取热销商品
+ * 获取热销商品（后端暂无此功能）
  * @param {Object} params 查询参数
  * @returns {Promise} 热销商品
  */
-const getHotProducts = (params = {}) => {
-  return get('/shop/hot-products', params)
-}
+// const getHotProducts = (params = {}) => {
+//   return get('/shop/hot-products', params)
+// }
 
 /**
- * 获取客户列表
+ * 获取客户列表（后端暂无此功能）
  * @param {Object} params 查询参数
  * @returns {Promise} 客户列表
  */
-const getShopCustomers = (params = {}) => {
-  return get('/shop/customers', params)
-}
+// const getShopCustomers = (params = {}) => {
+//   return get('/shop/customers', params)
+// }
 
 /**
- * 获取粉丝列表
+ * 获取粉丝列表（后端暂无此功能）
  * @param {Object} params 查询参数
  * @returns {Promise} 粉丝列表
  */
-const getShopFollowers = (params = {}) => {
-  return get('/shop/followers', params)
-}
+// const getShopFollowers = (params = {}) => {
+//   return get('/shop/followers', params)
+// }
 
 /**
- * 发送店铺消息
+ * 发送店铺消息（后端暂无此功能）
  * @param {Object} data 消息数据
  * @param {Array} data.user_ids 用户ID列表
  * @param {string} data.content 消息内容
  * @param {string} data.type 消息类型
  * @returns {Promise} 发送结果
  */
-const sendShopMessage = (data) => {
-  return post('/shop/messages', data)
-}
+// const sendShopMessage = (data) => {
+//   return post('/shop/messages', data)
+// }
 
 /**
- * 获取店铺设置
+ * 获取店铺设置（后端暂无此功能）
  * @returns {Promise} 店铺设置
  */
-const getShopSettings = () => {
-  return get('/shop/settings')
-}
+// const getShopSettings = () => {
+//   return get('/shop/settings')
+// }
 
 /**
- * 更新店铺设置
+ * 更新店铺设置（后端暂无此功能）
  * @param {Object} data 设置数据
  * @returns {Promise} 更新结果
  */
-const updateShopSettings = (data) => {
-  return put('/shop/settings', data)
-}
+// const updateShopSettings = (data) => {
+//   return put('/shop/settings', data)
+// }
 
 /**
- * 申请店铺认证
+ * 申请店铺认证（后端暂无此功能）
  * @param {Object} data 认证数据
  * @param {string} data.business_license 营业执照
  * @param {string} data.id_card_front 身份证正面
@@ -239,98 +255,99 @@ const updateShopSettings = (data) => {
  * @param {string} data.bank_card 银行卡
  * @returns {Promise} 申请结果
  */
-const applyShopVerification = (data) => {
-  return post('/shop/verification', data)
-}
+// const applyShopVerification = (data) => {
+//   return post('/shop/verification', data)
+// }
 
 /**
- * 获取店铺认证状态
+ * 获取店铺认证状态（后端暂无此功能）
  * @returns {Promise} 认证状态
  */
-const getShopVerificationStatus = () => {
-  return get('/shop/verification/status')
-}
+// const getShopVerificationStatus = () => {
+//   return get('/shop/verification/status')
+// }
 
 /**
- * 暂停/恢复营业
+ * 暂停/恢复营业（后端暂无此功能）
  * @param {Object} data 操作数据
  * @param {boolean} data.is_open 是否营业
  * @param {string} data.reason 原因
  * @returns {Promise} 操作结果
  */
-const toggleShopStatus = (data) => {
-  return put('/shop/toggle-status', data)
-}
+// const toggleShopStatus = (data) => {
+//   return put('/shop/toggle-status', data)
+// }
 
 /**
- * 获取店铺公告列表
+ * 获取店铺公告列表（后端暂无此功能）
  * @param {Object} params 查询参数
  * @returns {Promise} 公告列表
  */
-const getShopNotices = (params = {}) => {
-  return get('/shop/notices', params)
-}
+// const getShopNotices = (params = {}) => {
+//   return get('/shop/notices', params)
+// }
 
 /**
- * 创建店铺公告
+ * 创建店铺公告（后端暂无此功能）
  * @param {Object} data 公告数据
  * @param {string} data.title 标题
  * @param {string} data.content 内容
  * @param {boolean} data.is_top 是否置顶
  * @returns {Promise} 创建结果
  */
-const createShopNotice = (data) => {
-  return post('/shop/notices', data)
-}
+// const createShopNotice = (data) => {
+//   return post('/shop/notices', data)
+// }
 
 /**
- * 更新店铺公告
+ * 更新店铺公告（后端暂无此功能）
  * @param {number} noticeId 公告ID
  * @param {Object} data 公告数据
  * @returns {Promise} 更新结果
  */
-const updateShopNotice = (noticeId, data) => {
-  return put(`/shop/notices/${noticeId}`, data)
-}
+// const updateShopNotice = (noticeId, data) => {
+//   return put(`/shop/notices/${noticeId}`, data)
+// }
 
 /**
- * 删除店铺公告
+ * 删除店铺公告（后端暂无此功能）
  * @param {number} noticeId 公告ID
  * @returns {Promise} 删除结果
  */
-const deleteShopNotice = (noticeId) => {
-  return del(`/shop/notices/${noticeId}`)
-}
+// const deleteShopNotice = (noticeId) => {
+//   return del(`/shop/notices/${noticeId}`)
+// }
 
 module.exports = {
   getShopInfo,
   getMyShopInfo,
+  getMyBoundShops,
   createShop,
   updateShopInfo,
   getShopProducts,
   publishProduct,
   unpublishProduct,
   deleteProduct,
-  batchProductOperation,
+  // batchProductOperation, // 后端暂无此功能
   getShopCategories,
   getShopStatistics,
   getShopOrders,
-  getShopReviews,
-  replyReview,
-  getShopDecoration,
-  updateShopDecoration,
+  // getShopReviews, // 后端暂无此功能
+  // replyReview, // 后端暂无此功能
+  // getShopDecoration, // 后端暂无此功能
+  // updateShopDecoration, // 后端暂无此功能
   getShopAnalytics,
-  getHotProducts,
-  getShopCustomers,
-  getShopFollowers,
-  sendShopMessage,
-  getShopSettings,
-  updateShopSettings,
-  applyShopVerification,
-  getShopVerificationStatus,
-  toggleShopStatus,
-  getShopNotices,
-  createShopNotice,
-  updateShopNotice,
-  deleteShopNotice
+  // getHotProducts, // 后端暂无此功能
+  // getShopCustomers, // 后端暂无此功能
+  // getShopFollowers, // 后端暂无此功能
+  // sendShopMessage, // 后端暂无此功能
+  // getShopSettings, // 后端暂无此功能
+  // updateShopSettings, // 后端暂无此功能
+  // applyShopVerification, // 后端暂无此功能
+  // getShopVerificationStatus, // 后端暂无此功能
+  // toggleShopStatus, // 后端暂无此功能
+  // getShopNotices, // 后端暂无此功能
+  // createShopNotice, // 后端暂无此功能
+  // updateShopNotice, // 后端暂无此功能
+  // deleteShopNotice // 后端暂无此功能
 } 

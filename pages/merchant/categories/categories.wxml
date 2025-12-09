@@ -70,7 +70,7 @@
     </view>
 
     <view wx:else class="category-container">
-      <view wx:for="{{categoryTree}}" wx:key="id" class="tree-node">
+      <view wx:for="{{categoryTree}}" wx:key="category_id" class="tree-node">
         <!-- 一级分类 -->
         <view class="category-item level-{{item.level || 1}}">
           <view class="category-content">
@@ -79,10 +79,10 @@
               wx:if="{{item.children && item.children.length > 0}}"
               class="expand-btn"
               catchtap="toggleCategory" 
-              data-category-id="{{item.id}}"
+              data-category-id="{{item.category_id}}"
             >
               <van-icon 
-                name="{{expandedMap[item.id] ? 'arrow-down' : 'arrow'}}" 
+                name="{{expandedMap[item.category_id] ? 'arrow-down' : 'arrow'}}" 
                 size="14" 
                 color="#969799" 
               />
@@ -93,7 +93,7 @@
             <view class="category-info">
               <view class="category-header">
                 <!-- 可编辑的分类名称 -->
-                <view wx:if="{{editingCategoryId === item.id}}" class="editing-name">
+                <view wx:if="{{editingCategoryId === item.category_id}}" class="editing-name">
                   <input
                     value="{{editingName}}"
                     placeholder="请输入分类名称"
@@ -164,8 +164,8 @@
         </view>
 
         <!-- 子分类 -->
-        <view wx:if="{{expandedMap[item.id] && item.children && item.children.length > 0}}">
-          <view wx:for="{{item.children}}" wx:for-item="child" wx:key="id">
+        <view wx:if="{{expandedMap[item.category_id] && item.children && item.children.length > 0}}">
+          <view wx:for="{{item.children}}" wx:for-item="child" wx:key="category_id">
             <view class="category-item level-2">
               <view class="category-content">
                 <!-- 层级缩进 -->
@@ -176,10 +176,10 @@
                   wx:if="{{child.children && child.children.length > 0}}"
                   class="expand-btn"
                   catchtap="toggleCategory" 
-                  data-category-id="{{child.id}}"
+                  data-category-id="{{child.category_id}}"
                 >
                   <van-icon 
-                    name="{{expandedMap[child.id] ? 'arrow-down' : 'arrow'}}" 
+                    name="{{expandedMap[child.category_id] ? 'arrow-down' : 'arrow'}}" 
                     size="14" 
                     color="#969799" 
                   />
@@ -190,7 +190,7 @@
                 <view class="category-info">
                   <view class="category-header">
                     <!-- 可编辑的分类名称 -->
-                    <view wx:if="{{editingCategoryId === child.id}}" class="editing-name">
+                    <view wx:if="{{editingCategoryId === child.category_id}}" class="editing-name">
                       <input
                         value="{{editingName}}"
                         placeholder="请输入分类名称"
@@ -261,8 +261,8 @@
             </view>
 
             <!-- 三级分类 -->
-            <view wx:if="{{expandedMap[child.id] && child.children && child.children.length > 0}}">
-              <view wx:for="{{child.children}}" wx:for-item="grandchild" wx:key="id">
+            <view wx:if="{{expandedMap[child.category_id] && child.children && child.children.length > 0}}">
+              <view wx:for="{{child.children}}" wx:for-item="grandchild" wx:key="category_id">
                 <view class="category-item level-3">
                   <view class="category-content">
                     <!-- 层级缩进 -->
@@ -274,7 +274,7 @@
                     <view class="category-info">
                       <view class="category-header">
                         <!-- 可编辑的分类名称 -->
-                        <view wx:if="{{editingCategoryId === grandchild.id}}" class="editing-name">
+                        <view wx:if="{{editingCategoryId === grandchild.category_id}}" class="editing-name">
                           <input
                             value="{{editingName}}"
                             placeholder="请输入分类名称"
@@ -361,7 +361,7 @@
     <view wx:else>
       <view 
         wx:for="{{categories}}" 
-        wx:key="id"
+        wx:key="category_id"
         class="category-item"
         data-category="{{item}}"
         bindtap="viewDetail"
@@ -371,7 +371,7 @@
           <view class="category-info">
             <view class="category-header">
               <!-- 可编辑的分类名称 -->
-              <view wx:if="{{editingCategoryId === item.id}}" class="editing-name">
+              <view wx:if="{{editingCategoryId === item.category_id}}" class="editing-name">
                 <input
                   value="{{editingName}}"
                   placeholder="请输入分类名称"
@@ -584,7 +584,7 @@
       </view>
       <view 
         wx:for="{{parentCategories}}" 
-        wx:key="id"
+        wx:key="category_id"
         class="picker-item {{parentIndex === index + 1 ? 'selected' : ''}}"
         data-index="{{index + 1}}"
         bindtap="onParentPickerChange"

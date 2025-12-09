@@ -19,10 +19,10 @@
 
     <!-- 分类列表 -->
     <view wx:if="{{categoryTree.length > 0}}" class="category-list">
-      <view wx:for="{{categoryTree}}" wx:key="id" class="tree-node">
+      <view wx:for="{{categoryTree}}" wx:key="category_id" class="tree-node">
         <!-- 一级分类 -->
         <view 
-          class="category-item level-1 {{item.id === currentCategoryId ? 'disabled' : ''}}"
+          class="category-item level-1 {{item.category_id === currentCategoryId ? 'disabled' : ''}}"
           data-category="{{item}}"
         >
           <view class="category-content">
@@ -31,10 +31,10 @@
               wx:if="{{item.children && item.children.length > 0}}"
               class="expand-btn"
               catchtap="toggleCategory" 
-              data-category-id="{{item.id}}"
+              data-category-id="{{item.category_id}}"
             >
               <van-icon 
-                name="{{expandedMap[item.id] ? 'arrow-down' : 'arrow'}}" 
+                name="{{expandedMap[item.category_id] ? 'arrow-down' : 'arrow'}}" 
                 size="14" 
                 color="#969799" 
               />
@@ -52,18 +52,18 @@
             </view>
 
             <!-- 不可选择提示 -->
-            <view wx:if="{{item.id === currentCategoryId}}" class="disabled-hint">
+            <view wx:if="{{item.category_id === currentCategoryId}}" class="disabled-hint">
               <text class="hint-text">当前分类</text>
             </view>
-            <van-icon wx:elif="{{item.id !== currentCategoryId}}" name="arrow" size="16" color="#c8c9cc" />
+            <van-icon wx:elif="{{item.category_id !== currentCategoryId}}" name="arrow" size="16" color="#c8c9cc" />
           </view>
         </view>
 
         <!-- 子分类 -->
-        <view wx:if="{{expandedMap[item.id] && item.children && item.children.length > 0}}">
-          <view wx:for="{{item.children}}" wx:for-item="child" wx:key="id">
+        <view wx:if="{{expandedMap[item.category_id] && item.children && item.children.length > 0}}">
+          <view wx:for="{{item.children}}" wx:for-item="child" wx:key="category_id">
             <view 
-              class="category-item level-2 {{child.id === currentCategoryId ? 'disabled' : ''}}"
+              class="category-item level-2 {{child.category_id === currentCategoryId ? 'disabled' : ''}}"
               data-category="{{child}}"
             >
               <view class="category-content">
@@ -75,10 +75,10 @@
                   wx:if="{{child.children && child.children.length > 0}}"
                   class="expand-btn"
                   catchtap="toggleCategory" 
-                  data-category-id="{{child.id}}"
+                  data-category-id="{{child.category_id}}"
                 >
                   <van-icon 
-                    name="{{expandedMap[child.id] ? 'arrow-down' : 'arrow'}}" 
+                    name="{{expandedMap[child.category_id] ? 'arrow-down' : 'arrow'}}" 
                     size="14" 
                     color="#969799" 
                   />
@@ -96,18 +96,18 @@
                 </view>
 
                 <!-- 不可选择提示 -->
-                <view wx:if="{{child.id === currentCategoryId}}" class="disabled-hint">
+                <view wx:if="{{child.category_id === currentCategoryId}}" class="disabled-hint">
                   <text class="hint-text">当前分类</text>
                 </view>
-                <van-icon wx:elif="{{child.id !== currentCategoryId}}" name="arrow" size="16" color="#c8c9cc" />
+                <van-icon wx:elif="{{child.category_id !== currentCategoryId}}" name="arrow" size="16" color="#c8c9cc" />
               </view>
             </view>
 
             <!-- 三级分类 -->
-            <view wx:if="{{expandedMap[child.id] && child.children && child.children.length > 0}}">
-              <view wx:for="{{child.children}}" wx:for-item="grandchild" wx:key="id">
+            <view wx:if="{{expandedMap[child.category_id] && child.children && child.children.length > 0}}">
+              <view wx:for="{{child.children}}" wx:for-item="grandchild" wx:key="category_id">
                 <view 
-                  class="category-item level-3 {{grandchild.id === currentCategoryId ? 'disabled' : ''}}"
+                  class="category-item level-3 {{grandchild.category_id === currentCategoryId ? 'disabled' : ''}}"
                   data-category="{{grandchild}}"
                 >
                   <view class="category-content">
@@ -122,10 +122,10 @@
                     </view>
 
                     <!-- 不可选择提示 -->
-                    <view wx:if="{{grandchild.id === currentCategoryId}}" class="disabled-hint">
+                    <view wx:if="{{grandchild.category_id === currentCategoryId}}" class="disabled-hint">
                       <text class="hint-text">当前分类</text>
                     </view>
-                    <van-icon wx:elif="{{grandchild.id !== currentCategoryId}}" name="arrow" size="16" color="#c8c9cc" />
+                    <van-icon wx:elif="{{grandchild.category_id !== currentCategoryId}}" name="arrow" size="16" color="#c8c9cc" />
                   </view>
                 </view>
               </view>

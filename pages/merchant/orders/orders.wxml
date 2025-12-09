@@ -62,7 +62,7 @@
     <view class="order-list">
       <view class="order-item" wx:for="{{orderList}}" wx:key="id">
         <!-- 订单头部信息 -->
-        <view class="order-header" bindtap="viewOrderDetail" data-order-id="{{item.id}}">
+        <view class="order-header" bindtap="viewOrderDetail" data-order-id="{{item.order_id}}">
           <view class="order-main-info">
             <view class="order-no-row">
               <text class="order-no">订单号：{{item.order_no}}</text>
@@ -105,7 +105,7 @@
         </view>
 
         <!-- 订单地址信息 -->
-        <view class="order-summary" bindtap="viewOrderDetail" data-order-id="{{item.id}}" wx:if="{{item.receiver_address}}">
+        <view class="order-summary" bindtap="viewOrderDetail" data-order-id="{{item.order_id}}" wx:if="{{item.receiver_address}}">
           <view class="address-section">
             <text class="address-label">收货地址：</text>
             <text class="address-detail">{{item.receiver_address}}</text>
@@ -119,13 +119,13 @@
             <button 
               class="action-btn contact-btn" 
               size="mini"
-              data-order-id="{{item.id}}"
+              data-order-id="{{item.order_id}}"
               bindtap="contactBuyer"
             >联系买家</button>
             <button 
               class="action-btn ship-btn" 
               size="mini"
-              data-order-id="{{item.id}}"
+              data-order-id="{{item.order_id}}"
               data-order="{{item}}"
               bindtap="shipOrder"
             >发货</button>
@@ -136,7 +136,7 @@
             <button 
               class="action-btn contact-btn" 
               size="mini"
-              data-order-id="{{item.id}}"
+              data-order-id="{{item.order_id}}"
               bindtap="contactBuyer"
             >联系买家</button>
             <button 
@@ -152,7 +152,7 @@
             <button 
               class="action-btn contact-btn" 
               size="mini"
-              data-order-id="{{item.id}}"
+              data-order-id="{{item.order_id}}"
               bindtap="contactBuyer"
             >联系买家</button>
           </block>
@@ -162,7 +162,7 @@
             <button 
               class="action-btn contact-btn" 
               size="mini"
-              data-order-id="{{item.id}}"
+              data-order-id="{{item.order_id}}"
               bindtap="contactBuyer"
             >联系买家</button>
           </block>

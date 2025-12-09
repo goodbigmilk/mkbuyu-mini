@@ -1,483 +1,460 @@
-const authApi = require('../../../api/auth.js');
-const { validatePhone } = require('../../../utils/index.js');
-const { userState } = require('../../../utils/state.js');
+const { checkAuthAndLogin, isLoggedIn } = require('../../../api/auth.js')
+const { userState } = require('../../../utils/state.js')
+const { getDefaultPageByRole } = require('../../../utils/constants.js')
+const { casdoorSDK } = require('../../../utils/casdoor.js')
 
 Page({
   data: {
-    // 身份类型：user(用户) | shop(商家)
-    role: 'user',
+    // 旧的loading状态保持向后兼容
+    loading: false,
+    checking: true,
     
-    // 登录方式：phone(手机号) | password(密码)
-    loginType: 'password',
+    // 新的分离式loading状态
+    wechatLoading: false,
+    passwordLoading: false,
     
-    // 手机号登录
-    phone: '',
-    smsCode: '',
+    // Casdoor web-view 相关
+    casdoorLoginUrl: '',
+    showCasdoorLogin: false,
     
-    // 密码登录
-    username: '',
-    password: '',
-    
-    // 状态控制
-    logging: false,
-    wechatLogging: false,
-    sendingSms: false,
-    smsCountdown: 0,
-    agreePolicy: false,
-    canSendSms: false,
-    
-    // 定时器
-    smsTimer: null,
-    
-    // ========== 临时自动登录开关 - 测试用，后续删除 ==========
-    // TODO: 删除这个开关 - 设置为 false 可以关闭自动登录
-    enableAutoLogin: true,
-    // ========================================================
+    // 密码登录表单数据
+    username: '15629981111',
+    password: 'a123456'
   },
 
-  // 数据监听器
-  observers: {
-    'phone, agreePolicy': function() {
-      console.log('数据监听器触发 - phone:', this.data.phone, 'agreePolicy:', this.data.agreePolicy);
-      this.updateComputedState();
+  async onLoad(options) {
+    console.log('🔐 登录页面加载', options)
+    
+    // 检查是否有 token（从后端 navigateTo 跳转过来）
+    if (options.token) {
+      console.log('✅ 检测到 token，直接登录')
+      await this.handleTokenLogin(options.token)
+      return
+    }
+    
+    // 检查是否有授权码回调（从 Casdoor 返回）
+    if (options.code && options.state) {
+      console.log('🔄 检测到 Casdoor 授权码回调')
+      await this.handleCasdoorCallback(options.code, options.state)
+      return
+    }
+    
+    // 快速检查本地token，如果已登录则跳转（不调用API）
+    if (isLoggedIn()) {
+      console.log('✅ 用户已登录，直接跳转')
+      this.redirectToUserPage()
+    } else {
+      // 没有登录，显示登录界面
+      console.log('❌ 用户未登录，显示登录选项')
+      this.setData({ checking: false })
     }
   },
 
-  onLoad(options) {
-    this.initPage(options);
-    this.checkLoginStatus();
-    // 初始化计算状态
-    this.updateComputedState();
+  // 跳转到用户对应页面
+  redirectToUserPage() {
+    const role = userState.getRole()
+    const defaultPage = getDefaultPageByRole(role)
     
-    // ========== 临时自动登录功能 - 测试用，后续删除 ==========
-    // TODO: 删除这个自动登录功能
-    this.autoLoginForTesting();
-    // ========================================================
-  },
-  
-  // ========== 临时自动登录方法 - 测试用，后续删除 ==========
-  // TODO: 删除这个方法
-  async autoLoginForTesting() {
-    // 检查自动登录开关
-    if (!this.data.enableAutoLogin) {
-      console.log('🚫 自动登录已关闭');
-      return;
-    }
-    
-    console.log('🚀 开始自动登录测试...');
-    
-    // 设置为商家密码登录模式
-    this.setData({
-      role: 'user',              // 商家身份
-      loginType: 'password',     // 密码登录
-      username: '15629981111',   // 商家手机号
-      password: 'a123456',       // 商家密码
-      agreePolicy: true          // 同意协议
-    });
-    
-    // 更新计算状态
-    this.updateComputedState();
-    
-    // 延迟2秒自动执行登录，给用户看到填入的信息
     setTimeout(() => {
-      console.log('🚀 自动执行登录...');
-      this.onLogin();
-    }, 2000);
+      if (defaultPage.startsWith('/pages/user/')) {
+        // 用户页面使用switchTab
+        wx.switchTab({
+          url: defaultPage
+        })
+      } else {
+        // 其他页面使用reLaunch
+        wx.reLaunch({
+          url: defaultPage
+        })
+      }
+    }, 500)
   },
-  // ========================================================
 
-  onUnload() {
-    // 清理定时器
-    if (this.data.smsTimer) {
-      clearInterval(this.data.smsTimer);
-    }
-  },
-
-  // 更新计算状态
-  updateComputedState() {
-    const { phone, agreePolicy } = this.data;
+  // 开始微信小程序登录
+  async onStartLogin() {
+    this.setData({ 
+      wechatLoading: true,
+      loading: true // 保持向后兼容
+    })
     
-    // 防止 undefined，给默认值
-    const phoneValue = phone || '';
-    
-    // 计算是否可以发送短信
-    const canSendSms = validatePhone(phoneValue) && agreePolicy;
-    
-    this.setData({
-      canSendSms
-    });
-  },
-
-  // 输入框数据变化处理
-  onPhoneInput(e) {
-    this.setData({ phone: e.detail.value });
-    this.updateComputedState();
-  },
-
-  onSmsCodeInput(e) {
-    this.setData({ smsCode: e.detail.value });
-  },
-
-  onUsernameInput(e) {
-    this.setData({ username: e.detail.value });
-  },
-
-  onPasswordInput(e) {
-    this.setData({ password: e.detail.value });
-  },
-
-  // 输入框数据变化处理（兼容性方法）
-  onPhoneChange(e) {
-    this.onPhoneInput(e);
-  },
-
-  onSmsCodeChange(e) {
-    this.onSmsCodeInput(e);
-  },
-
-  onUsernameChange(e) {
-    this.onUsernameInput(e);
-  },
-
-  onPasswordChange(e) {
-    this.onPasswordInput(e);
-  },
-
-  // 初始化页面
-  initPage(options) {
-    // 从选项中获取默认登录方式
-    if (options.type) {
-      this.setData({ loginType: options.type });
-    }
-    
-    // 从选项中获取用户角色
-    if (options.role) {
-      this.setData({ role: options.role });
-    }
-    
-    // 默认同意协议（测试阶段方便调试）
-    this.setData({ agreePolicy: true });
-  },
-
-  // 检查登录状态
-  checkLoginStatus() {
     try {
-      const token = wx.getStorageSync('token');
-      const userInfo = wx.getStorageSync('userInfo');
+      wx.showToast({
+        title: '正在登录...',
+        icon: 'loading',
+        duration: 2000
+      })
+
+      // 使用微信小程序认证，可选择是否获取用户资料
+      const isAuthenticated = await checkAuthAndLogin({
+        withUserProfile: true // 获取用户资料进行登录
+      })
       
-      if (token && userInfo) {
-        // 用户已登录，根据角色类型跳转
+      if (isAuthenticated) {
+        console.log('✅ 微信小程序登录成功')
+        wx.showToast({
+          title: '登录成功',
+          icon: 'success'
+        })
+        
+        // 登录成功后跳转到用户对应页面
         setTimeout(() => {
-          if (userInfo.role === 'shop') {
-            // 卖家用户，跳转到商家端首页
-            wx.reLaunch({
-              url: '/pages/merchant/dashboard/dashboard'
-            });
-          } else if (userInfo.role === 'admin') {
-            // 管理员用户，跳转到管理端首页
-            wx.reLaunch({
-              url: '/pages/merchant/dashboard/dashboard' // 临时使用商家页面
-            });
-          } else {
-            // 买家用户，跳转到用户端首页
-            wx.switchTab({
-              url: '/pages/user/home/home'
-            });
-          }
-        }, 500);
+          this.redirectToUserPage()
+        }, 1000)
       }
+
     } catch (error) {
-      console.error('检查登录状态失败', error);
-    }
-  },
-
-  // 切换身份类型
-  switchRole(e) {
-    const type = e.currentTarget.dataset.type;
-    this.setData({ 
-      role: type,
-      // 确保清空表单数据时使用空字符串而不是undefined
-      phone: '',
-      smsCode: '',
-      username: '',
-      password: ''
-    });
-  },
-
-  // 切换登录方式
-  switchLoginType(e) {
-    const type = e.currentTarget.dataset.type;
-    console.log('切换登录类型 - 原类型:', this.data.loginType, '新类型:', type);
-    
-    this.setData({ 
-      loginType: type,
-      // 确保清空表单数据时使用空字符串而不是undefined
-      phone: '',
-      smsCode: '',
-      username: '',
-      password: ''
-    });
-    
-    console.log('登录类型切换完成，当前loginType:', this.data.loginType);
-  },
-
-  // 发送短信验证码
-  async onSendSms() {
-    const { phone, agreePolicy } = this.data;
-    
-    const phoneValue = phone || '';  // 防止 undefined
-    
-    // 验证手机号
-    if (!validatePhone(phoneValue)) {
+      console.error('微信小程序登录失败:', error)
       wx.showToast({
-        title: '请输入正确的手机号',
+        title: error.message || '登录失败，请重试',
         icon: 'none'
-      });
-      return;
-    }
-    
-    // 验证协议同意
-    if (!agreePolicy) {
-      wx.showToast({
-        title: '请先同意用户协议',
-        icon: 'none'
-      });
-      return;
-    }
-    
-    try {
-      this.setData({ sendingSms: true });
-      
-      await authApi.sendSmsCode(phoneValue, 'login');
-      
-      wx.showToast({
-        title: '验证码已发送',
-        icon: 'success'
-      });
-      
-      // 开始倒计时
-      this.startSmsCountdown();
-      
-    } catch (error) {
-      console.error('发送验证码失败:', error);
-      wx.showToast({
-        title: error.message || '发送失败',
-        icon: 'error'
-      });
+      })
     } finally {
-      this.setData({ sendingSms: false });
+      this.setData({ 
+        wechatLoading: false,
+        loading: false // 保持向后兼容
+      })
     }
-  },
-
-  // 开始短信倒计时
-  startSmsCountdown() {
-    let countdown = 60;
-    this.setData({ smsCountdown: countdown });
-    
-    const timer = setInterval(() => {
-      countdown--;
-      this.setData({ smsCountdown: countdown });
-      
-      if (countdown <= 0) {
-        clearInterval(timer);
-        this.setData({ smsTimer: null });
-      }
-    }, 1000);
-    
-    this.setData({ smsTimer: timer });
-  },
-
-  // 登录
-  async onLogin() {
-    const { role, loginType, phone, smsCode, username, password, agreePolicy } = this.data;
-    
-    console.log('开始登录，参数:', { role, loginType, phone, smsCode, username, password, agreePolicy });
-    
-    // 验证协议同意
-    if (!agreePolicy) {
-      wx.showToast({
-        title: '请先同意用户协议',
-        icon: 'none'
-      });
-      return;
-    }
-    
-    this.setData({ logging: true });
-    
-    try {
-      let loginData;
-      let loginResult;
-      
-      // 直接使用角色，无需转换
-      const role = this.data.role;
-      console.log('使用的角色:', role);
-      
-      if (loginType === 'phone') {
-        // 手机号验证码登录
-        const phoneValue = phone || '';  // 防止 undefined
-        const smsCodeValue = smsCode || '';  // 防止 undefined
-        
-        if (!validatePhone(phoneValue)) {
-          throw new Error('请输入正确的手机号');
-        }
-        if (smsCodeValue.length !== 6) {
-          throw new Error('请输入6位验证码');
-        }
-        
-        loginData = { 
-          phone: phoneValue, 
-          smsCode: smsCodeValue, 
-          role 
-        };
-        console.log('短信登录数据:', loginData);
-        loginResult = await authApi.loginWithSmsLogic(loginData);
-        
-      } else {
-        // 用户名密码登录（实际是手机号密码登录）
-        const usernameValue = username || '';  // 防止 undefined
-        if (!validatePhone(usernameValue.trim())) {
-          throw new Error('手机号错误');
-        }
-        if (!password || password.length < 6) {
-          throw new Error('密码至少6位');
-        }
-        
-        loginData = { 
-          phone: usernameValue.trim(), 
-          password, 
-          role 
-        };
-        console.log('密码登录数据:', loginData);
-        loginResult = await authApi.loginWithLogic(loginData);
-      }
-      
-      console.log('登录结果:', loginResult);
-      
-      wx.showToast({
-        title: '登录成功',
-        icon: 'success'
-      });
-      
-      // 登录成功后的跳转
-      this.handleLoginSuccess(loginResult);
-
-    } catch (error) {
-      console.error('登录失败:', error);
-      wx.showToast({
-        title: error.message || '登录失败',
-        icon: 'error'
-      });
-    } finally {
-      this.setData({ logging: false });
-    }
-  },
-
-  // 微信登录
-  async onWechatLogin() {
-    if (!this.data.agreePolicy) {
-      wx.showToast({
-        title: '请先同意用户协议',
-        icon: 'none'
-      });
-      return;
-    }
-    
-    this.setData({ wechatLogging: true });
-    
-    try {
-      const loginResult = await authApi.wxLoginLogic();
-      
-      wx.showToast({
-        title: '登录成功',
-        icon: 'success'
-      });
-      
-      this.handleLoginSuccess(loginResult);
-      
-    } catch (error) {
-      console.error('微信登录失败:', error);
-      wx.showToast({
-        title: error.message || '微信登录失败',
-        icon: 'error'
-      });
-    } finally {
-      this.setData({ wechatLogging: false });
-    }
-  },
-
-  // 登录成功处理
-  handleLoginSuccess(loginResult) {
-    // 延迟跳转，让用户看到成功提示
-    setTimeout(() => {
-      // 根据角色类型跳转
-      if (loginResult && loginResult.role) {
-        const role = loginResult.role;
-        if (role === 'shop') {
-          // 卖家登录，跳转到商家端首页
-          wx.reLaunch({
-            url: '/pages/merchant/dashboard/dashboard'
-          });
-        } else if (role === 'admin') {
-          // 管理员登录，跳转到管理端首页（如果有的话）
-          wx.reLaunch({
-            url: '/pages/merchant/dashboard/dashboard' // 临时使用商家页面
-          });
-        } else {
-          // 买家登录，跳转到用户端首页
-          wx.switchTab({
-            url: '/pages/user/home/home'
-          });
-        }
-      } else {
-        // 如果没有角色数据，根据选择的登录类型跳转
-        if (this.data.role === 'shop') {
-          wx.reLaunch({
-            url: '/pages/merchant/dashboard/dashboard'
-          });
-        } else {
-          wx.switchTab({
-            url: '/pages/user/home/home'
-          });
-        }
-      }
-    }, 1500);
-  },
-
-  // 协议同意状态变化
-  onAgreePolicyChange(e) {
-    this.setData({ agreePolicy: e.detail });
-    this.updateComputedState();
   },
 
   // 查看协议
-  onViewPolicy(e) {
-    const type = e.currentTarget.dataset.type;
-    const url = type === 'user' 
-      ? '/pages/policy/user-agreement/user-agreement'
-      : '/pages/policy/privacy-policy/privacy-policy';
-      
-    wx.navigateTo({ url });
+  onViewUserAgreement() {
+    wx.navigateTo({
+      url: '/pages/policy/user-agreement/user-agreement'
+    })
   },
 
-  // 忘记密码
-  onForgetPassword() {
+  onViewPrivacyPolicy() {
     wx.navigateTo({
-      url: '/pages/auth/forgot-password/forgot-password'
-    });
-  },
-
-  // 注册
-  onRegister() {
-    wx.navigateTo({
-      url: '/pages/auth/register/register'
-    });
+      url: '/pages/policy/privacy-policy/privacy-policy'
+    })
   },
 
   // 联系客服
   onContactService() {
+    wx.showModal({
+      title: '联系客服',
+      content: '如有问题，请联系客服协助处理',
+      showCancel: false
+    })
+  },
+
+  // ==================== 新增：密码登录相关方法 ====================
+
+  // 用户名输入
+  onUsernameInput(event) {
+    this.setData({
+      username: event.detail
+    })
+  },
+
+  // 密码输入
+  onPasswordInput(event) {
+    this.setData({
+      password: event.detail
+    })
+  },
+
+  // 密码登录
+  async onPasswordLogin() {
+    const { username, password } = this.data
+
+    // 基本验证
+    if (!username.trim()) {
+      wx.showToast({
+        title: '请输入账号',
+        icon: 'none'
+      })
+      return
+    }
+
+    if (!password.trim()) {
+      wx.showToast({
+        title: '请输入密码',
+        icon: 'none'
+      })
+      return
+    }
+
+    this.setData({ passwordLoading: true })
+
+    try {
+      wx.showToast({
+        title: '正在登录...',
+        icon: 'loading',
+        duration: 2000
+      })
+
+      // 调用密码登录API（需要先实现API方法）
+      const { passwordLogin } = require('../../../api/auth.js')
+      const result = await passwordLogin({
+        username: username.trim(),
+        password: password.trim()
+      })
+
+      if (result) {
+        console.log('✅ 密码登录成功')
+        wx.showToast({
+          title: '登录成功',
+          icon: 'success'
+        })
+
+        // 清空表单
+        this.setData({
+          username: '',
+          password: ''
+        })
+
+        // 登录成功后跳转到用户对应页面
+        setTimeout(() => {
+          this.redirectToUserPage()
+        }, 1000)
+      }
+
+    } catch (error) {
+      console.error('密码登录失败:', error)
+      wx.showToast({
+        title: error.message || '登录失败，请检查账号密码',
+        icon: 'none'
+      })
+    } finally {
+      this.setData({ passwordLoading: false })
+    }
+  },
+
+  // 跳转到注册页面
+  onGoToRegister() {
+    wx.navigateTo({
+      url: '/pages/auth/register/register'
+    })
+  },
+
+  // ==================== Casdoor 登录相关方法 ====================
+
+  /**
+   * 打开 Casdoor 登录页面（使用 web-view）
+   */
+  onOpenCasdoorLogin() {
+    console.log('🚀 打开 Casdoor 登录页面')
+    
+    // 生成 Casdoor 登录 URL
+    // 注意：redirect_uri 需要指向一个可以接收回调的页面
+    // 这里我们使用当前页面，通过 URL 参数传递 code
+    // 注意：不需要手动编码，getSigninUrl 内部会统一处理编码
+    const redirectUri = 'http://localhost:8080/api/auth/callback?client=miniprogram'
+    const loginUrl = casdoorSDK.getSigninUrl(redirectUri)
+    
+    console.log('📝 Casdoor 登录 URL:', loginUrl)
+    
+    this.setData({
+      casdoorLoginUrl: loginUrl,
+      showCasdoorLogin: true
+    })
+  },
+
+  /**
+   * 关闭 Casdoor 登录页面
+   */
+  onCloseCasdoorLogin() {
+    console.log('🔒 关闭 Casdoor 登录页面')
+    this.setData({
+      showCasdoorLogin: false,
+      casdoorLoginUrl: ''
+    })
+  },
+  
+  /**
+   * 页面显示时检查是否有待处理的消息
+   */
+  onShow() {
+    // 如果 web-view 已关闭，检查是否有待处理的消息
+    // 注意：bindmessage 事件可能在页面显示后才触发
+    if (!this.data.showCasdoorLogin) {
+      // 这里可以添加额外的检查逻辑
+    }
+  },
+
+  /**
+   * 处理 web-view 消息（来自 Casdoor 页面）
+   * 支持 navigateTo 跳转失败时的 postMessage 后备方案
+   */
+  onCasdoorMessage(event) {
+    console.log('📨 收到 Casdoor 消息:', event.detail)
+    
+    // 处理不同的数据格式
+    let data = null
+    
+    // 情况1: data 是数组
+    if (Array.isArray(event.detail.data) && event.detail.data.length > 0) {
+      data = event.detail.data[0]
+    } 
+    // 情况2: data 是对象
+    else if (event.detail.data && typeof event.detail.data === 'object') {
+      data = event.detail.data
+    }
+    // 情况3: 直接是对象
+    else if (event.detail && typeof event.detail === 'object' && event.detail.type) {
+      data = event.detail
+    }
+    
+    if (!data) {
+      console.error('❌ 无法解析消息数据:', event.detail)
+      return
+    }
+    
+    console.log('📨 解析后的数据:', data)
+    
+    // 检查是否是 OAuth 成功消息（来自后端的 postMessage）
+    if (data.type === 'oauth_success' && data.token) {
+      console.log('✅ 收到 OAuth 成功消息，使用 token 登录')
+      // 关闭 web-view
+      this.setData({
+        showCasdoorLogin: false
+      })
+      // 处理登录
+      this.handleTokenLogin(data.token)
+      return
+    }
+    
+    // 检查是否有授权码
+    if (data.code) {
+      this.handleCasdoorCallback(data.code, data.state || 'casdoor')
+      return
+    }
+    
+    // 检查关闭请求
+    if (data.type === 'close') {
+      console.log('✅ 收到关闭请求')
+      this.onCloseCasdoorLogin()
+      return
+    }
+    
+    console.warn('⚠️ 未识别的消息类型:', data)
+  },
+
+  /**
+   * 使用 token 直接登录（后端已处理授权码）
+   */
+  async handleTokenLogin(token) {
+    try {
+      wx.showLoading({
+        title: '正在登录...',
+        mask: true
+      })
+
+      // 先保存 token 到本地存储，以便后续请求使用
+      wx.setStorageSync('token', token)
+      console.log('✅ Token 已保存到本地存储')
+
+      // 使用 token 获取用户信息
+      const { getUserInfo, setUserLoginState } = require('../../../api/auth.js')
+      const userInfoResponse = await getUserInfo()
+      const userInfo = userInfoResponse.data
+      if (userInfo && (userInfo.user || userInfo.id)) {
+        const validUserInfo = userInfo.user
+        const roles = userInfo.roles || []
+        
+        console.log('✅ Token 登录成功:', validUserInfo)
+        
+        // 设置登录状态（会再次保存 token，但这是安全的）
+        setUserLoginState(validUserInfo, roles, token)
+        
+        wx.hideLoading()
+        wx.showToast({
+          title: '登录成功',
+          icon: 'success'
+        })
+
+        // 关闭 web-view
+        this.setData({
+          showCasdoorLogin: false
+        })
+
+        // 登录成功后跳转到用户对应页面
+        setTimeout(() => {
+          this.redirectToUserPage()
+        }, 1000)
+      } else {
+        throw new Error('获取用户信息失败')
+      }
+    } catch (error) {
+      console.error('❌ Token 登录失败:', error)
+      wx.hideLoading()
+      wx.showToast({
+        title: error.message || '登录失败，请重试',
+        icon: 'none',
+        duration: 3000
+      })
+      
+      // 关闭 web-view
+      this.setData({
+        showCasdoorLogin: false
+      })
+    }
+  },
+
+  /**
+   * 处理 Casdoor 授权回调
+   */
+  async handleCasdoorCallback(code, state) {
+    try {
+      wx.showLoading({
+        title: '正在登录...',
+        mask: true
+      })
+
+      // 使用授权码换取访问令牌
+      const result = await casdoorSDK.exchangeAuthCodeForToken(code, state)
+      
+      if (result && result.token) {
+        console.log('✅ Casdoor 登录成功:', result.user)
+        
+        wx.hideLoading()
+        wx.showToast({
+          title: '登录成功',
+          icon: 'success'
+        })
+
+        // 关闭 web-view
+        this.setData({
+          showCasdoorLogin: false
+        })
+
+        // 登录成功后跳转到用户对应页面
+        setTimeout(() => {
+          this.redirectToUserPage()
+        }, 1000)
+      }
+    } catch (error) {
+      console.error('❌ Casdoor 登录失败:', error)
+      wx.hideLoading()
+      wx.showToast({
+        title: error.message || '登录失败，请重试',
+        icon: 'none',
+        duration: 3000
+      })
+      
+      // 关闭 web-view
+      this.setData({
+        showCasdoorLogin: false
+      })
+    }
+  },
+
+  /**
+   * web-view 加载完成
+   */
+  onCasdoorLoad() {
+    console.log('✅ Casdoor 登录页面加载完成')
+  },
+
+  /**
+   * web-view 加载错误
+   */
+  onCasdoorError(event) {
+    console.error('❌ Casdoor 登录页面加载失败:', event.detail)
     wx.showToast({
-      title: '功能开发中',
+      title: '页面加载失败，请重试',
       icon: 'none'
-    });
+    })
   }
-}); 
+})

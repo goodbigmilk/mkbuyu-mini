@@ -2,12 +2,15 @@ const authAPI = require('../../../api/auth.js')
 const userAPI = require('../../../api/user.js')
 const groupPricingAPI = require('../../../api/group-pricing.js')
 const agentAPI = require('../../../api/agent.js')
+const referralAPI = require('../../../api/referral.js')
+const { userState } = require('../../../utils/state.js')
 
 Page({
   data: {
     userInfo: {},
     hasGroupPricing: false, // 用户是否有分组定价权限
     isInUserGroup: false, // 用户是否在任何用户分组中
+    hasDualRole: false, // 用户是否同时具有商家和用户双重角色
     // 推荐码相关
     showReferralModal: false, // 是否显示推荐码模态框
     showInputDialog: false, // 是否显示输入推荐码对话框
@@ -53,6 +56,7 @@ Page({
     this.loadUserInfo()
     this.checkGroupPricingAccess()
     this.checkUserGroupStatus()
+    this.checkDualRole()
   },
 
   onShow() {
@@ -61,6 +65,7 @@ Page({
     this.loadUserInfo()
     this.checkGroupPricingAccess()
     this.checkUserGroupStatus()
+    this.checkDualRole()
     
     // 更新自定义 tabbar 状态
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
@@ -74,7 +79,8 @@ Page({
     Promise.all([
       this.loadUserInfo(),
       this.checkGroupPricingAccess(),
-      this.checkUserGroupStatus()
+      this.checkUserGroupStatus(),
+      this.checkDualRole()
     ]).finally(() => {
       wx.stopPullDownRefresh()
     })
@@ -82,8 +88,8 @@ Page({
 
   // 检查登录状态
   checkLoginStatus() {
-    const token = wx.getStorageSync('token')
-    this.setData({ isLogin: !!token })
+    const isLogin = userState.isLoggedIn()
+    this.setData({ isLogin })
   },
 
   // 加载用户信息
@@ -104,25 +110,17 @@ Page({
       if (response.code === 200) {
         const userInfo = response.data
         this.setData({ userInfo })
-        
-        // 更新本地存储，保留原有的role字段
-        const existingUserInfo = wx.getStorageSync('userInfo') || {}
-        const updatedUserInfo = {
-          ...userInfo,
-          role: existingUserInfo.role
-        }
-        wx.setStorageSync('userInfo', updatedUserInfo)
       } else if (response.code === 401) {
         // token失效，清除登录状态
         this.handleLogout()
       }
     } catch (error) {
       console.error('加载用户信息失败:', error)
-      // 如果请求失败，使用本地存储的用户信息
-      const localUserInfo = wx.getStorageSync('userInfo')
-      if (localUserInfo) {
-        this.setData({ userInfo: localUserInfo })
-      }
+      // 显示加载失败提示
+      wx.showToast({
+        title: '加载用户信息失败',
+        icon: 'none'
+      })
     }
   },
 
@@ -261,9 +259,6 @@ Page({
         const userInfo = { ...this.data.userInfo, avatar: response.data.url || response.data.avatar }
         this.setData({ userInfo })
         
-        // 更新本地存储
-        wx.setStorageSync('userInfo', userInfo)
-        
         wx.showToast({
           title: '头像更新成功',
           icon: 'success'
@@ -312,9 +307,6 @@ Page({
         // 更新用户信息
         const userInfo = { ...this.data.userInfo, nickname }
         this.setData({ userInfo })
-        
-        // 更新本地存储
-        wx.setStorageSync('userInfo', userInfo)
         
         wx.showToast({
           title: '昵称更新成功',
@@ -448,14 +440,8 @@ Page({
   // 处理退出登录
   async handleLogout() {
     try {
-      // 调用退出登录API
-      await authAPI.logout()
-    } catch (error) {
-      console.error('退出登录失败:', error)
-    } finally {
-      // 清除本地数据
-      wx.removeStorageSync('token')
-      wx.removeStorageSync('userInfo')
+      // 使用统一的登出逻辑
+      await authAPI.logoutLogic()
       
       // 更新页面状态
       this.setData({
@@ -466,18 +452,18 @@ Page({
         }
       })
       
-      wx.showToast({
-        title: '已退出登录',
-        icon: 'success',
-        duration: 1500
-      })
-      
       // 延迟跳转到登录页面
       setTimeout(() => {
         wx.reLaunch({
           url: '/pages/auth/login/login'
         })
       }, 1500)
+    } catch (error) {
+      console.error('退出登录失败:', error)
+      wx.showToast({
+        title: '退出登录失败',
+        icon: 'none'
+      })
     }
   },
 
@@ -496,7 +482,7 @@ Page({
       wx.showLoading({ title: '加载中...' })
       
       // 获取推荐信息
-      const response = await authAPI.getReferralInfo()
+      const response = await referralAPI.getReferralInfo()
       
       if (response.code === 200) {
         this.setData({
@@ -642,8 +628,8 @@ Page({
       wx.showLoading({ title: isUpdate ? '修改中...' : '绑定中...' })
 
       const response = isUpdate 
-        ? await authAPI.updateReferrer(referralCode)
-        : await authAPI.bindReferrer(referralCode)
+        ? await referralAPI.updateReferrer(referralCode)
+        : await referralAPI.bindReferrer(referralCode)
 
       if (response.code === 200) {
         wx.showToast({
@@ -687,7 +673,7 @@ Page({
   // 刷新推荐信息
   async refreshReferralInfo() {
     try {
-      const response = await authAPI.getReferralInfo()
+      const response = await referralAPI.getReferralInfo()
       if (response.code === 200) {
         this.setData({
           referralInfo: response.data || {}
@@ -695,6 +681,72 @@ Page({
       }
     } catch (error) {
       console.error('刷新推荐信息失败:', error)
+    }
+  },
+
+  // ==================== 双重角色管理相关方法 ====================
+
+  // 检查用户是否同时具有商家和用户双重角色
+  async checkDualRole() {
+    try {
+      if (!this.data.isLogin) {
+        this.setData({ hasDualRole: false })
+        return
+      }
+
+      // 直接从本地存储获取 roles 数组
+      const roles = wx.getStorageSync('roles') || []
+      console.log('👤 用户端角色数据:', roles)
+      
+      // 检查是否同时有 user 和 shop 角色
+      const hasUserRole = roles.includes('user')
+      const hasShopRole = roles.includes('shop')
+      const hasDualRole = hasUserRole && hasShopRole
+      
+      this.setData({ hasDualRole })
+      
+      console.log('👤 用户端双重角色检查结果:', {
+        roles: roles,
+        hasUserRole: hasUserRole,
+        hasShopRole: hasShopRole,
+        hasDualRole: hasDualRole
+      })
+      
+    } catch (error) {
+      console.error('检查双重角色失败:', error)
+      this.setData({ hasDualRole: false })
+    }
+  },
+
+  // 切换到商家端
+  onSwitchToMerchant() {
+    // 直接从本地存储检查角色
+    const roles = wx.getStorageSync('roles') || []
+    const hasShopRole = roles.includes('shop')
+    
+    console.log('🔄 切换到商家端检查:', {
+      roles: roles,
+      hasShopRole: hasShopRole
+    })
+    
+    if (hasShopRole) {
+      // 使用统一的状态管理切换到商家端上下文
+      const success = userState.switchContext('shop')
+      if (success) {
+        wx.reLaunch({
+          url: '/pages/merchant/dashboard/dashboard'
+        })
+      } else {
+        wx.showToast({
+          title: '切换失败',
+          icon: 'none'
+        })
+      }
+    } else {
+      wx.showToast({
+        title: '您没有商家权限',
+        icon: 'none'
+      })
     }
   }
 }) 

@@ -1,5 +1,5 @@
 const { formatPrice, formatTime, showToast, showModal } = require('../../../utils/index.js')
-const { shopState } = require('../../../utils/state.js')
+const { shopState, userState } = require('../../../utils/state.js')
 
 Page({
   data: {
@@ -44,11 +44,9 @@ Page({
 
   // 检查商家权限
   checkMerchantAuth() {
-    const userInfo = wx.getStorageSync('userInfo')
-    
-    // 检查用户角色是否为商家(shop)或管理员(admin)
-    if (!userInfo.id || (userInfo.role !== 'shop' && userInfo.role !== 'admin')) {
-      showModal('权限不足', '您没有商家权限，请联系管理员开通。').then(() => {
+    // 检查用户是否已登录
+    if (!userState.isLoggedIn()) {
+      showModal('请先登录', '您需要先登录才能访问商家功能。').then(() => {
         wx.switchTab({
           url: '/pages/login/login'
         })
@@ -56,6 +54,26 @@ Page({
       return false
     }
     
+    // 直接从本地存储检查角色权限
+    const roles = wx.getStorageSync('roles') || []
+    const hasShopRole = roles.includes('shop')
+    
+    console.log('🏪 商家端权限检查:', {
+      roles: roles,
+      hasShopRole: hasShopRole
+    })
+    
+    if (!hasShopRole) {
+      showModal('权限不足', '您没有商家权限，请联系管理员开通。').then(() => {
+        wx.switchTab({
+          url: '/pages/user/profile/profile'
+        })
+      })
+      return false
+    }
+    
+    // 使用统一的状态管理切换到商家端上下文
+    userState.switchContext('shop')
     return true
   },
 
@@ -96,7 +114,7 @@ Page({
     try {
       const { getMyShopInfo } = require('../../../api/shop.js')
       const response = await getMyShopInfo()
-      
+
       if (response.code === 200 && response.data) {
         shopState.setShopInfo(response.data)
         this.setData({ shopInfo: response.data })

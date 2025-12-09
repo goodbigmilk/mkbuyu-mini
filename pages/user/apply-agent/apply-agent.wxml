@@ -1,5 +1,16 @@
 <!--pages/user/apply-agent/apply-agent.wxml-->
 <view class="container">
+  <!-- 店铺选择器 -->
+  <view wx:if="{{ shops.length > 1 }}" class="shop-selector">
+    <text class="selector-label">选择店铺：</text>
+    <picker mode="selector" range="{{ shops }}" range-key="name" value="{{ selectedShopIndex }}" bind:change="onShopPickerChange">
+      <view class="picker-value">
+        {{ shops[selectedShopIndex].name || '请选择店铺' }}
+        <van-icon name="arrow-down" />
+      </view>
+    </picker>
+  </view>
+
   <!-- 提示信息 -->
   <van-notice-bar 
     wx:if="{{ !hasApplication || applicationStatus === 3 }}"

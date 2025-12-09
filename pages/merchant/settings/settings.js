@@ -9,6 +9,7 @@ Page({
   data: {
     userInfo: {},
     shopInfo: {},
+    hasDualRole: false, // 用户是否同时具有商家和用户双重角色
     todayStats: {
       orderCount: 0,
       sales: 0,
@@ -77,6 +78,7 @@ Page({
     this.loadUserInfo();
     this.loadShopInfo();
     this.loadTodayStats();
+    this.checkDualRole();
   },
 
   onShow() {
@@ -86,6 +88,7 @@ Page({
     });
     
     this.refreshData();
+    this.checkDualRole();
   },
 
   onPullDownRefresh() {
@@ -99,7 +102,8 @@ Page({
     await Promise.all([
       this.loadUserInfo(),
       this.loadShopInfo(),
-      this.loadTodayStats()
+      this.loadTodayStats(),
+      this.checkDualRole()
     ]);
   },
 
@@ -130,9 +134,36 @@ Page({
         // 更新状态管理中的店铺信息
         shopState.setShopInfo(processedShopInfo);
         this.setData({ shopInfo: processedShopInfo });
+      } else if (response.code === 404) {
+        // 店铺不存在，设置为未创建状态
+        console.log('店铺不存在，需要创建');
+        this.setData({
+          shopInfo: {
+            shop_id: null, // 标记为未创建
+            name: '未设置店铺名称',
+            avatar: '',
+            description: '暂无店铺简介',
+            owner_name: '未设置'
+          }
+        });
       }
-    } catch (error) {
-      console.error('加载店铺信息失败:', error);
+      } catch (error) {
+        console.error('加载店铺信息失败:', error);
+        
+        // 如果是网络错误或服务器错误，判断为需要创建店铺
+        if (error.message && error.message.includes('404')) {
+          console.log('店铺不存在，需要创建');
+          this.setData({
+            shopInfo: {
+              shop_id: null,
+              name: '未设置店铺名称',
+              avatar: '',
+              description: '暂无店铺简介',
+              owner_name: '未设置'
+            }
+          });
+          return;
+        }
       // 如果获取失败，尝试从用户信息中获取
       try {
         const userInfo = userState.getUserInfo();
@@ -499,11 +530,44 @@ Page({
     });
   },
 
+  // 带确认弹窗的切换用户端功能
+  async onSwitchToUserWithConfirm() {
+    const confirmed = await showModal('切换端', '确定要切换到用户端吗？');
+    if (!confirmed) return;
+    
+    this.onSwitchToUser();
+  },
+
   // 切换用户端
   onSwitchToUser() {
-    wx.reLaunch({
-      url: '/pages/user/home/home'
-    });
+    // 直接从本地存储检查角色
+    const roles = wx.getStorageSync('roles') || []
+    const hasUserRole = roles.includes('user')
+    
+    console.log('🔄 切换到用户端检查:', {
+      roles: roles,
+      hasUserRole: hasUserRole
+    })
+    
+    if (hasUserRole) {
+      // 使用统一的状态管理切换上下文
+      const success = userState.switchContext('user')
+      if (success) {
+        wx.reLaunch({
+          url: '/pages/user/home/home'
+        })
+      } else {
+        wx.showToast({
+          title: '切换失败',
+          icon: 'none'
+        })
+      }
+    } else {
+      wx.showToast({
+        title: '您没有用户权限',
+        icon: 'none'
+      })
+    }
   },
 
   // 退出登录
@@ -542,5 +606,34 @@ Page({
     wx.navigateTo({
       url: '/pages/common/about/about'
     });
+  },
+
+  // ==================== 双重角色管理相关方法 ====================
+
+  // 检查用户是否同时具有商家和用户双重角色
+  async checkDualRole() {
+    try {
+      // 直接从本地存储获取 roles 数组
+      const roles = wx.getStorageSync('roles') || []
+      console.log('🏪 商家端角色数据:', roles)
+      
+      // 检查是否同时有 user 和 shop 角色
+      const hasUserRole = roles.includes('user')
+      const hasShopRole = roles.includes('shop')
+      const hasDualRole = hasUserRole && hasShopRole
+      
+      this.setData({ hasDualRole })
+      
+      console.log('🏪 商家端双重角色检查结果:', {
+        roles: roles,
+        hasUserRole: hasUserRole,
+        hasShopRole: hasShopRole,
+        hasDualRole: hasDualRole
+      })
+      
+    } catch (error) {
+      console.error('检查双重角色失败:', error)
+      this.setData({ hasDualRole: false })
+    }
   }
 });

@@ -1,422 +1,425 @@
-const authApi = require('../../../api/auth.js');
-const { validatePhone, validatePassword } = require('../../../utils/index.js');
+const { registerUser } = require('../../../api/auth.js')
+const { getDefaultPageByRole } = require('../../../utils/constants.js')
+const { casdoorSDK } = require('../../../utils/casdoor.js')
+const { checkAuthAndLogin, isLoggedIn } = require('../../../api/auth.js')
+const { userState } = require('../../../utils/state.js')
 
 Page({
   data: {
-    // 身份类型：user(用户) | shop(商家)
-    role: 'user',
+    registering: false,
+    
+    // Casdoor web-view 相关
+    casdoorSignupUrl: '',
+    showCasdoorSignup: false,
     
     // 表单数据
-    phone: '',
-    smsCode: '',
-    password: '',
-    confirmPassword: '',
-    referralCode: '',
+    formData: {
+      username: '',
+      displayName: '',
+      phone: '',
+      email: '',
+      password: '',
+      confirmPassword: ''
+    },
     
-    // 卖家专用字段
-    shopName: '',
-    ownerName: '',
+    // 错误信息
+    usernameError: '',
+    phoneError: '',
+    emailError: '',
+    passwordError: '',
+    confirmPasswordError: '',
     
-    // 状态控制
-    registering: false,
-    sendingSms: false,
-    smsCountdown: 0,
-    agreePolicy: false,
-    canSendSms: false,
-    
-    // 定时器
-    smsTimer: null
+    // 表单验证状态
+    isFormValid: false
   },
 
-  // 更新计算状态
-  updateComputedState() {
-    const { phone, agreePolicy } = this.data;
+  async onLoad(options) {
+    console.log('📝 注册页面加载')
     
-    // 防止 undefined，给默认值
-    const phoneValue = phone || '';
-    
-    // 计算是否可以发送短信
-    const canSendSms = validatePhone(phoneValue) && agreePolicy;
-    
-    this.setData({
-      canSendSms
-    });
-  },
-
-  onLoad(options) {
-    this.initPage(options);
-    // 初始化计算状态
-    this.updateComputedState();
-  },
-
-  onUnload() {
-    // 清理定时器
-    if (this.data.smsTimer) {
-      clearInterval(this.data.smsTimer);
+    // 检查是否有授权码回调（从 Casdoor 返回）
+    if (options.code && options.state) {
+      console.log('🔄 检测到 Casdoor 授权码回调（注册）')
+      await this.handleCasdoorCallback(options.code, options.state)
+      return
     }
   },
 
-  // 初始化页面
-  initPage(options) {
-    // 如果有推荐码，自动填入
-    if (options.referralCode) {
-      this.setData({ referralCode: options.referralCode});
-    }
-    
-    // 从参数中获取用户角色
-    if (options.type) {
-      this.setData({ role: options.type });
-    }
-    
-    // 默认同意协议（测试阶段方便调试）
-    this.setData({ agreePolicy: true });
-    
-    this.updateComputedState(); // 初始化时也更新计算状态
+  // ==================== 表单输入处理 ====================
+
+  onUsernameInput(event) {
+    this.setFormData('username', event.detail)
+    this.validateUsername(event.detail)
   },
 
-  // 切换身份类型
-  switchRole(e) {
-    const type = e.currentTarget.dataset.type;
+  onDisplayNameInput(event) {
+    this.setFormData('displayName', event.detail)
+  },
+
+  onPhoneInput(event) {
+    this.setFormData('phone', event.detail)
+    this.validatePhone(event.detail)
+  },
+
+  onEmailInput(event) {
+    this.setFormData('email', event.detail)
+    this.validateEmail(event.detail)
+  },
+
+  onPasswordInput(event) {
+    this.setFormData('password', event.detail)
+    this.validatePassword(event.detail)
+    // 如果确认密码已有值，重新验证匹配性
+    if (this.data.formData.confirmPassword) {
+      this.validateConfirmPassword(this.data.formData.confirmPassword)
+    }
+  },
+
+  onConfirmPasswordInput(event) {
+    this.setFormData('confirmPassword', event.detail)
+    this.validateConfirmPassword(event.detail)
+  },
+
+  // 设置表单数据的通用方法
+  setFormData(key, value) {
+    const newFormData = { ...this.data.formData, [key]: value }
     this.setData({ 
-      role: type,
-      // 清空卖家专用字段
-      shopName: '',
-      ownerName: ''
-    });
+      [`formData.${key}`]: value
+    })
+    // 更新表单验证状态
+    this.updateFormValidation(newFormData)
   },
 
-  // 统一的输入框变化处理（模仿编辑页面）
-  onFieldChange(e) {
-    const { field } = e.currentTarget.dataset;
-    const { detail } = e;
-    
-    console.log(`${field}输入变化:`, detail);
-    
-    this.setData({
-      [field]: detail
-    });
-    
-    // 如果是手机号变化，需要更新计算状态
-    if (field === 'phone') {
-      this.updateComputedState();
+  // ==================== 表单验证 ====================
+
+  validateUsername(username) {
+    let error = ''
+    if (!username.trim()) {
+      error = '用户名不能为空'
+    } else if (username.length < 3) {
+      error = '用户名至少3个字符'
+    } else if (username.length > 20) {
+      error = '用户名最多20个字符'
+    } else if (!/^[a-zA-Z0-9_\u4e00-\u9fa5]+$/.test(username)) {
+      error = '用户名只能包含字母、数字、下划线或中文'
     }
+    this.setData({ usernameError: error })
+    return !error
   },
 
-
-  // 发送短信验证码
-  async onSendSms() {
-    const { phone, agreePolicy } = this.data;
-    
-    const phoneValue = phone || '';  // 防止 undefined
-    
-    // 验证手机号
-    if (!validatePhone(phoneValue)) {
-      wx.showToast({
-        title: '请输入正确的手机号',
-        icon: 'none'
-      });
-      return;
-    }
-    
-    // 验证协议同意
-    if (!agreePolicy) {
-      wx.showToast({
-        title: '请先同意用户协议',
-        icon: 'none'
-      });
-      return;
-    }
-    
-    try {
-      this.setData({ sendingSms: true });
-      
-      await authApi.sendSmsCode(phoneValue, 'register');
-      
-      wx.showToast({
-        title: '验证码已发送',
-        icon: 'success'
-      });
-      
-      // 开始倒计时
-      this.startSmsCountdown();
-      
-    } catch (error) {
-      console.error('发送验证码失败:', error);
-      wx.showToast({
-        title: error.message || '发送失败',
-        icon: 'error'
-      });
-    } finally {
-      this.setData({ sendingSms: false });
-    }
-  },
-
-  // 开始短信倒计时
-  startSmsCountdown() {
-    let countdown = 60;
-    this.setData({ smsCountdown: countdown });
-    
-    const timer = setInterval(() => {
-      countdown--;
-      this.setData({ smsCountdown: countdown });
-      
-      if (countdown <= 0) {
-        clearInterval(timer);
-        this.setData({ smsTimer: null });
+  validatePhone(phone) {
+    let error = ''
+    if (phone && phone.trim()) {
+      if (!/^1[3-9]\d{9}$/.test(phone)) {
+        error = '请输入正确的手机号'
       }
-    }, 1000);
-    
-    this.setData({ smsTimer: timer });
+    }
+    this.setData({ phoneError: error })
+    return !error
   },
 
-  // 注册
+  validateEmail(email) {
+    let error = ''
+    if (email && email.trim()) {
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailPattern.test(email)) {
+        error = '请输入正确的邮箱格式'
+      }
+    }
+    this.setData({ emailError: error })
+    return !error
+  },
+
+  validatePassword(password) {
+    let error = ''
+    if (!password) {
+      error = '密码不能为空'
+    } else if (password.length < 6) {
+      error = '密码至少6个字符'
+    } else if (password.length > 20) {
+      error = '密码最多20个字符'
+    }
+    this.setData({ passwordError: error })
+    return !error
+  },
+
+  validateConfirmPassword(confirmPassword) {
+    let error = ''
+    if (!confirmPassword) {
+      error = '请确认密码'
+    } else if (confirmPassword !== this.data.formData.password) {
+      error = '两次密码输入不一致'
+    }
+    this.setData({ confirmPasswordError: error })
+    return !error
+  },
+
+  // 更新表单验证状态
+  updateFormValidation(formData) {
+    const { username, password, confirmPassword } = formData || this.data.formData
+    
+    const isValid = 
+      username.trim().length >= 3 &&
+      password.length >= 6 &&
+      confirmPassword === password &&
+      !this.data.usernameError &&
+      !this.data.phoneError &&
+      !this.data.emailError &&
+      !this.data.passwordError &&
+      !this.data.confirmPasswordError
+
+    this.setData({ isFormValid: isValid })
+  },
+
+  // ==================== 注册逻辑 ====================
+
   async onRegister() {
-    const { role, phone, smsCode, password, confirmPassword, referralCode, shopName, ownerName, agreePolicy } = this.data;
-    
-    console.log('开始注册 - 当前数据状态:', {
-      role,
-      phone,
-      smsCode,
-      password: password ? '已输入' : '未输入',
-      confirmPassword: confirmPassword ? '已输入' : '未输入',
-      referralCode,
-      shopName,
-      ownerName,
-      agreePolicy
-    });
-    
-    // 防止 undefined，给默认值
-    const phoneValue = phone || '';
-    const smsCodeValue = smsCode || '';
-    const passwordValue = password || '';
-    const confirmPasswordValue = confirmPassword || '';
-    const referralCodeValue = referralCode || '';
-    const shopNameValue = shopName || '';
-    const ownerNameValue = ownerName || '';
-    
-    // 验证协议同意
-    if (!agreePolicy) {
-      wx.showToast({
-        title: '请先同意用户协议',
-        icon: 'none'
-      });
-      return;
+    const { formData } = this.data
+
+    // 最终验证
+    if (!this.validateAllFields()) {
+      return
     }
-    
-    // 验证手机号
-    if (!validatePhone(phoneValue)) {
-      wx.showToast({
-        title: '请输入正确的手机号',
-        icon: 'none'
-      });
-      return;
-    }
-    
-    // 验证验证码
-    if (smsCodeValue.length !== 6) {
-      wx.showToast({
-        title: '请输入6位验证码',
-        icon: 'none'
-      });
-      return;
-    }
-    
-    // 验证密码
-    if (passwordValue.length < 6) {
-      wx.showToast({
-        title: '密码至少6位',
-        icon: 'error'
-      });
-      return;
-    }
-    
-    // 验证确认密码
-    if (passwordValue !== confirmPasswordValue) {
-      wx.showToast({
-        title: '两次密码不一致',
-        icon: 'none'
-      });
-      return;
-    }
-    
-    // 如果是卖家，验证卖家专用字段
-    if (role === 'shop') {
-      if (!shopNameValue.trim()) {
-        wx.showToast({
-          title: '请输入店铺名称',
-          icon: 'none'
-        });
-        return;
-      }
-      
-      if (!ownerNameValue.trim()) {
-        wx.showToast({
-          title: '请输入店主姓名',
-          icon: 'none'
-        });
-        return;
-      }
-    }
-    
-    this.setData({ registering: true });
-    
+
+    this.setData({ registering: true })
+
     try {
-      let registerResult;
-      
-      console.log('开始注册，用户类型:', role);
-      
-      if (role === 'shop') {
-        // 卖家注册
-        const registerData = {
-          phone: phoneValue,
-          password: passwordValue,
-          shop_name: shopNameValue.trim(),
-          owner_name: ownerNameValue.trim()
-        };
-        
-        console.log('卖家注册数据:', registerData);
-        registerResult = await authApi.registerShop(registerData);
-      } else {
-        // 买家注册
-        const registerData = {
-          phone: phoneValue,
-          password: passwordValue,
-          nickname: '', // 可以添加昵称字段
-        };
-        
-        console.log('买家注册数据:', registerData);
-        registerResult = await authApi.register(registerData);
-      }
-      
-      console.log('注册结果:', registerResult);
-      
       wx.showToast({
-        title: '注册成功',
-        icon: 'success'
-      });
-      
-      // 注册成功后的处理
-      this.handleRegisterSuccess(registerResult, referralCodeValue);
-      
-    } catch (error) {
-      console.error('注册失败:', error);
-      wx.showToast({
-        title: error.message || '注册失败',
-        icon: 'error'
-      });
-    } finally {
-      this.setData({ registering: false });
-    }
-  },
+        title: '正在注册...',
+        icon: 'loading',
+        duration: 2000
+      })
 
-  // 注册成功处理
-  async handleRegisterSuccess(registerResult, referralCode) {
-    // 如果是买家注册且有推荐码，尝试绑定推荐人
-    if (this.data.role === 'user' && referralCode && referralCode.trim()) {
-      try {
-        console.log('尝试绑定推荐人，推荐码:', referralCode);
-        
-        // 先登录获取token（注册成功但未登录状态）
-        const loginData = {
-          phone: this.data.phone,
-          password: this.data.password,
-          role: 'user'
-        };
-        
-        const loginResult = await authApi.login(loginData);
-        
-        if (loginResult.code === 200) {
-          // 登录成功，保存token
-          wx.setStorageSync('token', loginResult.data.token);
-          wx.setStorageSync('userInfo', loginResult.data.user_info);
-          
-          // 绑定推荐人
-          const bindResult = await authApi.bindReferrer(referralCode.trim());
-          
-          if (bindResult.code === 200) {
-            console.log('推荐人绑定成功');
-            wx.showModal({
-              title: '注册成功',
-              content: '推荐人绑定成功，欢迎加入买不语！',
-              showCancel: false,
-              confirmText: '好的'
-            });
-          } else {
-            console.log('推荐人绑定失败:', bindResult.message);
-            wx.showModal({
-              title: '注册成功',
-              content: '推荐码无效或已过期，注册已完成！',
-              showCancel: false,
-              confirmText: '知道了'
-            });
-          }
-        } else {
-          console.log('自动登录失败，跳过推荐人绑定');
-          wx.showToast({
+      // 构建注册数据
+      const registerData = {
+        username: formData.username.trim(),
+        password: formData.password,
+        displayName: formData.displayName.trim() || formData.username.trim(),
+        phone: formData.phone.trim(),
+        email: formData.email.trim()
+      }
+
+      const result = await registerUser(registerData)
+
+      if (result) {
+        console.log('✅ 注册成功')
+        wx.showToast({
+          title: '注册成功',
+          icon: 'success'
+        })
+
+        // 清空表单
+        this.resetForm()
+
+        // 延迟跳转到登录页面
+        setTimeout(() => {
+          wx.showModal({
             title: '注册成功',
-            icon: 'success',
-            duration: 2000
-          });
-        }
-      } catch (error) {
-        console.error('绑定推荐人失败:', error);
-        wx.showModal({
-          title: '注册成功',
-          content: '推荐码处理异常，但注册已完成！',
-          showCancel: false,
-          confirmText: '知道了'
-        });
+            content: '账号创建成功！现在可以使用账号密码登录了。',
+            showCancel: false,
+            confirmText: '去登录',
+            success: () => {
+              wx.navigateBack()
+            }
+          })
+        }, 1000)
       }
-    }
 
-    // 延迟跳转，让用户看到成功提示
-    setTimeout(() => {
-      if (this.data.role === 'shop') {
-        // 卖家注册成功，提示审核信息并跳转到登录页
-        wx.showModal({
-          title: '注册成功',
-          content: '您的店铺正在审核中，审核通过后即可登录使用',
-          showCancel: false,
-          success: () => {
-            wx.navigateBack();
-          }
-        });
-      } else {
-        // 买家注册成功，跳转到登录页或主页
-        const hasToken = wx.getStorageSync('token');
-        if (hasToken) {
-          // 如果已经有token（推荐人绑定成功），跳转到主页
-          wx.reLaunch({
-            url: '/pages/user/home/home'
-          });
-        } else {
-          // 否则跳转到登录页
-          setTimeout(() => {
-            wx.navigateBack();
-          }, 1500);
-        }
-      }
-    }, referralCode && referralCode.trim() ? 3500 : 1500);
+    } catch (error) {
+      console.error('注册失败:', error)
+      wx.showToast({
+        title: error.message || '注册失败，请重试',
+        icon: 'none',
+        duration: 3000
+      })
+    } finally {
+      this.setData({ registering: false })
+    }
   },
 
-  // 协议同意状态变化
-  onAgreePolicyChange(e) {
-    this.setData({ agreePolicy: e.detail });
-    this.updateComputedState(); // 协议同意状态变化时更新计算状态
+  // 验证所有字段
+  validateAllFields() {
+    const { formData } = this.data
+    
+    const usernameValid = this.validateUsername(formData.username)
+    const phoneValid = this.validatePhone(formData.phone)
+    const emailValid = this.validateEmail(formData.email)
+    const passwordValid = this.validatePassword(formData.password)
+    const confirmPasswordValid = this.validateConfirmPassword(formData.confirmPassword)
+
+    return usernameValid && phoneValid && emailValid && passwordValid && confirmPasswordValid
+  },
+
+  // 重置表单
+  resetForm() {
+    this.setData({
+      formData: {
+        username: '',
+        displayName: '',
+        phone: '',
+        email: '',
+        password: '',
+        confirmPassword: ''
+      },
+      usernameError: '',
+      phoneError: '',
+      emailError: '',
+      passwordError: '',
+      confirmPasswordError: '',
+      isFormValid: false
+    })
+  },
+
+  // ==================== 导航和其他功能 ====================
+
+  // 返回登录页面
+  onGoToLogin() {
+    wx.navigateBack()
   },
 
   // 查看协议
-  onViewPolicy(e) {
-    const type = e.currentTarget.dataset.type;
-    const url = type === 'user' 
-      ? '/pages/policy/user-agreement/user-agreement'
-      : '/pages/policy/privacy-policy/privacy-policy';
-      
-    wx.navigateTo({ url });
+  onViewUserAgreement() {
+    wx.navigateTo({
+      url: '/pages/policy/user-agreement/user-agreement'
+    })
   },
 
-  // 跳转到登录页面
-  onLogin() {
-    wx.navigateBack();
+  onViewPrivacyPolicy() {
+    wx.navigateTo({
+      url: '/pages/policy/privacy-policy/privacy-policy'
+    })
+  },
+
+  // 联系客服
+  onContactService() {
+    wx.showModal({
+      title: '联系客服',
+      content: '如有问题，请联系客服协助处理',
+      showCancel: false
+    })
+  },
+
+  // ==================== Casdoor 注册相关方法 ====================
+
+  /**
+   * 打开 Casdoor 注册页面（使用 web-view）
+   */
+  onOpenCasdoorSignup() {
+    console.log('🚀 打开 Casdoor 注册页面')
+    
+    // 生成 Casdoor 注册 URL
+    // 注意：不需要手动编码，getSignupUrl 内部会统一处理编码
+    const redirectUri = 'http://localhost:8080/api/auth/callback'
+    const signupUrl = casdoorSDK.getSignupUrl(redirectUri)
+    
+    console.log('📝 Casdoor 注册 URL:', signupUrl)
+    
+    this.setData({
+      casdoorSignupUrl: signupUrl,
+      showCasdoorSignup: true
+    })
+  },
+
+  /**
+   * 关闭 Casdoor 注册页面
+   */
+  onCloseCasdoorSignup() {
+    this.setData({
+      showCasdoorSignup: false,
+      casdoorSignupUrl: ''
+    })
+  },
+
+  /**
+   * 处理 web-view 消息（来自 Casdoor 页面）
+   */
+  onCasdoorMessage(event) {
+    console.log('📨 收到 Casdoor 消息:', event.detail.data)
+    
+    const data = event.detail.data[0] || event.detail.data
+    
+    // 检查是否有授权码
+    if (data.code) {
+      this.handleCasdoorCallback(data.code, data.state || 'casdoor')
+    } else if (data.type === 'close') {
+      // Casdoor 页面请求关闭
+      this.onCloseCasdoorSignup()
+    }
+  },
+
+  /**
+   * 处理 Casdoor 授权回调
+   */
+  async handleCasdoorCallback(code, state) {
+    try {
+      wx.showLoading({
+        title: '正在处理...',
+        mask: true
+      })
+
+      // 使用授权码换取访问令牌
+      const result = await casdoorSDK.exchangeAuthCodeForToken(code, state)
+      
+      if (result && result.token) {
+        console.log('✅ Casdoor 注册/登录成功:', result.user)
+        
+        wx.hideLoading()
+        wx.showToast({
+          title: '注册成功',
+          icon: 'success'
+        })
+
+        // 关闭 web-view
+        this.setData({
+          showCasdoorSignup: false
+        })
+
+        // 注册成功后跳转到用户对应页面
+        setTimeout(() => {
+          const role = userState.getRole()
+          const defaultPage = getDefaultPageByRole(role)
+          
+          if (defaultPage.startsWith('/pages/user/')) {
+            wx.switchTab({
+              url: defaultPage
+            })
+          } else {
+            wx.reLaunch({
+              url: defaultPage
+            })
+          }
+        }, 1000)
+      }
+    } catch (error) {
+      console.error('❌ Casdoor 注册/登录失败:', error)
+      wx.hideLoading()
+      wx.showToast({
+        title: error.message || '注册失败，请重试',
+        icon: 'none',
+        duration: 3000
+      })
+      
+      // 关闭 web-view
+      this.setData({
+        showCasdoorSignup: false
+      })
+    }
+  },
+
+  /**
+   * web-view 加载完成
+   */
+  onCasdoorLoad() {
+    console.log('✅ Casdoor 注册页面加载完成')
+  },
+
+  /**
+   * web-view 加载错误
+   */
+  onCasdoorError(event) {
+    console.error('❌ Casdoor 注册页面加载失败:', event.detail)
+    wx.showToast({
+      title: '页面加载失败，请重试',
+      icon: 'none'
+    })
   }
-}); 
+})

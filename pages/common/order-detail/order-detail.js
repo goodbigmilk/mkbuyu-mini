@@ -30,8 +30,9 @@ Page({
       return
     }
     
+    // 保持 ID 为字符串，避免大数精度丢失
     this.setData({ 
-      orderId: parseInt(finalOrderId),
+      orderId: finalOrderId,
       autoShowPayment: showPayment === 'true' // 记录是否需要自动显示支付弹窗
     })
     this.loadOrderDetail()
@@ -190,7 +191,7 @@ Page({
           try {
             wx.showLoading({ title: '取消中...' })
             
-            await orderApi.cancelOrder(orderDetail.id)
+            await orderApi.cancelOrder(orderDetail.order_id)
             
             wx.hideLoading()
             wx.showToast({
@@ -253,8 +254,9 @@ Page({
   // 跳转到商品详情
   onProductTap(e) {
     const { product } = e.currentTarget.dataset
+    // 使用product_id业务ID
     wx.navigateTo({
-      url: `/pages/user/product/detail/detail?id=${product.id}`
+      url: `/pages/user/product/detail/detail?id=${product.product_id}`
     })
   },
 
@@ -294,7 +296,7 @@ Page({
           try {
             wx.showLoading({ title: '处理中...' })
             
-            await orderApi.confirmReceipt(orderDetail.id)
+            await orderApi.confirmReceipt(orderDetail.order_id)
             
             wx.hideLoading()
             wx.showToast({

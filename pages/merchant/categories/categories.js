@@ -24,7 +24,7 @@ Page({
     isEdit: false,
     currentCategory: null,
     formData: {
-      parent_id: 0,
+      parent_id: "",
       name: '',
       sort: 0,
       status: 1,
@@ -40,7 +40,6 @@ Page({
     parentIndex: 0,
     
     // 树形展示相关 - 新增
-    expandedCategories: [], // 展开的分类ID数组
     expandedMap: {}, // 展开状态的映射对象
     viewMode: 'tree', // 视图模式：tree（树形）或 list（列表）
     
@@ -123,7 +122,7 @@ Page({
     if (selectedCategory) {
       // 选择了具体的分类
       this.setData({
-        'formData.parent_id': selectedCategory.id,
+        'formData.parent_id': selectedCategory.category_id,
         selectedParentCategory: selectedCategory
       }, () => {
         console.log('父分类数据更新完成:', {
@@ -134,7 +133,7 @@ Page({
     } else {
       // 选择了"无父分类"
       this.setData({
-        'formData.parent_id': 0,
+        'formData.parent_id': "0",
         selectedParentCategory: null
       }, () => {
         console.log('清除父分类选择完成')
@@ -144,17 +143,17 @@ Page({
 
   // 检查登录状态
   checkLoginStatus() {
-    const token = wx.getStorageSync('token')
-    const userInfo = wx.getStorageSync('userInfo')
+        const { userState } = require('../../../utils/state.js')
+        const token = userState.getToken()
+        const userId = userState.getUserId()
     
     console.log('分类页面 - 登录状态检查:', {
       hasToken: !!token,
-      hasUserInfo: !!userInfo,
-      userRole: userInfo?.role,
+      hasUserId: !!userId,
       tokenLength: token ? token.length : 0
     })
     
-    if (!token || !userInfo) {
+    if (!token || !userId) {
       console.log('未登录，跳转到登录页')
       wx.showModal({
         title: '未登录',
@@ -170,8 +169,17 @@ Page({
       return false
     }
     
-    if (userInfo.role !== 'shop') {
-      console.log('非商家用户，角色:', userInfo.role)
+    // 直接从本地存储检查角色权限
+    const roles = wx.getStorageSync('roles') || []
+    const hasShopRole = roles.includes('shop')
+    
+    console.log('🏪 分类页面权限检查:', {
+      roles: roles,
+      hasShopRole: hasShopRole
+    })
+    
+    if (!hasShopRole) {
+      console.log('用户没有商家权限')
       wx.showModal({
         title: '权限不足',
         content: '此功能仅供商家使用',
@@ -183,6 +191,9 @@ Page({
       })
       return false
     }
+    
+    // 使用统一的状态管理切换到商家端上下文
+    userState.switchContext('shop')
     
     // 状态检查通过，加载数据
     this.loadCategories()
@@ -235,7 +246,7 @@ Page({
       let response
       try {
         response = await request({
-          url: '/shop/categories/tree',
+          url: '/product/categories/tree',
           method: 'GET',
           data: params
         })
@@ -243,7 +254,7 @@ Page({
         // 如果树形接口不存在，回退到普通接口
         console.log('树形接口不可用，使用普通接口:', error)
         response = await request({
-          url: '/shop/categories',
+          url: '/product/categories',
           method: 'GET',
           data: params
         })
@@ -309,13 +320,13 @@ Page({
     
     // 先创建所有分类的映射，并初始化children数组
     categories.forEach(category => {
-      // 确保ID是数字类型
-      const categoryId = parseInt(category.id)
-      const parentId = parseInt(category.parent_id || 0)
+      // 保持原始的 category_id（可能是数字或字符串）
+      const categoryId = category.category_id
+      const parentId = category.parent_id || 0
       
       categoryMap[categoryId] = {
         ...category,
-        id: categoryId,
+        category_id: categoryId,
         parent_id: parentId,
         children: []
       }
@@ -326,10 +337,11 @@ Page({
     
     // 构建树形结构
     categories.forEach(category => {
-      const categoryId = parseInt(category.id)
-      const parentId = parseInt(category.parent_id || 0)
+      const categoryId = category.category_id
+      const parentId = category.parent_id || 0
       
-      if (parentId === 0 || !parentId) {
+      // 判断是否为根级分类
+      if (parentId === 0 || parentId === '0' || !parentId) {
         // 根级分类（父ID为0或空）
         tree.push(categoryMap[categoryId])
         console.log(`添加根级分类: ID:${categoryId}, 名称:${category.name}`)
@@ -354,45 +366,41 @@ Page({
   // 新增：切换分类展开/收起状态
   toggleCategory(e) {
     const categoryIdRaw = e.currentTarget.dataset.categoryId
-    const categoryId = parseInt(categoryIdRaw)
+    // 统一转换为字符串类型，因为对象的键总是字符串
+    const categoryId = String(categoryIdRaw)
     
     console.log('切换分类展开状态:', {
       原始ID: categoryIdRaw,
       转换后ID: categoryId,
-      当前展开列表: this.data.expandedCategories,
+      转换后类型: typeof categoryId,
       当前展开映射: this.data.expandedMap
     })
     
-    if (!categoryId || isNaN(categoryId)) {
+    if (!categoryId || categoryId === 'undefined' || categoryId === 'null') {
       console.error('无效的分类ID:', categoryIdRaw)
       return
     }
     
-    const expanded = [...this.data.expandedCategories] // 复制数组
     const expandedMap = { ...this.data.expandedMap } // 复制映射对象
-    const index = expanded.indexOf(categoryId)
     
-    if (index > -1) {
-      expanded.splice(index, 1) // 从数组中移除
-      expandedMap[categoryId] = false // 在映射中设置为false
+    // 切换展开状态
+    if (expandedMap[categoryId]) {
+      // 当前是展开状态，改为收起
+      delete expandedMap[categoryId]
       console.log(`收起分类 ${categoryId}`)
     } else {
-      expanded.push(categoryId) // 添加到数组
-      expandedMap[categoryId] = true // 在映射中设置为true
+      // 当前是收起状态，改为展开
+      expandedMap[categoryId] = true
       console.log(`展开分类 ${categoryId}`)
     }
     
     this.setData({
-      expandedCategories: expanded,
       expandedMap: expandedMap
+    }, () => {
+      console.log('展开状态更新完成:', this.data.expandedMap)
     })
   },
 
-  // 新增：检查分类是否展开
-  isCategoryExpanded(categoryId) {
-    const numericId = parseInt(categoryId)
-    return this.data.expandedCategories.some(id => parseInt(id) === numericId)
-  },
 
   // 新增：切换视图模式
   switchViewMode() {
@@ -402,14 +410,13 @@ Page({
 
   // 新增：展开所有分类
   expandAll() {
-    const expandedCategories = []
     const expandedMap = {}
     
     const collectAllIds = (categories) => {
       categories.forEach(category => {
         if (category.children && category.children.length > 0) {
-          expandedCategories.push(category.id)
-          expandedMap[category.id] = true
+          // 使用字符串类型的ID作为键
+          expandedMap[String(category.category_id)] = true
           collectAllIds(category.children)
         }
       })
@@ -418,7 +425,6 @@ Page({
     collectAllIds(this.data.categoryTree)
     
     this.setData({
-      expandedCategories,
       expandedMap
     })
   },
@@ -426,7 +432,6 @@ Page({
   // 新增：收起所有分类
   collapseAll() {
     this.setData({
-      expandedCategories: [],
       expandedMap: {}
     })
   },
@@ -438,7 +443,7 @@ Page({
     // 先在categoryTree中查找（树形结构）
     const findInTree = (categories) => {
       for (let category of categories) {
-        if (category.id === targetId) {
+        if (parseInt(category.category_id) === targetId) {
           return category
         }
         if (category.children && category.children.length > 0) {
@@ -458,7 +463,7 @@ Page({
     // 如果在分类树中找不到，再在普通分类列表中查找
     if (this.data.categories && this.data.categories.length > 0) {
       const found = this.data.categories.find(category => 
-        parseInt(category.id) === targetId
+        parseInt(category.category_id) === targetId
       )
       if (found) return found
     }
@@ -502,7 +507,7 @@ Page({
       currentCategory: null,
       selectedParentCategory: null, // 清空父分类选择
       formData: {
-        parent_id: 0,
+        parent_id: "0",
         name: '',
         sort: 0,
         status: 1,
@@ -514,7 +519,7 @@ Page({
 
   // 跳转到选择分类页面
   selectParentCategory() {
-    const currentId = this.data.isEdit && this.data.currentCategory ? this.data.currentCategory.id : 0
+    const currentId = this.data.isEdit && this.data.currentCategory ? this.data.currentCategory.category_id : 0
     console.log('跳转到父分类选择页面，当前分类ID:', currentId)
     
     wx.navigateTo({
@@ -535,19 +540,19 @@ Page({
     
     console.log('开始编辑分类:', category)
     
-    if (!category || !category.id) {
+    if (!category || !category.category_id) {
       console.error('无效的分类数据')
       return
     }
     
     console.log('设置编辑状态:', {
-      categoryId: category.id,
+      categoryId: category.category_id,
       categoryName: category.name,
       currentEditingId: this.data.editingCategoryId
     })
     
     this.setData({
-      editingCategoryId: category.id,
+      editingCategoryId: category.category_id,
       editingName: category.name,
       originalName: category.name
     }, () => {
@@ -624,7 +629,7 @@ Page({
       
       // 构建完整的更新数据，保持原有字段不变，只修改名称
       const updateData = {
-        parent_id: currentCategory.parent_id || 0,
+        parent_id: String(currentCategory.parent_id || 0),
         name: trimmedName,
         sort: currentCategory.sort || 0,
         status: currentCategory.status || 1,
@@ -632,12 +637,12 @@ Page({
       }
       
       console.log('发送更新请求:', {
-        url: `/shop/categories/${editingCategoryId}`,
+        url: `/product/categories/${editingCategoryId}`,
         data: updateData
       })
       
       const response = await request({
-        url: `/shop/categories/${editingCategoryId}`,
+        url: `/product/categories/${editingCategoryId}`,
         method: 'PUT',
         data: updateData
       })
@@ -772,7 +777,7 @@ Page({
       })
 
       const requestData = {
-        parent_id: formData.parent_id,
+        parent_id: String(formData.parent_id || "0"),
         name: (formData.name || '').trim(),
         sort: formData.sort,
         status: formData.status,
@@ -784,13 +789,13 @@ Page({
       let response
       if (isEdit) {
         response = await request({
-          url: `/shop/categories/${currentCategory.id}`,
+          url: `/product/categories/${currentCategory.category_id}`,
           method: 'PUT',
           data: requestData
         })
       } else {
         response = await request({
-          url: '/shop/categories',
+          url: '/product/categories',
           method: 'POST',
           data: requestData
         })
@@ -823,6 +828,9 @@ Page({
   handleBusinessError(errorMessage, isEdit) {
     console.log('处理业务错误:', { errorMessage, isEdit })
     
+    // 在方法顶部统一引入 userState
+    const { userState } = require('../../../utils/state.js')
+    
     if (typeof errorMessage !== 'string') {
       errorMessage = '操作失败，请稍后重试'
     }
@@ -835,8 +843,7 @@ Page({
         showCancel: false,
         confirmText: '重新登录',
         success: () => {
-          wx.removeStorageSync('token')
-          wx.removeStorageSync('userInfo')
+          userState.logout()
           wx.reLaunch({
             url: '/pages/auth/login/login'
           })
@@ -863,8 +870,7 @@ Page({
         showCancel: false,
         confirmText: '重新登录',
         success: () => {
-          wx.removeStorageSync('token')
-          wx.removeStorageSync('userInfo')
+          userState.logout()
           wx.reLaunch({
             url: '/pages/auth/login/login'
           })
@@ -904,7 +910,7 @@ Page({
       dataset: e.currentTarget.dataset
     })
     
-    if (!category || !category.id) {
+    if (!category || !category.category_id) {
       console.error('删除分类: 缺少分类数据或ID')
       showToast('分类信息异常，请刷新页面重试')
       return
@@ -924,7 +930,7 @@ Page({
         return
       }
 
-      console.log('开始删除分类，ID:', category.id, '名称:', category.name)
+      console.log('开始删除分类，ID:', category.category_id, '名称:', category.name)
       
       wx.showLoading({
         title: '删除中...',
@@ -933,7 +939,7 @@ Page({
 
       // 调用删除接口
       const response = await request({
-        url: `/shop/categories/${category.id}`,
+        url: `/product/categories/${category.category_id}`,
         method: 'DELETE'
       })
 
@@ -993,7 +999,7 @@ Page({
   async loadParentCategories() {
     try {
       const response = await request({
-        url: '/shop/categories/all',
+        url: '/product/categories/all',
         method: 'GET'
       })
 
@@ -1021,12 +1027,12 @@ Page({
   // 父分类选择器变化（旧版本兼容）
   onParentPickerChange(e) {
     const { index } = e.currentTarget.dataset
-    let parentId = 0
+    let parentId = "0"
     let selectedParentCategory = null
     
     if (index > 0) {
       const category = this.data.parentCategories[index - 1]
-      parentId = category.id
+      parentId = category.category_id
       selectedParentCategory = category
     }
     

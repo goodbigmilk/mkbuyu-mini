@@ -53,9 +53,10 @@ Page({
     const { id } = options
     
     if (id) {
+      // 保持 product_id 为字符串，避免大数精度丢失
       this.setData({
         isEdit: true,
-        productId: parseInt(id)
+        productId: id
       })
       
       // 设置导航栏标题
@@ -63,7 +64,7 @@ Page({
         title: '编辑商品'
       })
       
-      this.loadProductDetail(parseInt(id))
+      this.loadProductDetail(id)
     } else {
       wx.setNavigationBarTitle({
         title: '创建商品'
@@ -91,8 +92,8 @@ Page({
       if (selectedCategory) {
         this.setData({
           selectedCategory,
-          selectedCategoryId: selectedCategory.id,
-          'formData.category_id': selectedCategory.id
+          selectedCategoryId: selectedCategory.category_id, // 使用业务ID
+          'formData.category_id': selectedCategory.category_id // 使用业务ID
         })
       } else {
         // 选择了"无父分类"
@@ -111,10 +112,11 @@ Page({
 
   // 检查登录状态
   checkLoginStatus() {
-    const token = wx.getStorageSync('token')
-    const userInfo = wx.getStorageSync('userInfo')
+    const { userState } = require('../../../../utils/state.js')
+    const token = userState.getToken()
+    const userId = userState.getUserId()
     
-    if (!token || !userInfo) {
+    if (!token || !userId) {
       wx.showModal({
         title: '提示',
         content: '请先登录',
@@ -128,7 +130,8 @@ Page({
       return false
     }
     
-    if (userInfo.role !== 'shop') {
+    // 使用 userState 检查商家权限
+    if (!userState.hasShopRole()) {
       wx.showModal({
         title: '提示',
         content: '需要商家权限',
@@ -163,8 +166,8 @@ Page({
         
         const uploadedImages = product.images ? product.images.map(img => img.url) : []
         
-        // 查找对应的分类
-        const selectedCategory = this.data.categories.find(cat => cat.id === product.category_id)
+        // 查找对应的分类（使用业务ID匹配）
+        const selectedCategory = this.data.categories.find(cat => cat.category_id === product.category_id)
         
         this.setData({
           formData: {
@@ -249,19 +252,19 @@ Page({
     const categoryMap = {}
     const rootCategories = []
     
-    // 创建分类映射
+    // 创建分类映射（使用业务ID category_id 作为key）
     categories.forEach(category => {
-      categoryMap[category.id] = { ...category, children: [] }
+      categoryMap[category.category_id] = { ...category, children: [] }
     })
     
-    // 构建树结构
+    // 构建树结构（parent_id 和 category_id 都是业务ID，类型一致）
     categories.forEach(category => {
-      if (category.parent_id === 0 || !categoryMap[category.parent_id]) {
+      if (category.parent_id === '0' || category.parent_id === 0 || !categoryMap[category.parent_id]) {
         // 根分类
-        rootCategories.push(categoryMap[category.id])
+        rootCategories.push(categoryMap[category.category_id])
       } else {
         // 子分类
-        categoryMap[category.parent_id].children.push(categoryMap[category.id])
+        categoryMap[category.parent_id].children.push(categoryMap[category.category_id])
       }
     })
     
@@ -405,18 +408,18 @@ Page({
   onCategorySelect(e) {
     const { category } = e.currentTarget.dataset
     this.setData({
-      selectedCategoryId: category.id
+      selectedCategoryId: category.category_id // 使用业务ID
     })
   },
 
   // 确认分类选择
   confirmCategory() {
-    const selectedCategory = this.data.categories.find(cat => cat.id === this.data.selectedCategoryId)
+    const selectedCategory = this.data.categories.find(cat => cat.category_id === this.data.selectedCategoryId)
     
     if (selectedCategory) {
       this.setData({
         selectedCategory,
-        'formData.category_id': selectedCategory.id,
+        'formData.category_id': selectedCategory.category_id, // 使用业务ID
         showCategoryPicker: false
       })
       this.checkCanSave()
@@ -427,8 +430,8 @@ Page({
 
   // 跳转到分类选择页面
   selectParentCategory() {
-    const currentId = this.data.isEdit && this.data.selectedCategory ? this.data.selectedCategory.id : 0
-    console.log('跳转到父分类选择页面，当前分类ID:', currentId)
+    const currentId = this.data.isEdit && this.data.selectedCategory ? this.data.selectedCategory.category_id : 0
+    console.log('跳转到父分类选择页面，当前分类业务ID:', currentId)
     
     wx.navigateTo({
       url: `/pages/merchant/categories/select-parent/select-parent?currentId=${currentId}`,
@@ -527,7 +530,7 @@ Page({
       price: Math.round(parseFloat(formData.price) * 100), // 元转分
       stock: parseInt(formData.stock) || 0,
       weight: parseFloat(formData.weight) || 0,
-      category_id: parseInt(formData.category_id),
+      category_id: String(formData.category_id), // 转为字符串，解决后端int64大数问题
       is_hot: !!formData.is_hot,
       is_new: !!formData.is_new,
       is_recommend: !!formData.is_recommend,

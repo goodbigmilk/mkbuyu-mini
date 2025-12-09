@@ -5,47 +5,51 @@ const { get, post, put } = require('../utils/request')
 
 // 从购物车创建订单
 function createOrderFromCart(data) {
-  return post('/user/orders/cart', data)
+  // 确保cart_ids是字符串数组
+  if (data.cart_ids && Array.isArray(data.cart_ids)) {
+    data.cart_ids = data.cart_ids.map(id => String(id))
+  }
+  return post('/order/cart', data)
 }
 
 // 立即购买创建订单
 function createOrderNow(data) {
-  return post('/user/orders/now', data)
+  return post('/order/now', data)
 }
 
 // 获取用户订单列表
 function getUserOrderList(params = {}) {
-  return get('/user/orders', params)
+  return get('/order/my', params)
 }
 
 // 获取订单详情
 function getOrderDetail(orderId) {
-  return get(`/user/orders/${orderId}`)
+  return get(`/order/${orderId}`)
 }
 
 // 取消订单
 function cancelOrder(orderId) {
-  return put(`/user/orders/${orderId}/cancel`)
+  return put(`/order/${orderId}/cancel`)
 }
 
 // 确认收货
 function confirmReceipt(orderId) {
-  return put(`/user/orders/${orderId}/receipt`)
+  return put(`/order/${orderId}/receipt`)
 }
 
 // 搜索用户订单
 function searchUserOrders(params = {}) {
-  return get('/user/orders/search', params)
+  return get('/order/search', params)
 }
 
 // 获取订单可用优惠券
 function getAvailableCoupons(orderAmount) {
-  return get('/user/orders/coupons', { order_amount: orderAmount })
+  return get('/order/coupons', { order_amount: orderAmount })
 }
 
 // 支付订单回调
 function payOrder(orderNo, paymentAmount, paymentMethod) {
-  return post('/user/orders/pay', { 
+  return post('/payment/pay', { 
     order_no: orderNo,
     payment_amount: paymentAmount,
     payment_method: paymentMethod
@@ -56,27 +60,27 @@ function payOrder(orderNo, paymentAmount, paymentMethod) {
 
 // 获取店铺订单列表
 function getShopOrderList(params = {}) {
-  return get('/shop/orders', params)
+  return get('/order/manage', params)
 }
 
 // 更新订单状态
 function updateOrderStatus(orderId, status) {
-  return put(`/shop/orders/${orderId}/status`, { status })
+  return put(`/order/${orderId}/status`, { status })
 }
 
 // 订单发货
 function shipOrder(orderId, data) {
-  return put(`/shop/orders/${orderId}/ship`, data)
+  return put(`/order/${orderId}/ship`, data)
 }
 
 // 获取店铺订单统计
 function getShopOrderStatistics() {
-  return get('/shop/orders/statistics')
+  return get('/order/statistics')
 }
 
 // 搜索店铺订单
 function searchShopOrders(params = {}) {
-  return get('/shop/orders/search', params)
+  return get('/order/search', params)
 }
 
 // ==================== 支付相关 (TODO) ====================

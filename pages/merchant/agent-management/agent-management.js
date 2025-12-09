@@ -33,7 +33,7 @@ Page({
     // 编辑条件弹窗相关
     showEditConditionDialog: false,
     editConditionForm: {
-      id: null,
+      id: '',
       type: 1,
       amount: ''
     }
@@ -206,7 +206,7 @@ Page({
     try {
       wx.showLoading({ title: '处理中...' })
       
-      const response = await agentAPI.processAgentApplication(application.id, {
+      const response = await agentAPI.processAgentApplication(String(application.id), {
         status: 3, // 拒绝
         reason: '不符合要求'
       })
@@ -263,9 +263,9 @@ Page({
     try {
       wx.showLoading({ title: '处理中...' })
       
-      const response = await agentAPI.processAgentApplication(currentApplication.id, {
+      const response = await agentAPI.processAgentApplication(String(currentApplication.id), {
         status: 2, // 同意
-        selected_group_id: selectedGroupId,
+        selected_group_id: String(selectedGroupId),
         reason: '申请通过'
       })
       
@@ -408,7 +408,7 @@ Page({
     this.setData({
       showEditConditionDialog: true,
       editConditionForm: {
-        id: condition.id,
+        id: String(condition.id),
         type: condition.type,
         amount: (condition.amount / 100).toString()
       }
@@ -420,7 +420,7 @@ Page({
     this.setData({ 
       showEditConditionDialog: false,
       editConditionForm: {
-        id: null,
+        id: '',
         type: 1,
         amount: ''
       }
@@ -450,7 +450,7 @@ Page({
     try {
       wx.showLoading({ title: '更新中...' })
       
-      const response = await agentAPI.updateAgentCondition(editConditionForm.id, {
+      const response = await agentAPI.updateAgentCondition(String(editConditionForm.id), {
         amount: Math.round(parseFloat(editConditionForm.amount) * 100)
       })
       
@@ -479,7 +479,7 @@ Page({
     try {
       wx.showLoading({ title: '删除中...' })
       
-      const response = await agentAPI.deleteAgentCondition(condition.id)
+      const response = await agentAPI.deleteAgentCondition(String(condition.id))
       
       if (response.code === 200) {
         showToast('条件删除成功')

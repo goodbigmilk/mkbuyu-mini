@@ -1,7 +1,6 @@
 // pages/merchant/user-groups/user-groups.js
 const { showToast, showModal } = require('../../../utils/index.js')
 const { userGroups: userGroupsApi } = require('../../../api/index.js')
-const { userState } = require('../../../utils/state.js')
 
 Page({
   data: {
@@ -125,6 +124,7 @@ Page({
   // 显示编辑分组对话框
   showEditDialog(e) {
     const { group } = e.currentTarget.dataset
+    // 保存完整的group对象,group_id已经是字符串类型
     this.setData({
       showCreateDialog: true,
       editingGroup: group,
@@ -176,18 +176,18 @@ Page({
     }
     
     try {
-      const userInfo = userState.getUserInfo()
-      
       if (editingGroup) {
-        // 编辑分组
-        await userGroupsApi.updateUserGroup(editingGroup.id, formData)
+        // 编辑分组 - 使用group_id(字符串类型)
+        if (!editingGroup.group_id) {
+          showToast('分组ID无效')
+          console.error('editingGroup缺少group_id:', editingGroup)
+          return
+        }
+        await userGroupsApi.updateUserGroup(editingGroup.group_id, formData)
         showToast('更新成功')
       } else {
-        // 创建分组
-        await userGroupsApi.createUserGroup({
-          ...formData,
-          shop_id: userInfo.shop_id || userInfo.id
-        })
+        // 创建分组 - shop_id由后端从token中获取
+        await userGroupsApi.createUserGroup(formData)
         showToast('创建成功')
       }
       
@@ -203,11 +203,18 @@ Page({
   async deleteGroup(e) {
     const { group } = e.currentTarget.dataset
     
+    if (!group || !group.group_id) {
+      showToast('分组ID无效')
+      console.error('group缺少group_id:', group)
+      return
+    }
+    
     const confirmed = await showModal('删除确认', `确定要删除分组"${group.name}"吗？`)
     if (!confirmed) return
     
     try {
-      await userGroupsApi.deleteUserGroup(group.id)
+      // 使用group_id(字符串类型)
+      await userGroupsApi.deleteUserGroup(group.group_id)
       showToast('删除成功')
       this.refreshData()
     } catch (error) {
@@ -219,10 +226,18 @@ Page({
   // 切换分组状态
   async toggleGroupStatus(e) {
     const { group } = e.currentTarget.dataset
+    
+    if (!group || !group.group_id) {
+      showToast('分组ID无效')
+      console.error('group缺少group_id:', group)
+      return
+    }
+    
     const newStatus = group.status === 1 ? 2 : 1
     
     try {
-      await userGroupsApi.updateUserGroup(group.id, {
+      // 使用group_id(字符串类型)
+      await userGroupsApi.updateUserGroup(group.group_id, {
         name: group.name,
         description: group.description,
         status: newStatus
@@ -239,16 +254,32 @@ Page({
   // 查看分组成员
   viewGroupMembers(e) {
     const { group } = e.currentTarget.dataset
+    
+    if (!group || !group.group_id) {
+      showToast('分组ID无效')
+      console.error('group缺少group_id:', group)
+      return
+    }
+    
+    // 确保group_id作为字符串传递,避免大数精度丢失
     wx.navigateTo({
-      url: `/pages/merchant/group-members/group-members?groupId=${group.id}&groupName=${encodeURIComponent(group.name)}`
+      url: `/pages/merchant/group-members/group-members?groupId=${group.group_id}&groupName=${encodeURIComponent(group.name)}`
     })
   },
 
   // 设置分组定价
   setGroupPricing(e) {
     const { group } = e.currentTarget.dataset
+    
+    if (!group || !group.group_id) {
+      showToast('分组ID无效')
+      console.error('group缺少group_id:', group)
+      return
+    }
+    
+    // 确保group_id作为字符串传递,避免大数精度丢失
     wx.navigateTo({
-      url: `/pages/merchant/group-pricing/group-pricing?groupId=${group.id}&groupName=${encodeURIComponent(group.name)}`
+      url: `/pages/merchant/group-pricing/group-pricing?groupId=${group.group_id}&groupName=${encodeURIComponent(group.name)}`
     })
   }
 })

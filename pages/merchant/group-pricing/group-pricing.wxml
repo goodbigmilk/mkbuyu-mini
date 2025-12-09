@@ -84,7 +84,7 @@
     <!-- 定价项 -->
     <view 
       wx:for="{{priceList}}" 
-      wx:key="id" 
+      wx:key="group_pricing_id" 
       class="price-item {{item.status === 2 ? 'disabled' : ''}} {{item.isSelected ? 'selected' : ''}}"
       bindtap="{{isBatchMode ? 'togglePriceSelection' : ''}}"
       data-price="{{item}}"
@@ -363,7 +363,7 @@
       <view class="product-list">
         <view 
           wx:for="{{allProductList}}" 
-          wx:key="id" 
+          wx:key="product_id" 
           class="product-item {{item.isSelected ? 'selected' : ''}}"
           data-product="{{item}}"
           bindtap="toggleProductSelection"
@@ -427,7 +427,7 @@
       <view class="product-list">
         <view 
           wx:for="{{allProductList}}" 
-          wx:key="id" 
+          wx:key="product_id" 
           class="product-item {{item.isSelected ? 'selected' : ''}}"
           data-product="{{item}}"
           bindtap="toggleProductSelection"

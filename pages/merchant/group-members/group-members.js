@@ -4,7 +4,7 @@ const { userGroups: userGroupsApi, user: userApi } = require('../../../api/index
 
 Page({
   data: {
-    groupId: 0,
+    groupId: '',  // 改为字符串类型,避免大数精度丢失
     groupName: '',
     memberList: [],
     allUserList: [],
@@ -30,8 +30,7 @@ Page({
     const { groupId, groupName } = options
     
     // 验证 groupId 是否有效
-    const parsedGroupId = parseInt(groupId)
-    if (!groupId || isNaN(parsedGroupId) || parsedGroupId <= 0) {
+    if (!groupId) {
       showToast('分组ID无效')
       setTimeout(() => {
         wx.navigateBack()
@@ -39,8 +38,9 @@ Page({
       return
     }
     
+    // 保持 groupId 为字符串，避免大数精度丢失
     this.setData({
-      groupId: parsedGroupId,
+      groupId: String(groupId),  // 确保为字符串类型
       groupName: decodeURIComponent(groupName || '')
     })
     
@@ -85,7 +85,7 @@ Page({
     if (this.data.loading) return
     
     // 验证 groupId 是否有效
-    if (!this.data.groupId || isNaN(this.data.groupId) || this.data.groupId <= 0) {
+    if (!this.data.groupId) {
       showToast('分组ID无效')
       return
     }
@@ -160,7 +160,7 @@ Page({
       const params = {
         page: 1,
         page_size: 20, // 暂时加载较多用户，实际可分页
-        group_id: this.data.groupId // 传入当前分组ID，后端会自动过滤已在分组中的用户
+        exclude_group_id: this.data.groupId // 排除已在该分组中的用户
       }
       
       // 如果有搜索关键词，添加到参数中
@@ -168,14 +168,14 @@ Page({
         params.keyword = this.data.searchKeyword.trim()
       }
       
-      console.log('调用用户列表API，参数:', params)
-      const res = await userApi.getUserList(params)
-      console.log('用户列表API响应:', res)
+      console.log('调用商家绑定用户列表API，参数:', params)
+      const res = await userApi.getShopBoundUsers(params)
+      console.log('商家绑定用户列表API响应:', res)
       
       if (res.code === 200 && res.data && res.data.items) {
-        console.log('用户原始数据:', res.data.items)
+        console.log('用户原始数据(来自Casdoor):', res.data.items)
         
-        // 后端已经过滤掉分组中的用户，直接处理选中状态
+        // 后端已经从Casdoor获取了完整的用户信息，并排除了分组中的用户
         const processedUsers = res.data.items.map(user => ({
           ...user,
           isSelected: this.data.selectedUsers.some(u => u.id === user.id)
@@ -261,10 +261,11 @@ Page({
     }
     
     try {
+      // user.id是Casdoor返回的用户ID(字符串类型)
       const userIds = selectedUsers.map(user => user.id)
       await userGroupsApi.addGroupMembers({
-        group_id: groupId,
-        user_ids: userIds
+        group_id: groupId,  // groupId已经是字符串类型
+        user_ids: userIds   // userIds是字符串数组
       })
       
       showToast('添加成功')

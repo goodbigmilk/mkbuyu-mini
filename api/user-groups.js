@@ -51,7 +51,7 @@ function getUserGroupList(params = {}) {
 
 /**
  * 获取用户分组详情
- * @param {number} id - 分组ID
+ * @param {string} id - 分组ID（业务ID）
  */
 function getUserGroupDetail(id) {
   return get(`/shop/user-groups/${id}`)
@@ -59,7 +59,7 @@ function getUserGroupDetail(id) {
 
 /**
  * 更新用户分组
- * @param {number} id - 分组ID
+ * @param {string} id - 分组ID（业务ID）
  * @param {Object} data - 更新数据
  * @param {string} data.name - 分组名称
  * @param {string} data.description - 分组描述
@@ -71,7 +71,7 @@ function updateUserGroup(id, data) {
 
 /**
  * 删除用户分组
- * @param {number} id - 分组ID
+ * @param {string} id - 分组ID（业务ID）
  */
 function deleteUserGroup(id) {
   return del(`/shop/user-groups/${id}`)
@@ -80,7 +80,7 @@ function deleteUserGroup(id) {
 /**
  * 添加分组成员
  * @param {Object} data - 成员数据
- * @param {number} data.group_id - 分组ID
+ * @param {string} data.group_id - 分组ID（业务ID）
  * @param {Array} data.user_ids - 用户ID列表
  */
 function addGroupMembers(data) {
@@ -90,7 +90,7 @@ function addGroupMembers(data) {
 /**
  * 移除分组成员
  * @param {Object} data - 成员数据
- * @param {number} data.group_id - 分组ID
+ * @param {string} data.group_id - 分组ID（业务ID）
  * @param {Array} data.user_ids - 用户ID列表
  */
 function removeGroupMembers(data) {
@@ -99,7 +99,7 @@ function removeGroupMembers(data) {
 
 /**
  * 获取分组成员列表
- * @param {number} groupId - 分组ID
+ * @param {string} groupId - 分组ID（业务ID）
  * @param {Object} params - 查询参数
  * @param {number} params.page - 页码，默认1
  * @param {number} params.page_size - 每页数量，默认10
@@ -123,8 +123,8 @@ function getGroupMembers(groupId, params = {}) {
 /**
  * 创建分组商品定价
  * @param {Object} data - 定价数据
- * @param {number} data.group_id - 分组ID
- * @param {number} data.product_id - 商品ID
+ * @param {string} data.group_id - 分组ID（业务ID）
+ * @param {string} data.product_id - 商品ID（业务ID）
  * @param {number} data.price - 价格(分)
  * @param {string} data.start_time - 生效开始时间
  * @param {string} data.end_time - 生效结束时间
@@ -136,8 +136,10 @@ function createGroupProductPrice(data) {
 /**
  * 批量创建分组商品定价
  * @param {Object} data - 批量定价数据
- * @param {number} data.group_id - 分组ID
+ * @param {string} data.group_id - 分组ID（业务ID）
  * @param {Array} data.products - 商品列表
+ * @param {string} data.products[].product_id - 商品ID（业务ID）
+ * @param {number} data.products[].price - 价格(分)
  * @param {string} data.start_time - 生效开始时间
  * @param {string} data.end_time - 生效结束时间
  */
@@ -147,7 +149,7 @@ function batchCreateGroupProductPrice(data) {
 
 /**
  * 获取分组商品定价列表
- * @param {number} groupId - 分组ID
+ * @param {string} groupId - 分组ID（业务ID）
  * @param {Object} params - 查询参数
  * @param {number} params.page - 页码，默认1
  * @param {number} params.page_size - 每页数量，默认10
@@ -170,7 +172,7 @@ function getGroupProductPrices(groupId, params = {}) {
 
 /**
  * 更新分组商品定价
- * @param {number} id - 定价ID
+ * @param {string} id - 定价ID（业务ID：group_pricing_id）
  * @param {Object} data - 更新数据
  * @param {number} data.price - 价格(分)
  * @param {string} data.start_time - 生效开始时间
@@ -183,7 +185,7 @@ function updateGroupProductPrice(id, data) {
 
 /**
  * 删除分组商品定价
- * @param {number} id - 定价ID
+ * @param {string} id - 定价ID（业务ID：group_pricing_id）
  */
 function deleteGroupProductPrice(id) {
   return del(`/shop/user-groups/prices/${id}`)

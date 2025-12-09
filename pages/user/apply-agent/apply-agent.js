@@ -1,6 +1,7 @@
 // pages/user/apply-agent/apply-agent.js
 const { showToast, showModal } = require('../../../utils/index.js')
 const agentAPI = require('../../../api/agent.js')
+const shopAPI = require('../../../api/shop.js')
 
 Page({
   data: {
@@ -10,6 +11,11 @@ Page({
     canApply: false, // 是否可以申请
     hasApplication: false, // 是否已有申请
     applicationStatus: 0, // 申请状态
+    
+    // 店铺相关
+    shops: [],
+    selectedShopId: '',
+    selectedShopIndex: 0,
     
     // 申请状态文字
     statusText: {
@@ -47,6 +53,10 @@ Page({
     try {
       wx.showLoading({ title: '加载中...' })
       
+      // 先加载店铺列表
+      await this.loadShops()
+      
+      // 再加载其他数据
       await Promise.all([
         this.loadConditions(),
         this.loadUserStats(),
@@ -64,6 +74,30 @@ Page({
     }
   },
 
+  // 加载店铺列表
+  async loadShops() {
+    try {
+      const response = await shopAPI.getMyBoundShops()
+      if (response.code === 200 && response.data) {
+        const shops = response.data.map(binding => ({
+          shop_id: binding.shop.shop_id,
+          name: binding.shop.name,
+          logo: binding.shop.logo
+        }))
+        
+        this.setData({
+          shops: shops,
+          selectedShopId: shops.length > 0 ? String(shops[0].shop_id) : '',
+          selectedShopIndex: 0
+        })
+      } else {
+        console.error('获取店铺列表失败:', response.message)
+      }
+    } catch (error) {
+      console.error('加载店铺列表失败:', error)
+    }
+  },
+
   // 刷新数据
   async refreshData() {
     this.setData({ loading: true })
@@ -73,8 +107,13 @@ Page({
 
   // 加载申请条件
   async loadConditions() {
+    // 如果没有选择店铺，不加载
+    if (!this.data.selectedShopId) return
+    
     try {
-      const response = await agentAPI.getAgentConditionsForUser()
+      const response = await agentAPI.getAgentConditionsForUser({
+        shop_id: this.data.selectedShopId
+      })
       
       if (response.code === 200) {
         // 延迟格式化，在获取用户统计数据后进行
@@ -112,8 +151,13 @@ Page({
 
   // 加载用户统计数据
   async loadUserStats() {
+    // 如果没有选择店铺，不加载
+    if (!this.data.selectedShopId) return
+    
     try {
-      const response = await agentAPI.getUserStats()
+      const response = await agentAPI.getUserStats({
+        shop_id: this.data.selectedShopId
+      })
       
       if (response.code === 200) {
         const data = response.data || {}
@@ -138,8 +182,13 @@ Page({
 
   // 检查申请状态
   async checkApplicationStatus() {
+    // 如果没有选择店铺，不加载
+    if (!this.data.selectedShopId) return
+    
     try {
-      const response = await agentAPI.getUserApplicationStatus()
+      const response = await agentAPI.getUserApplicationStatus({
+        shop_id: this.data.selectedShopId
+      })
       
       if (response.code === 200) {
         const data = response.data
@@ -193,7 +242,9 @@ Page({
     try {
       wx.showLoading({ title: '提交申请中...' })
       
-      const response = await agentAPI.submitAgentApplication()
+      const response = await agentAPI.submitAgentApplication({
+        shop_id: this.data.selectedShopId
+      })
       
       if (response.code === 200) {
         showToast('申请已提交，请等待商家审核')
@@ -244,6 +295,49 @@ Page({
     wx.navigateTo({
       url: '/pages/user/distribution/distribution'
     })
+  },
+
+  // 店铺选择器变化
+  onShopPickerChange(event) {
+    const index = event.detail.value
+    const shops = this.data.shops
+    
+    if (index < shops.length) {
+      const selectedShop = shops[index]
+      console.log('切换店铺:', selectedShop)
+      
+      this.setData({
+        selectedShopIndex: index,
+        selectedShopId: String(selectedShop.shop_id)
+      })
+      
+      // 重新加载数据（不重新加载店铺列表）
+      this.reloadDataForSelectedShop()
+    }
+  },
+
+  // 为选中的店铺重新加载数据
+  async reloadDataForSelectedShop() {
+    try {
+      this.setData({ loading: true })
+      wx.showLoading({ title: '加载中...' })
+      
+      await Promise.all([
+        this.loadConditions(),
+        this.loadUserStats(),
+        this.checkApplicationStatus()
+      ])
+      
+      // 在数据加载完成后，格式化条件数据
+      this.formatConditionsData()
+      this.checkCanApply()
+    } catch (error) {
+      console.error('加载数据失败:', error)
+      showToast('加载数据失败')
+    } finally {
+      this.setData({ loading: false })
+      wx.hideLoading()
+    }
   },
 
   // 格式化金额

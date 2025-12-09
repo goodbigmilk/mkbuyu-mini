@@ -5,6 +5,39 @@
   padding-bottom: 120rpx;
 }
 
+/* 店铺选择器样式 */
+.shop-selector {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 30rpx;
+  background: white;
+  border-radius: 16rpx;
+  margin: 20rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+}
+
+.selector-label {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.shop-selector picker {
+  flex: 1;
+  margin-left: 20rpx;
+}
+
+.picker-value {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  font-size: 28rpx;
+  color: #07c160;
+  font-weight: 500;
+  gap: 10rpx;
+}
+
 .section {
   margin: 20rpx 20rpx 30rpx;
   background: white;

@@ -93,7 +93,7 @@
         <button 
           class="detail-btn" 
           size="mini"
-          data-distribution-id="{{item.id}}"
+          data-distribution-id="{{item.distribution_id}}"
           bindtap="viewDistributionDetail"
         >查看明细</button>
       </view>

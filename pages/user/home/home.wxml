@@ -20,6 +20,11 @@
   <view class="filter-section">
     <van-dropdown-menu active-color="#ee0a24">
       <van-dropdown-item 
+        value="{{shopFilter}}" 
+        options="{{shopOptions}}"
+        bind:change="onShopFilterChange"
+      />
+      <van-dropdown-item 
         value="{{categoryFilter}}" 
         options="{{categoryOptions}}"
         bind:change="onCategoryFilterChange"

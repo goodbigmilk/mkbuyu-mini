@@ -12,8 +12,9 @@ Page({
 
   onLoad(options) {
     if (options.id) {
+      // 保持 ID 为字符串，避免大数精度丢失
       this.setData({
-        refundId: parseInt(options.id)
+        refundId: options.id
       })
       this.loadRefundDetail()
     } else {

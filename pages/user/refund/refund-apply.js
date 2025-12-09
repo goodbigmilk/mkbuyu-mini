@@ -31,8 +31,9 @@ Page({
 
   onLoad(options) {
     if (options.orderId) {
+      // 保持 ID 为字符串，避免大数精度丢失
       this.setData({
-        orderId: parseInt(options.orderId)
+        orderId: options.orderId
       })
       this.loadOrderInfo()
     } else {

@@ -14,164 +14,107 @@
       <text class="subtitle">您的专属购物平台</text>
     </view>
 
-    <!-- 身份选择 -->
-    <view class="user-type-selector">
-      <view class="type-tabs">
-        <view 
-          class="type-tab {{role === 'user' ? 'active' : ''}}" 
-          bindtap="switchRole" 
-          data-type="user"
-        >
-          <van-icon name="user-o" size="20px" />
-          <text>用户登录</text>
-        </view>
-        <view 
-          class="type-tab {{role === 'shop' ? 'active' : ''}}" 
-          bindtap="switchRole" 
-          data-type="shop"
-        >
-          <van-icon name="shop-o" size="20px" />
-          <text>商家登录</text>
-        </view>
-      </view>
+    <!-- 检查登录状态 -->
+    <view class="checking-section" wx:if="{{checking}}">
+      <van-loading size="24px" />
+      <text class="checking-text">检查登录状态...</text>
     </view>
 
-    <!-- 登录表单 -->
-    <view class="login-form">
-      <!-- 手机号登录 -->
-      <view class="login-section" wx:if="{{loginType === 'phone'}}">
-        <view class="input-group">
-          <van-field
-            model:value="{{phone}}"
-            type="number"
-            placeholder="请输入手机号"
-            border="{{false}}"
-            maxlength="11"
-            custom-class="login-input"
-          >
-            <van-icon slot="left-icon" name="phone-o" />
-          </van-field>
-        </view>
+    <!-- 登录选项 -->
+    <view class="login-options" wx:if="{{!checking}}">
 
-        <view class="input-group">
-          <van-field
-            model:value="{{smsCode}}"
-            type="number"
-            placeholder="请输入验证码"
-            border="{{false}}"
-            maxlength="6"
-            custom-class="login-input"
-            use-button-slot
-          >
-            <van-icon slot="left-icon" name="shield-o" />
-            <van-button 
-              slot="button" 
-              size="small" 
-              type="primary"
-              disabled="{{!canSendSms || smsCountdown > 0}}"
-              loading="{{sendingSms}}"
-              bindtap="onSendSms"
-              custom-class="sms-btn"
-            >
-              {{smsCountdown > 0 ? smsCountdown + 's' : '获取验证码'}}
-            </van-button>
-          </van-field>
-        </view>
+      <!-- 账号密码登录表单 -->
+      <view class="password-login-form">
+        <van-field
+          value="{{username}}"
+          placeholder="请输入手机号/邮箱/用户名"
+          bind:input="onUsernameInput"
+          clearable
+          left-icon="contact"
+          custom-class="login-field"
+          input-class="field-input"
+        />
+        
+        <van-field
+          value="{{password}}"
+          type="password"
+          placeholder="请输入密码"
+          bind:input="onPasswordInput"
+          clearable
+          left-icon="lock"
+          custom-class="login-field"
+          input-class="field-input"
+        />
       </view>
 
-      <!-- 账号密码登录 -->
-      <view class="login-section" wx:if="{{loginType === 'password'}}">
-        <view class="input-group">
-          <van-field
-            model:value="{{username}}"
-            type="number"
-            placeholder="请输入手机号"
-            border="{{false}}"
-            maxlength="11"
-            custom-class="login-input"
-          >
-            <van-icon slot="left-icon" name="phone-o" />
-          </van-field>
-        </view>
-
-        <view class="input-group">
-          <van-field
-            model:value="{{password}}"
-            type="password"
-            placeholder="请输入密码"
-            border="{{false}}"
-            custom-class="login-input"
-          >
-            <van-icon slot="left-icon" name="lock" />
-          </van-field>
-        </view>
-      </view>
-
-      <!-- 登录按钮 -->
+      <!-- 密码登录按钮 -->
       <van-button 
         type="primary" 
         size="large"
-        loading="{{logging}}"
-        bindtap="onLogin"
-        custom-class="login-btn"
+        loading="{{passwordLoading}}"
+        bindtap="onPasswordLogin"
+        custom-class="password-login-btn"
+        icon="user-o"
+        disabled="{{!username || !password}}"
       >
-        {{logging ? '登录中...' : '登录'}}
+        {{passwordLoading ? '登录中...' : '账号密码登录'}}
       </van-button>
 
-      <!-- 登录方式切换 -->
-      <view class="switch-login">
-        <text 
-          wx:if="{{loginType === 'phone'}}"
-          bindtap="switchLoginType"
-          data-type="password"
-        >
-          密码登录
-        </text>
-        <text 
-          wx:if="{{loginType === 'password'}}"
-          bindtap="switchLoginType"
-          data-type="phone"
-        >
-          验证码登录
-        </text>
-      </view>
-
-      <!-- 忘记密码和注册 -->
-      <view class="bottom-links">
-        <text class="link" bindtap="onForgetPassword">忘记密码？</text>
-        <text class="link" bindtap="onRegister">立即注册</text>
-      </view>
-    </view>
-
-    <!-- 微信一键登录 -->
-    <view class="wechat-login-section">
-
+      <!-- 微信一键登录按钮 -->
       <van-button 
-        type="success" 
+        type="info" 
         size="large"
-        loading="{{wechatLogging}}"
-        bindtap="onWechatLogin"
+        loading="{{wechatLoading}}"
+        bindtap="onStartLogin"
         custom-class="wechat-login-btn"
         icon="wechat"
+        plain
       >
-        {{wechatLogging ? '登录中...' : '微信一键登录'}}
+        {{wechatLoading ? '跳转中...' : '微信一键登录'}}
       </van-button>
+
+      <!-- Casdoor 登录按钮 -->
+      <van-button 
+        type="primary" 
+        size="large"
+        bindtap="onOpenCasdoorLogin"
+        custom-class="casdoor-login-btn"
+        plain
+      >
+        使用 Casdoor 登录
+      </van-button>
+
+      <!-- 注册链接 -->
+      <view class="register-link">
+        <text class="register-text">还没有账号？</text>
+        <text class="register-btn" bindtap="onGoToRegister">立即注册</text>
+      </view>
     </view>
 
+    <!-- Casdoor 登录 web-view -->
+    <view class="casdoor-webview-container" wx:if="{{showCasdoorLogin}}">
+      <view class="casdoor-header">
+        <text class="casdoor-title">Casdoor 登录</text>
+        <view class="casdoor-close" bindtap="onCloseCasdoorLogin">
+          <van-icon name="cross" size="20px" />
+        </view>
+      </view>
+      <web-view 
+        src="{{casdoorLoginUrl}}" 
+        bindmessage="onCasdoorMessage"
+        binderror="onCasdoorError"
+        bindload="onCasdoorLoad"
+      ></web-view>
+    </view>
 
     <!-- 协议同意 -->
-    <view class="agreement-section">
-      <van-checkbox 
-        value="{{agreePolicy}}" 
-        bind:change="onAgreePolicyChange"
-        checked-color="#1989fa"
-        custom-class="agreement-checkbox"
-      >
-        我已阅读并同意
-      </van-checkbox>
-      <text class="policy-link" bindtap="onViewPolicy" data-type="user">《用户协议》</text>
-      <text>和</text>
-      <text class="policy-link" bindtap="onViewPolicy" data-type="privacy">《隐私政策》</text>
+    <view class="agreement-section" wx:if="{{!checking}}">
+      <text class="agreement-text">
+        登录即表示同意
+        <text class="policy-link" bindtap="onViewUserAgreement">《用户协议》</text>
+        和
+        <text class="policy-link" bindtap="onViewPrivacyPolicy">《隐私政策》</text>
+      </text>
     </view>
 
   </view>
@@ -181,4 +124,4 @@
     <van-icon name="service-o" size="20px" />
     <text>客服</text>
   </view>
-</view> 
+</view>

@@ -8,7 +8,9 @@
         <text class="shop-phone" wx:if="{{userInfo.phone}}">手机号: {{userInfo.phone}}</text>
         <text class="shop-desc">{{shopInfo.description || '暂无店铺简介'}}</text>
       </view>
-      <van-icon name="edit" size="16" />
+      <view class="shop-actions">
+        <van-icon name="edit" size="16" />
+      </view>
     </view>
 
     <!-- 今日数据概览 -->
@@ -36,6 +38,7 @@
     </view>
   </view>
 
+
   <!-- 功能菜单 -->
   <view wx:for="{{menuGroups}}" wx:key="title" class="menu-group">
     <view class="group-title">{{item.title}}</view>
@@ -58,19 +61,24 @@
         <van-icon name="arrow" size="16" color="#c8c9cc" />
       </view>
     </view>
+    
+    <!-- 用户端切换按钮 - 仅在"系统设置"组后显示 -->
+    <view wx:if="{{item.title === '系统设置' && hasDualRole}}">
+      <view class="action-section">
+        <van-button 
+          size="large" 
+          type="primary"
+          bindtap="onSwitchToUserWithConfirm"
+          custom-class="switch-to-user-btn"
+        >
+          切换到用户端
+        </van-button>
+      </view>
+    </view>
   </view>
 
   <!-- 操作按钮 -->
   <view class="action-section">
-    <van-button 
-      type="default" 
-      size="large" 
-      bindtap="onSwitchToUser"
-      custom-class="action-btn"
-    >
-      切换到用户端
-    </van-button>
-    
     <van-button 
       type="danger" 
       size="large" 

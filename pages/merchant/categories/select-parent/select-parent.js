@@ -31,7 +31,7 @@ Page({
     
     try {
       const response = await request({
-        url: '/shop/categories/tree',
+        url: '/product/categories/tree',
         method: 'GET'
       })
       
@@ -65,12 +65,12 @@ Page({
     
     // 创建分类映射
     categories.forEach(category => {
-      const categoryId = parseInt(category.id)
-      const parentId = parseInt(category.parent_id || 0)
+      const categoryId = category.category_id
+      const parentId = category.parent_id || 0
       
       categoryMap[categoryId] = {
         ...category,
-        id: categoryId,
+        category_id: categoryId,
         parent_id: parentId,
         children: []
       }
@@ -78,10 +78,11 @@ Page({
     
     // 构建树形结构
     categories.forEach(category => {
-      const categoryId = parseInt(category.id)
-      const parentId = parseInt(category.parent_id || 0)
+      const categoryId = category.category_id
+      const parentId = category.parent_id || 0
       
-      if (parentId === 0 || !parentId) {
+      // 判断是否为根级分类
+      if (parentId === 0 || parentId === '0' || !parentId) {
         tree.push(categoryMap[categoryId])
       } else {
         const parent = categoryMap[parentId]
@@ -98,14 +99,38 @@ Page({
 
   // 切换分类展开/收起状态
   toggleCategory(e) {
-    const categoryId = parseInt(e.currentTarget.dataset.categoryId)
+    const categoryIdRaw = e.currentTarget.dataset.categoryId
+    // 统一转换为字符串类型，因为对象的键总是字符串
+    const categoryId = String(categoryIdRaw)
     
-    if (!categoryId) return
+    console.log('切换分类展开状态:', {
+      原始ID: categoryIdRaw,
+      转换后ID: categoryId,
+      转换后类型: typeof categoryId,
+      当前展开映射: this.data.expandedMap
+    })
+    
+    if (!categoryId || categoryId === 'undefined' || categoryId === 'null') {
+      console.error('无效的分类ID:', categoryIdRaw)
+      return
+    }
     
     const expandedMap = { ...this.data.expandedMap }
-    expandedMap[categoryId] = !expandedMap[categoryId]
     
-    this.setData({ expandedMap })
+    // 切换展开状态
+    if (expandedMap[categoryId]) {
+      // 当前是展开状态，改为收起
+      delete expandedMap[categoryId]
+      console.log(`收起分类 ${categoryId}`)
+    } else {
+      // 当前是收起状态，改为展开
+      expandedMap[categoryId] = true
+      console.log(`展开分类 ${categoryId}`)
+    }
+    
+    this.setData({ expandedMap }, () => {
+      console.log('展开状态更新完成:', this.data.expandedMap)
+    })
   },
 
   // 选择分类

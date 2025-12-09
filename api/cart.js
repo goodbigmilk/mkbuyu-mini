@@ -4,7 +4,7 @@ const { request } = require('../utils/request')
 // 获取购物车列表
 function getCartList() {
   return request({
-    url: '/user/cart',
+    url: '/cart',
     method: 'GET'
   })
 }
@@ -12,7 +12,7 @@ function getCartList() {
 // 添加商品到购物车
 function addToCart(data) {
   return request({
-    url: '/user/cart',
+    url: '/cart',
     method: 'POST',
     data
   })
@@ -21,15 +21,17 @@ function addToCart(data) {
 // 获取购物车数量
 function getCartCount() {
   return request({
-    url: '/user/cart/count',
+    url: '/cart/count',
     method: 'GET'
   })
 }
 
 // 更新购物车商品数量
 function updateCartQuantity(cartId, quantity) {
+  // 确保使用字符串格式的ID
+  const stringId = String(cartId)
   return request({
-    url: `/user/cart/${cartId}/quantity`,
+    url: `/cart/${stringId}/quantity`,
     method: 'PUT',
     data: { quantity }
   })
@@ -37,8 +39,10 @@ function updateCartQuantity(cartId, quantity) {
 
 // 更新购物车商品选中状态
 function updateCartSelected(cartId, selected) {
+  // 确保使用字符串格式的ID
+  const stringId = String(cartId)
   return request({
-    url: `/user/cart/${cartId}/selected`,
+    url: `/cart/${stringId}/selected`,
     method: 'PUT',
     data: { selected }
   })
@@ -47,7 +51,7 @@ function updateCartSelected(cartId, selected) {
 // 批量更新选中状态
 function batchUpdateSelected(selected) {
   return request({
-    url: '/user/cart/selected',
+    url: '/cart/selected',
     method: 'PUT',
     data: { selected }
   })
@@ -55,25 +59,29 @@ function batchUpdateSelected(selected) {
 
 // 删除购物车商品
 function deleteCartItem(cartId) {
+  // 确保使用字符串格式的ID
+  const stringId = String(cartId)
   return request({
-    url: `/user/cart/${cartId}`,
+    url: `/cart/${stringId}`,
     method: 'DELETE'
   })
 }
 
 // 批量删除购物车商品
 function batchDeleteCart(cartIds) {
+  // 确保传递字符串格式的ID数组
+  const stringIds = cartIds.map(id => String(id))
   return request({
-    url: '/user/cart/batch',
+    url: '/cart/batch',
     method: 'DELETE',
-    data: { cart_ids: cartIds }
+    data: { cart_ids: stringIds }
   })
 }
 
 // 清空购物车
 function clearCart() {
   return request({
-    url: '/user/cart/clear',
+    url: '/cart/clear',
     method: 'DELETE'
   })
 }

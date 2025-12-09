@@ -1,0 +1,157 @@
+<view class="container">
+  <view class="form-section">
+    <view class="section-title">基本信息</view>
+    
+    <!-- 店铺名称 -->
+    <van-field
+      label="店铺名称"
+      placeholder="请输入店铺名称"
+      required
+      value="{{formData.name}}"
+      data-field="name"
+      bind:input="onFormInput"
+      error="{{errors.name}}"
+      error-message="{{errors.name}}"
+    />
+    
+    <!-- 店铺简介 -->
+    <van-field
+      label="店铺简介"
+      placeholder="请输入店铺简介"
+      required
+      type="textarea"
+      autosize
+      maxlength="200"
+      show-word-limit
+      value="{{formData.description}}"
+      data-field="description"
+      bind:input="onFormInput"
+      error="{{errors.description}}"
+      error-message="{{errors.description}}"
+    />
+    
+    <!-- 店铺LOGO -->
+    <view class="upload-field">
+      <view class="field-label">
+        店铺LOGO
+        <text class="optional">(可选)</text>
+      </view>
+      <view class="upload-area">
+        <view wx:if="{{formData.logo}}" class="image-preview">
+          <image src="{{formData.logo}}" class="preview-image" mode="aspectFill" />
+          <view class="image-actions">
+            <van-icon name="delete" size="20" color="#fff" data-type="logo" bind:tap="onDeleteImage" />
+          </view>
+        </view>
+        <view wx:else class="upload-placeholder" data-type="logo" bind:tap="onUploadImage">
+          <van-loading wx:if="{{uploading.logo}}" size="24" color="#1989fa" />
+          <block wx:else>
+            <van-icon name="photograph" size="32" color="#999" />
+            <text class="upload-text">点击上传LOGO</text>
+          </block>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 店铺横幅 -->
+    <view class="upload-field">
+      <view class="field-label">
+        店铺横幅
+        <text class="optional">(可选)</text>
+      </view>
+      <view class="upload-area banner">
+        <view wx:if="{{formData.banner}}" class="image-preview">
+          <image src="{{formData.banner}}" class="preview-image" mode="aspectFill" />
+          <view class="image-actions">
+            <van-icon name="delete" size="20" color="#fff" data-type="banner" bind:tap="onDeleteImage" />
+          </view>
+        </view>
+        <view wx:else class="upload-placeholder" data-type="banner" bind:tap="onUploadImage">
+          <van-loading wx:if="{{uploading.banner}}" size="24" color="#1989fa" />
+          <block wx:else>
+            <van-icon name="photograph" size="32" color="#999" />
+            <text class="upload-text">点击上传横幅</text>
+          </block>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="form-section">
+    <view class="section-title">联系信息</view>
+    
+    <!-- 联系电话 -->
+    <van-field
+      label="联系电话"
+      placeholder="请输入联系电话"
+      type="number"
+      value="{{formData.phone}}"
+      data-field="phone"
+      bind:input="onFormInput"
+      error="{{errors.phone}}"
+      error-message="{{errors.phone}}"
+    />
+    
+    <!-- 店铺邮箱 -->
+    <van-field
+      label="店铺邮箱"
+      placeholder="请输入店铺邮箱"
+      value="{{formData.email}}"
+      data-field="email"
+      bind:input="onFormInput"
+      error="{{errors.email}}"
+      error-message="{{errors.email}}"
+    />
+  </view>
+
+  <view class="form-section">
+    <view class="section-title">店主信息</view>
+    
+    <!-- 店主姓名 -->
+    <van-field
+      label="店主姓名"
+      placeholder="请输入店主姓名"
+      required
+      value="{{formData.owner_name}}"
+      data-field="owner_name"
+      bind:input="onFormInput"
+      error="{{errors.owner_name}}"
+      error-message="{{errors.owner_name}}"
+    />
+    
+    <!-- 店主邮箱 -->
+    <van-field
+      label="店主邮箱"
+      placeholder="请输入店主邮箱"
+      value="{{formData.owner_email}}"
+      data-field="owner_email"
+      bind:input="onFormInput"
+      error="{{errors.owner_email}}"
+      error-message="{{errors.owner_email}}"
+    />
+  </view>
+
+  <!-- 操作按钮 -->
+  <view class="action-section">
+    <van-button 
+      type="default" 
+      size="large" 
+      bind:click="onCancel"
+      custom-class="cancel-btn"
+    >
+      取消
+    </van-button>
+    <van-button 
+      type="primary" 
+      size="large" 
+      loading="{{saving}}"
+      bind:click="onSave"
+      custom-class="save-btn"
+    >
+      {{mode === 'create' ? '创建店铺' : '保存'}}
+    </van-button>
+  </view>
+
+  <!-- 底部间距 -->
+  <view class="bottom-space"></view>
+</view>

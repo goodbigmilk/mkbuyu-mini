@@ -180,13 +180,13 @@
       <scroll-view class="category-list" scroll-y>
         <view 
           wx:for="{{categories}}" 
-          wx:key="id"
-          class="category-item {{selectedCategoryId === item.id ? 'selected' : ''}}"
+          wx:key="category_id"
+          class="category-item {{selectedCategoryId === item.category_id ? 'selected' : ''}}"
           bindtap="onCategorySelect"
           data-category="{{item}}"
         >
           <text class="category-name">{{item.displayName || item.name}}</text>
-          <van-icon wx:if="{{selectedCategoryId === item.id}}" name="checked" color="#1989fa" />
+          <van-icon wx:if="{{selectedCategoryId === item.category_id}}" name="checked" color="#1989fa" />
         </view>
       </scroll-view>
     </view>

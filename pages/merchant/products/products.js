@@ -1,5 +1,5 @@
 // pages/merchant/products/products.js
-const { getProductList, publishProduct, unpublishProduct, deleteProduct } = require('../../../api/product')
+const { getShopProductList, publishProduct, unpublishProduct, deleteProduct } = require('../../../api/product')
 const { getAllCategories } = require('../../../api/category')
 const { showToast, showModal, formatTime, throttle } = require('../../../utils/index')
 
@@ -143,7 +143,7 @@ Page({
             const prefix = '　'.repeat(level) // 使用全角空格缩进
             categoryOptions.push({ 
               text: prefix + item.name, 
-              value: item.id,
+              value: item.category_id,
               level: level
             })
             
@@ -169,19 +169,19 @@ Page({
     const categoryMap = {}
     const rootCategories = []
     
-    // 创建分类映射
+    // 创建分类映射（使用业务ID category_id）
     categories.forEach(category => {
-      categoryMap[category.id] = { ...category, children: [] }
+      categoryMap[category.category_id] = { ...category, children: [] }
     })
     
     // 构建树结构
     categories.forEach(category => {
-      if (category.parent_id === 0 || !categoryMap[category.parent_id]) {
+      if (category.parent_id === 0 || category.parent_id === '0' || !categoryMap[category.parent_id]) {
         // 根分类
-        rootCategories.push(categoryMap[category.id])
+        rootCategories.push(categoryMap[category.category_id])
       } else {
         // 子分类
-        categoryMap[category.parent_id].children.push(categoryMap[category.id])
+        categoryMap[category.parent_id].children.push(categoryMap[category.category_id])
       }
     })
     
@@ -217,7 +217,7 @@ Page({
 
       console.log('请求商品列表参数:', params)
 
-      const response = await getProductList(params)
+      const response = await getShopProductList(params)
       console.log('商品列表响应:', response)
       console.log('响应数据类型检查:', {
         responseType: typeof response,
@@ -395,7 +395,7 @@ Page({
     console.log('编辑商品:', item)
     
     wx.navigateTo({
-      url: `/pages/merchant/products/edit/edit?id=${item.id}`,
+      url: `/pages/merchant/products/edit/edit?id=${item.product_id}`,
       fail: (error) => {
         console.error('跳转编辑页面失败:', error)
         showToast('页面跳转失败')
@@ -423,13 +423,13 @@ Page({
       item, 
       action, 
       isPublish, 
-      itemId: item?.id,
+      itemProductId: item?.product_id,
       itemStatus: item?.status,
       itemName: item?.name
     })
 
     // 验证必要参数
-    if (!item || !item.id) {
+    if (!item || !item.product_id) {
       console.error('商品信息不完整:', item)
       showToast('商品信息不完整，无法操作')
       return
@@ -439,15 +439,15 @@ Page({
       wx.showLoading({ title: isPublish ? '上架中...' : '下架中...' })
       
       console.log(`开始${isPublish ? '上架' : '下架'}商品:`, {
-        productId: item.id,
+        productId: item.product_id,
         productName: item.name,
         currentStatus: item.status,
         targetAction: action
       })
       
       const response = isPublish 
-        ? await publishProduct(item.id)
-        : await unpublishProduct(item.id)
+        ? await publishProduct(item.product_id)
+        : await unpublishProduct(item.product_id)
       
       console.log('切换状态响应:', {
         response,
@@ -458,7 +458,7 @@ Page({
       
       if (response.code === 200) {
         const successMessage = isPublish ? '上架成功' : '下架成功'
-        console.log(successMessage, { productId: item.id, productName: item.name })
+        console.log(successMessage, { productId: item.product_id, productName: item.name })
         showToast(successMessage)
         this.refreshList()
       } else {
@@ -467,7 +467,7 @@ Page({
           code: response.code,
           message: response.message,
           data: response.data,
-          productId: item.id
+          productId: item.product_id
         })
         showToast(errorMessage)
       }
@@ -476,7 +476,7 @@ Page({
         error,
         errorMessage: error.message,
         errorStack: error.stack,
-        productId: item?.id,
+        productId: item?.product_id,
         productName: item?.name,
         action,
         isPublish
@@ -495,7 +495,7 @@ Page({
     try {
       wx.showLoading({ title: '删除中...' })
       
-      const response = await deleteProduct(item.id)
+      const response = await deleteProduct(item.product_id)
       
       if (response.code === 200) {
         showToast('删除成功')

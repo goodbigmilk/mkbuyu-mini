@@ -28,7 +28,7 @@
     <!-- 分组项 -->
     <view 
       wx:for="{{groupList}}" 
-      wx:key="id" 
+      wx:key="group_id" 
       class="group-item {{item.status === 2 ? 'disabled' : ''}}"
     >
       <view class="item-content">

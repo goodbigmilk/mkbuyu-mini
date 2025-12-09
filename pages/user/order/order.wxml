@@ -70,7 +70,7 @@
       <view class="product-container">
         <scroll-view class="product-scroll" scroll-x="true" show-scrollbar="false">
           <view class="product-list">
-            <view class="product-item" wx:for="{{item.items}}" wx:for-item="product" wx:key="id" bindtap="viewOrderDetail" data-order-id="{{item.id}}">
+            <view class="product-item" wx:for="{{item.items}}" wx:for-item="product" wx:key="id" bindtap="viewOrderDetail" data-order-id="{{item.order_id}}">
               <image wx:if="{{product.product.images && product.product.images.length > 0}}" class="product-image" src="{{product.product.images[0].url}}" mode="aspectFill" />
               <view class="product-quantity">x{{product.quantity}}</view>
             </view>
@@ -79,7 +79,7 @@
       </view>
 
       <!-- 订单信息 -->
-      <view class="order-info-section" bindtap="viewOrderDetail" data-order-id="{{item.id}}">
+      <view class="order-info-section" bindtap="viewOrderDetail" data-order-id="{{item.order_id}}">
         <view class="order-meta">
           <text class="order-no">订单号：{{item.order_no}}</text>
           <view class="order-time">{{item.formatted_time}}</view>
@@ -97,14 +97,14 @@
           <button 
             class="action-btn cancel-btn" 
             size="mini"
-            data-order-id="{{item.id}}"
+            data-order-id="{{item.order_id}}"
             data-order-no="{{item.order_no}}"
             bindtap="cancelOrder"
           >取消订单</button>
           <button 
             class="action-btn pay-btn" 
             size="mini"
-            data-order-id="{{item.id}}"
+            data-order-id="{{item.order_id}}"
             data-order-no="{{item.order_no}}"
             bindtap="goPay"
           >立即付款</button>
@@ -115,13 +115,13 @@
           <button 
             class="action-btn refund-btn" 
             size="mini"
-            data-order-id="{{item.id}}"
+            data-order-id="{{item.order_id}}"
             bindtap="applyRefund"
           >申请退款</button>
           <button 
             class="action-btn detail-btn" 
             size="mini"
-            data-order-id="{{item.id}}"
+            data-order-id="{{item.order_id}}"
             bindtap="viewOrderDetail"
           >查看详情</button>
         </block>
@@ -131,13 +131,13 @@
           <button 
             class="action-btn refund-btn" 
             size="mini"
-            data-order-id="{{item.id}}"
+            data-order-id="{{item.order_id}}"
             bindtap="applyRefund"
           >申请退款</button>
           <button 
             class="action-btn confirm-btn" 
             size="mini"
-            data-order-id="{{item.id}}"
+            data-order-id="{{item.order_id}}"
             bindtap="confirmReceipt"
           >确认收货</button>
         </block>
@@ -147,7 +147,7 @@
           <button 
             class="action-btn detail-btn" 
             size="mini"
-            data-order-id="{{item.id}}"
+            data-order-id="{{item.order_id}}"
             bindtap="viewOrderDetail"
           >查看详情</button>
         </block>
@@ -157,7 +157,7 @@
           <button 
             class="action-btn detail-btn" 
             size="mini"
-            data-order-id="{{item.id}}"
+            data-order-id="{{item.order_id}}"
             bindtap="viewOrderDetail"
           >查看详情</button>
         </block>
@@ -167,7 +167,7 @@
           <button 
             class="action-btn detail-btn" 
             size="mini"
-            data-order-id="{{item.id}}"
+            data-order-id="{{item.order_id}}"
             bindtap="viewOrderDetail"
           >查看详情</button>
         </block>
@@ -177,7 +177,7 @@
           <button 
             class="action-btn detail-btn" 
             size="mini"
-            data-order-id="{{item.id}}"
+            data-order-id="{{item.order_id}}"
             bindtap="viewOrderDetail"
           >查看详情</button>
         </block>
